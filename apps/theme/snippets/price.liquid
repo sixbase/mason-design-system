@@ -1,0 +1,36 @@
+{%- comment -%}
+  Render a price (with optional compare-at).
+
+  Mirrors the PriceDisplay component in
+  packages/components/src/price-display/PriceDisplay.tsx.
+  Outputs .ds-price-display HTML; Shopify's `money` filter formats
+  the integer-cents values into the shop's currency string.
+
+  Accepts:
+    price               integer (cents) or money_value, required
+    compare_at_price    integer (cents) or money_value (optional;
+                        rendered with strikethrough when present
+                        and greater than price)
+    size                'sm' | 'md' | 'lg' (default 'md')
+
+  Usage:
+    {% render 'price', price: product.price, compare_at_price: product.compare_at_price %}
+    {% render 'price', price: variant.price, size: 'lg' %}
+{%- endcomment -%}
+
+{%- liquid
+  assign price_size = size | default: 'md'
+  assign has_compare = false
+  if compare_at_price and compare_at_price > price
+    assign has_compare = true
+  endif
+-%}
+
+<div class="ds-price-display ds-price-display--{{ price_size }}">
+  <span class="ds-text ds-text--medium ds-price-display__price">{{ price | money }}</span>
+  {%- if has_compare -%}
+    <span class="ds-text ds-text--muted ds-price-display__compare">
+      <span class="ds-sr-only">Original price:</span>{{ compare_at_price | money }}
+    </span>
+  {%- endif -%}
+</div>

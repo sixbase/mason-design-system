@@ -133,6 +133,96 @@ Mirror the React component boundaries. Header is one section, ProductCard is ren
 
 ---
 
+## Section API Conventions
+
+Every section in `apps/theme/sections/` follows these rules. Agents porting new sections must not deviate without explicit approval.
+
+### 1. File naming
+
+- Template-bound sections (one per template): `main-{template}.liquid` — e.g. `main-product.liquid`, `main-collection.liquid`, `main-cart.liquid`, `main-login.liquid`.
+- Global sections (present on every page): plain names — `header.liquid`, `footer.liquid`, `announcement-bar.liquid`.
+- Home-only sections: descriptive names — `hero.liquid`, `featured-collection.liquid`, `feature-block.liquid`.
+
+### 2. Schema settings — content only, never design
+
+Settings exposed in the section's `{% schema %}` block expose **content** (text, images, URLs, selectors), never **design decisions** (colors, fonts, spacing, border radius). The design system already made those decisions — merchants don't override them from the theme editor.
+
+```jsonc
+// ✅ OK — content
+{ "type": "text", "id": "heading", "label": "Heading" }
+{ "type": "image_picker", "id": "image", "label": "Image" }
+{ "type": "url", "id": "cta_url", "label": "Button link" }
+
+// ❌ NOT OK — design
+{ "type": "color", "id": "background", "label": "Background" }
+{ "type": "range", "id": "padding", "min": 0, "max": 100 }
+{ "type": "font_picker", "id": "heading_font" }
+```
+
+### 3. Standard settings IDs
+
+Where sections take the same kind of input, use the same `id` across sections. This keeps the editor consistent and reduces per-section surprise.
+
+| Pattern | Standard ID | Example sections |
+|---------|-------------|------------------|
+| Section heading | `heading` | hero, feature-block, featured-collection |
+| Section body/description | `body` | hero, feature-block |
+| Call-to-action button text | `cta_label` | hero, feature-block |
+| Call-to-action button URL | `cta_url` | hero, feature-block |
+| Image | `image` | hero, feature-block |
+| Collection picker | `collection` | featured-collection |
+| Product picker | `product` | featured-product |
+| Show/hide toggle | `show_{what}` — e.g. `show_vendor` | product, collection |
+
+### 4. CSS per section
+
+Each section has a matching CSS file in `assets/` named the same as the section — e.g. `sections/header.liquid` → `assets/header.css`. The section imports its CSS via:
+
+```liquid
+{{ 'header.css' | asset_url | stylesheet_tag }}
+```
+
+Primitive CSS (button, typography, input, badge, select, icon, price-display, breadcrumb) is loaded once in `layout/theme.liquid` — sections never re-import primitives.
+
+### 5. BEM class names mirror the React component
+
+When porting a React component to Liquid, preserve every `.ds-*` class the component outputs. A Liquid section for ProductCard outputs the same HTML structure and classes as `<ProductCard>`, so visual parity is automatic. Agents porting a section must grep the component source for every class name used and reproduce them.
+
+### 6. Shared snippets (Phase 0 — do not re-implement)
+
+Sections must consume these snippets rather than inlining equivalents:
+
+| Snippet | Purpose | Call |
+|---------|---------|------|
+| `icon.liquid` | SVG icon renderer | `{% render 'icon', name: 'cart', size: 'md' %}` |
+| `price.liquid` | Price with optional compare-at | `{% render 'price', price: product.price, compare_at_price: product.compare_at_price %}` |
+| `responsive-image.liquid` | Shopify CDN image with srcset | `{% render 'responsive-image', image: product.featured_image, alt: product.title %}` |
+| `breadcrumb.liquid` | Breadcrumb nav + JSON-LD | `{% render 'breadcrumb' %}` |
+
+If a section needs a formatter or a repeated HTML pattern not covered by an existing snippet, escalate — don't create a new shared snippet mid-stream.
+
+### 7. SEO is part of the section, not a later pass
+
+Each section that maps to a page type includes the relevant JSON-LD schema inline:
+
+| Template | Required JSON-LD |
+|----------|-----------------|
+| Product | `Product` (offers, aggregateRating, brand) |
+| Collection | `CollectionPage` + `ItemList` |
+| Article | `Article` (headline, author, datePublished, image) |
+| Home | `WebSite` with `potentialAction` search |
+| Any | `BreadcrumbList` (handled by `breadcrumb.liquid` snippet) |
+
+### 8. Accessibility non-negotiables (same as components)
+
+- Every interactive element has `:focus-visible` styles (inherited from primitive CSS)
+- Icons are `aria-hidden="true"` by default; decorative-false icons require `aria-label`
+- Form inputs always have associated labels
+- Dialog/Drawer content uses `aria-modal`, `aria-labelledby`, traps focus
+- `prefers-reduced-motion` handled by primitive CSS — animations should respect it by default
+
+---
+
 ## Roadmap
 
 | Phase | What | Status |

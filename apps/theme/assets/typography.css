@@ -1,0 +1,125 @@
+/* ─── Typography base ──────────────────────────────────────── */
+.ds-text {
+  font-family: var(--font-family-body);
+  color: var(--color-foreground);
+  margin: 0;
+
+  /* Optical centering: trim em-box to cap height + baseline */
+  text-box-trim: both;
+  text-box-edge: cap alphabetic;
+
+  /* Optimal reading width: 65ch ≈ 65 characters per line.
+     Only applies to block-level renderings (p, div) — inline
+     elements (span, label) ignore max-width automatically. */
+  max-width: 65ch;
+}
+
+/* ─── Heading levels ───────────────────────────────────────── */
+.ds-heading {
+  font-family: var(--font-family-body);
+  color: var(--color-foreground);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  margin: 0;
+
+  /* Optical centering: trim em-box to cap height + baseline */
+  text-box-trim: both;
+  text-box-edge: cap alphabetic;
+}
+
+.ds-heading--4xl {
+  font-size: var(--font-size-4xl);
+}
+
+.ds-heading--3xl {
+  font-size: var(--font-size-3xl);
+}
+
+.ds-heading--2xl {
+  font-size: var(--font-size-2xl);
+}
+
+.ds-heading--xl {
+  font-size: var(--font-size-xl);
+}
+
+/* ─── Weight modifiers (heading) ──────────────────────────── */
+.ds-heading--normal   { font-weight: var(--font-weight-normal); }
+.ds-heading--medium   { font-weight: var(--font-weight-medium); }
+.ds-heading--bold     { font-weight: var(--font-weight-bold); }
+
+/* ─── Body sizes ───────────────────────────────────────────── */
+.ds-text--lg {
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-snug);
+}
+
+.ds-text--base {
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-snug);
+}
+
+.ds-text--sm {
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+
+/* ─── Caption ──────────────────────────────────────────────── */
+.ds-caption {
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-normal);
+  color: var(--color-foreground-subtle);
+  margin: 0;
+
+  /* Optical centering: trim em-box to cap height + baseline */
+  text-box-trim: both;
+  text-box-edge: cap alphabetic;
+}
+
+/* ─── Inline code ──────────────────────────────────────────── */
+.ds-code {
+  font-family: var(--font-family-code);
+  font-size: 0.9em;
+  background-color: var(--color-background-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0.1em 0.35em;
+  color: var(--color-foreground);
+}
+
+/* ─── Color modifiers ──────────────────────────────────────── */
+.ds-text--muted,
+.ds-heading--muted {
+  color: var(--color-foreground-subtle);
+}
+
+/* ─── Weight modifiers ─────────────────────────────────────── */
+.ds-text--medium   { font-weight: var(--font-weight-medium); }
+.ds-text--semibold { font-weight: var(--font-weight-semibold); }
+.ds-text--bold     { font-weight: var(--font-weight-bold); }
+
+/* ─── Truncate ─────────────────────────────────────────────── */
+.ds-text--truncate,
+.ds-heading--truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ─── Reading width utility ───────────────────────────────── */
+/* Apply to any body/paragraph text outside the Text component.
+   65ch ≈ 65 characters — the typographic sweet spot for
+   comfortable reading (Bringhurst, 45–75ch range). */
+.ds-readable-width {
+  max-width: 65ch;
+}
+
+/* ─── Optical centering fallback ─────────────────────────── */
+@supports not (text-box-trim: both) {
+  .ds-text,
+  .ds-heading,
+  .ds-caption {
+    transform: translateY(0.05em);
+  }
+}

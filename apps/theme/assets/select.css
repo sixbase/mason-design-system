@@ -1,0 +1,234 @@
+/* ─── Select root ────────────────────────────────────────── */
+.ds-select-root {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  font-family: var(--font-family-body);
+}
+
+.ds-select-root--full-width {
+  width: 100%;
+}
+
+/* ─── Label ──────────────────────────────────────────────── */
+.ds-select-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-foreground);
+  line-height: var(--line-height-snug);
+}
+
+/* ─── Trigger ────────────────────────────────────────────── */
+.ds-select-trigger {
+  --select-border-color: var(--color-border);
+  --select-bg: var(--color-background-surface);
+  --select-radius: var(--radius-md);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-2);
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-sm);
+  color: var(--color-foreground);
+  background-color: var(--select-bg);
+  border: 1px solid var(--select-border-color);
+  border-radius: var(--select-radius);
+  cursor: pointer;
+  outline: none;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+  white-space: nowrap;
+
+  /* Optical centering: trim em-box to cap height + baseline */
+  text-box-trim: both;
+  text-box-edge: cap alphabetic;
+}
+
+.ds-select-trigger--full-width {
+  width: 100%;
+}
+
+/* Sizes */
+.ds-select-trigger--sm {
+  height: var(--size-control-sm);
+  padding: 0 var(--spacing-3);
+  font-size: var(--font-size-xs);
+}
+
+.ds-select-trigger--md {
+  height: var(--size-control-md);
+  padding: 0 var(--spacing-3);
+  font-size: var(--font-size-sm);
+}
+
+.ds-select-trigger--lg {
+  height: var(--size-control-lg);
+  padding: 0 var(--spacing-4);
+  font-size: var(--font-size-base);
+}
+
+/* Hover */
+.ds-select-trigger:hover:not([data-disabled]) {
+  border-color: var(--color-border-strong);
+}
+
+/* Active (pressed) */
+.ds-select-trigger:active:not([data-disabled]) {
+  border-color: var(--color-primary);
+}
+
+/* Focus */
+.ds-select-trigger:focus-visible,
+.ds-select-trigger[data-state="open"] {
+  border-color: var(--color-primary);
+  box-shadow: var(--focus-ring);
+}
+
+/* Error */
+.ds-select-trigger--error {
+  border-color: var(--color-destructive);
+}
+
+.ds-select-trigger--error:focus-visible,
+.ds-select-trigger--error[data-state="open"] {
+  box-shadow: var(--focus-ring-error);
+}
+
+/* Disabled */
+.ds-select-trigger[data-disabled] {
+  opacity: var(--opacity-medium);
+  cursor: not-allowed;
+}
+
+/* Placeholder text */
+.ds-select-trigger [data-placeholder] {
+  color: var(--color-foreground-muted);
+}
+
+/* ─── Chevron icon ───────────────────────────────────────── */
+.ds-select-icon {
+  display: flex;
+  align-items: center;
+  color: var(--color-foreground-subtle);
+  flex-shrink: 0;
+  transition: transform var(--transition-fast);
+}
+
+.ds-select-trigger[data-state="open"] .ds-select-icon {
+  transform: rotate(180deg);
+}
+
+/* ─── Dropdown content ───────────────────────────────────── */
+.ds-select-content {
+  background-color: var(--color-background-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  z-index: var(--z-index-overlay);
+  /* Match trigger width */
+  min-width: var(--radix-select-trigger-width);
+  max-height: var(--radix-select-content-available-height);
+
+  /* Animation */
+  transform-origin: var(--radix-select-content-transform-origin);
+  animation: ds-select-open var(--transition-duration-fast) var(--transition-easing-out);
+}
+
+@keyframes ds-select-open {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-select-content { animation: none; }
+}
+
+/* ─── Viewport ───────────────────────────────────────────── */
+.ds-select-viewport {
+  padding: var(--spacing-1);
+}
+
+/* ─── Item ───────────────────────────────────────────────── */
+.ds-select-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-2) var(--spacing-3);
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-sm);
+  color: var(--color-foreground);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+  transition: background-color var(--transition-fast);
+}
+
+.ds-select-item[data-highlighted] {
+  background-color: var(--color-secondary);
+  color: var(--color-foreground);
+}
+
+.ds-select-item[data-disabled] {
+  opacity: var(--opacity-medium);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ─── Item indicator (checkmark) ────────────────────────── */
+.ds-select-item-indicator {
+  display: flex;
+  align-items: center;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+/* ─── Group label ────────────────────────────────────────── */
+.ds-select-group-label {
+  padding: var(--spacing-2) var(--spacing-3) var(--spacing-1);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wider);
+  text-transform: uppercase;
+  color: var(--color-foreground-muted);
+}
+
+/* ─── Separator ──────────────────────────────────────────── */
+.ds-select-separator {
+  height: 1px;
+  background-color: var(--color-border);
+  margin: var(--spacing-1) 0;
+}
+
+/* ─── Scroll buttons ─────────────────────────────────────── */
+.ds-select-scroll-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--spacing-6);
+  color: var(--color-foreground-subtle);
+  cursor: default;
+}
+
+/* ─── Hint / error ───────────────────────────────────────── */
+.ds-select-hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-foreground-subtle);
+  line-height: var(--line-height-normal);
+}
+
+.ds-select-error {
+  font-size: var(--font-size-xs);
+  color: var(--color-destructive);
+  line-height: var(--line-height-normal);
+}
+
+/* ─── Optical centering fallback ─────────────────────────── */
+@supports not (text-box-trim: both) {
+  .ds-select-trigger {
+    transform: translateY(0.05em);
+  }
+}

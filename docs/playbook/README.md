@@ -76,6 +76,7 @@ These are the non-negotiable constraints that govern all work on this project. I
 | [08-page-templates.md](./08-page-templates.md) | PLP, Search, Account, Terms, Sale specs | Composing pages or preparing for Shopify |
 | [09-layout-grid.md](./09-layout-grid.md) | 12-column grid, container, splits, responsive | Any page layout work |
 | [10-shopify-theme.md](./10-shopify-theme.md) | Theme architecture, strip strategy, dev workflow, Shopify gotchas | Any work inside `apps/theme/` |
+| [11-theme-port-plan.md](./11-theme-port-plan.md) | Parallelization plan for porting React components → Liquid sections | Starting Phase 1 theme port; operational, delete when complete |
 
 ---
 

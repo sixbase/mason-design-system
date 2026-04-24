@@ -1,0 +1,78 @@
+{%- comment -%}
+  Render breadcrumb navigation + JSON-LD BreadcrumbList schema.
+
+  Builds the crumbs automatically from the current template context
+  (product, collection, article, page) — no caller arguments needed
+  for standard templates.
+
+  Mirrors the Breadcrumb component in packages/components/src/breadcrumb/.
+  Outputs a <nav class="ds-breadcrumb"> with .ds-breadcrumb__item entries
+  and a separate <script type="application/ld+json"> block with the
+  schema.org BreadcrumbList markup.
+
+  Usage:
+    {% render 'breadcrumb' %}
+{%- endcomment -%}
+
+{%- liquid
+  assign crumbs = ''
+  if template.name == 'product'
+    assign crumbs = crumbs | append: 'Home|' | append: routes.root_url | append: '||'
+    if collection
+      assign crumbs = crumbs | append: collection.title | append: '|' | append: collection.url | append: '||'
+    endif
+    assign crumbs = crumbs | append: product.title | append: '|' | append: product.url
+  elsif template.name == 'collection'
+    assign crumbs = crumbs | append: 'Home|' | append: routes.root_url | append: '||'
+    assign crumbs = crumbs | append: collection.title | append: '|' | append: collection.url
+  elsif template.name == 'article'
+    assign crumbs = crumbs | append: 'Home|' | append: routes.root_url | append: '||'
+    assign crumbs = crumbs | append: blog.title | append: '|' | append: blog.url | append: '||'
+    assign crumbs = crumbs | append: article.title | append: '|' | append: article.url
+  elsif template.name == 'page'
+    assign crumbs = crumbs | append: 'Home|' | append: routes.root_url | append: '||'
+    assign crumbs = crumbs | append: page.title | append: '|' | append: page.url
+  elsif template.name == 'blog'
+    assign crumbs = crumbs | append: 'Home|' | append: routes.root_url | append: '||'
+    assign crumbs = crumbs | append: blog.title | append: '|' | append: blog.url
+  endif
+  assign crumb_list = crumbs | split: '||'
+-%}
+
+{%- if crumb_list.size > 1 -%}
+  <nav class="ds-breadcrumb" aria-label="Breadcrumb">
+    <ol class="ds-breadcrumb__list">
+      {%- for crumb in crumb_list -%}
+        {%- assign parts = crumb | split: '|' -%}
+        {%- assign label = parts[0] -%}
+        {%- assign url = parts[1] -%}
+        <li class="ds-breadcrumb__item">
+          {%- if forloop.last -%}
+            <span class="ds-breadcrumb__current" aria-current="page">{{ label | escape }}</span>
+          {%- else -%}
+            <a class="ds-breadcrumb__link" href="{{ url }}">{{ label | escape }}</a>
+            <span class="ds-breadcrumb__separator" aria-hidden="true">/</span>
+          {%- endif -%}
+        </li>
+      {%- endfor -%}
+    </ol>
+  </nav>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {%- for crumb in crumb_list -%}
+          {%- assign parts = crumb | split: '|' -%}
+          {
+            "@type": "ListItem",
+            "position": {{ forloop.index }},
+            "name": {{ parts[0] | json }},
+            "item": {{ shop.url | append: parts[1] | json }}
+          }{% unless forloop.last %},{% endunless %}
+        {%- endfor -%}
+      ]
+    }
+  </script>
+{%- endif -%}

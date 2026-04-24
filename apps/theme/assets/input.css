@@ -1,0 +1,149 @@
+/* ─── Input component tokens ──────────────────────────────── */
+.ds-input-root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  width: 100%;
+  font-family: var(--font-family-body);
+}
+
+/* ─── Label ────────────────────────────────────────────────── */
+.ds-input-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-foreground);
+  line-height: var(--line-height-snug);
+}
+
+.ds-input-label--required::after {
+  content: ' *';
+  color: var(--color-destructive);
+}
+
+/* ─── Input field ───────────────────────────────────────────── */
+.ds-input-field {
+  --input-border-color: var(--color-border);
+  --input-bg: var(--color-background-surface);
+  --input-radius: var(--radius-md);
+
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0 var(--spacing-3);
+  color: var(--color-foreground);
+  background-color: var(--input-bg);
+  border: 1px solid var(--input-border-color);
+  border-radius: var(--input-radius);
+  outline: none;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+
+  /* Optical centering: trim em-box to cap height + baseline */
+  text-box-trim: both;
+  text-box-edge: cap alphabetic;
+}
+
+/* ─── Sizes ─────────────────────────────────────────────────── */
+.ds-input-field--sm {
+  height: var(--size-control-sm);
+  font-size: var(--font-size-xs);
+}
+
+.ds-input-field--md {
+  height: var(--size-control-md);
+  font-size: var(--font-size-sm);
+}
+
+.ds-input-field--lg {
+  height: var(--size-control-lg);
+  padding: 0 var(--spacing-4);
+  font-size: var(--font-size-base);
+}
+
+.ds-input-field::placeholder {
+  color: var(--color-foreground-muted);
+}
+
+/* Focus */
+.ds-input-field:focus {
+  border-color: var(--color-primary);
+  box-shadow: var(--focus-ring);
+}
+
+/* Hover (non-focused, non-disabled) */
+.ds-input-field:hover:not(:focus):not(:disabled):not([aria-invalid="true"]) {
+  border-color: var(--color-border-strong);
+}
+
+/* Error state */
+.ds-input-field[aria-invalid="true"] {
+  border-color: var(--color-destructive);
+}
+
+.ds-input-field[aria-invalid="true"]:focus {
+  box-shadow: var(--focus-ring-error);
+}
+
+/* Disabled */
+.ds-input-field:disabled {
+  opacity: var(--opacity-medium);
+  cursor: not-allowed;
+  background-color: var(--color-background-subtle);
+}
+
+/* ─── With icons / adornments ──────────────────────────────── */
+.ds-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.ds-input-wrapper .ds-input-field {
+  width: 100%;
+}
+
+.ds-input-wrapper--leading .ds-input-field {
+  padding-left: calc(var(--spacing-3) + var(--size-icon) + var(--spacing-2));
+}
+
+.ds-input-wrapper--trailing .ds-input-field {
+  padding-right: calc(var(--spacing-3) + var(--size-icon) + var(--spacing-2));
+}
+
+.ds-input-adornment {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  color: var(--color-foreground-subtle);
+  pointer-events: none;
+}
+
+.ds-input-adornment--leading {
+  left: var(--spacing-3);
+}
+
+.ds-input-adornment--trailing {
+  right: var(--spacing-3);
+}
+
+/* ─── Helper text / error message ──────────────────────────── */
+.ds-input-hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-foreground-subtle);
+  line-height: var(--line-height-normal);
+}
+
+.ds-input-error {
+  font-size: var(--font-size-xs);
+  color: var(--color-destructive);
+  line-height: var(--line-height-normal);
+}
+
+/* ─── Optical centering fallback ─────────────────────────── */
+@supports not (text-box-trim: both) {
+  .ds-input-field {
+    transform: translateY(0.05em);
+  }
+}

@@ -1,0 +1,28 @@
+/* ─── Component tokens ─────────────────────────────── */
+.ds-icon {
+  --icon-size: var(--size-icon-md);
+  --icon-stroke-width: 1.5;
+}
+
+/* ─── Base styles ──────────────────────────────────── */
+.ds-icon {
+  display: inline-block;
+  width: var(--icon-size);
+  height: var(--icon-size);
+  flex-shrink: 0;
+  vertical-align: middle;
+  color: currentColor;
+}
+
+/* ─── Size variants ────────────────────────────────── */
+.ds-icon--sm {
+  --icon-size: var(--size-icon-sm);
+}
+
+.ds-icon--md {
+  --icon-size: var(--size-icon-md);
+}
+
+.ds-icon--lg {
+  --icon-size: var(--size-icon-lg);
+}

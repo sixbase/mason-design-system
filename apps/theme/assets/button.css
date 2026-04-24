@@ -1,0 +1,196 @@
+/* ─── Button component tokens ─────────────────────────────── */
+.ds-button {
+  /* Structural */
+  --button-radius: var(--radius-md);
+  --button-font-weight: var(--font-weight-medium);
+  --button-transition: color var(--transition-fast),
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    opacity var(--transition-fast),
+    transform var(--transition-fast);
+
+  /* Base styles */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-2);
+  white-space: nowrap;
+  font-family: var(--font-family-body);
+  font-weight: var(--button-font-weight);
+  border-radius: var(--button-radius);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: var(--button-transition);
+  text-decoration: none;
+  user-select: none;
+  outline: none;
+  position: relative;
+
+  /*
+   * Trim extra leading above cap-height and below baseline so
+   * flex centering aligns the visible ink, not the em box.
+   * Supported: Chrome 133+, Safari 18.2+. Degrades gracefully.
+   */
+  text-box-trim: both;
+  text-box-edge: cap alphabetic;
+}
+
+/* Focus ring — visible for keyboard, hidden for mouse */
+.ds-button:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+.ds-button--primary:focus-visible {
+  box-shadow: var(--shadow-sm), var(--focus-ring);
+}
+
+/* ─── Size variants ─────────────────────────────────────── */
+.ds-button--sm {
+  height: var(--size-control-sm);
+  padding: 0 var(--spacing-3);
+  font-size: var(--font-size-sm);
+}
+
+.ds-button--md {
+  height: var(--size-control-md);
+  padding: 0 var(--spacing-4);
+  font-size: var(--font-size-sm);
+}
+
+.ds-button--lg {
+  height: var(--size-control-lg);
+  padding: 0 var(--spacing-6);
+  font-size: var(--font-size-base);
+}
+
+/* ─── Variant: primary ──────────────────────────────────── */
+.ds-button--primary {
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.ds-button--primary:hover:not(:disabled) {
+  background-color: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+.ds-button--primary:active:not(:disabled) {
+  background-color: var(--color-primary-active);
+  border-color: var(--color-primary-active);
+  transform: scale(0.98);
+}
+
+/* ─── Variant: secondary ────────────────────────────────── */
+.ds-button--secondary {
+  background-color: var(--color-secondary);
+  color: var(--color-secondary-foreground);
+  border-color: var(--color-border);
+}
+
+.ds-button--secondary:hover:not(:disabled) {
+  background-color: var(--color-secondary-hover);
+  border-color: transparent;
+}
+
+.ds-button--secondary:active:not(:disabled) {
+  background-color: var(--color-secondary-active);
+  transform: scale(0.98);
+}
+
+/* ─── Variant: ghost ────────────────────────────────────── */
+.ds-button--ghost {
+  background-color: transparent;
+  color: var(--color-foreground);
+  border-color: transparent;
+}
+
+.ds-button--ghost:hover:not(:disabled) {
+  background-color: var(--color-secondary);
+}
+
+.ds-button--ghost:active:not(:disabled) {
+  background-color: var(--color-secondary-active);
+  transform: scale(0.98);
+}
+
+/* ─── Variant: destructive ──────────────────────────────── */
+.ds-button--destructive {
+  background-color: var(--color-destructive);
+  color: var(--color-destructive-foreground);
+  border-color: var(--color-destructive);
+}
+
+.ds-button--destructive:hover:not(:disabled) {
+  background-color: var(--color-destructive-hover);
+  border-color: var(--color-destructive-hover);
+}
+
+.ds-button--destructive:active:not(:disabled) {
+  background-color: var(--color-destructive-active);
+  border-color: var(--color-destructive-active);
+  transform: scale(0.98);
+}
+
+/* ─── Disabled state ────────────────────────────────────── */
+.ds-button:disabled,
+.ds-button[aria-disabled="true"] {
+  opacity: var(--opacity-medium);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ─── Loading state ─────────────────────────────────────── */
+.ds-button--loading {
+  cursor: wait;
+  pointer-events: none;
+}
+
+.ds-button__spinner {
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: var(--radius-full);
+  animation: ds-button-spin 0.65s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes ds-button-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Icon-only variant ─────────────────────────────────── */
+.ds-button--icon-only { padding: 0; }
+.ds-button--icon-only.ds-button--sm  { width: var(--size-control-sm); }
+.ds-button--icon-only.ds-button--md  { width: var(--size-control-md); }
+.ds-button--icon-only.ds-button--lg  { width: var(--size-control-lg); }
+
+/* ─── Full-width ────────────────────────────────────────── */
+.ds-button--full-width {
+  width: 100%;
+}
+
+/* ─── Optical centering fallback ─────────────────────────── */
+@supports not (text-box-trim: both) {
+  .ds-button {
+    transform: translateY(0.05em);
+  }
+  .ds-button:active:not(:disabled) {
+    transform: translateY(0.05em) scale(0.98);
+  }
+}
+
+/* ─── Reduced motion ───────────────────────────────────── */
+/* Placed last so cascade order wins over @supports fallback
+   at equal specificity. No !important needed. */
+@media (prefers-reduced-motion: reduce) {
+  .ds-button__spinner {
+    animation: none;
+    opacity: 0.5;
+  }
+  .ds-button:active:not(:disabled) {
+    transform: none;
+  }
+}

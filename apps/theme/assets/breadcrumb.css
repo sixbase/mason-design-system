@@ -1,0 +1,99 @@
+/* ─── Breadcrumb ─────────────────────────────────────────── */
+.ds-breadcrumb {
+  min-width: 0;
+  overflow: hidden;
+  margin-bottom: var(--spacing-4);
+}
+
+@media (min-width: 768px) {
+  .ds-breadcrumb {
+    margin-bottom: var(--spacing-6);
+  }
+}
+
+.ds-breadcrumb__list {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-1);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+
+.ds-breadcrumb__item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.ds-breadcrumb__link {
+  color: var(--color-foreground-subtle);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color var(--transition-fast);
+}
+
+a.ds-breadcrumb__link:hover {
+  color: var(--color-foreground);
+}
+
+.ds-breadcrumb__separator {
+  color: var(--color-foreground-muted);
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.ds-breadcrumb__ellipsis {
+  color: var(--color-foreground-muted);
+  user-select: none;
+}
+
+.ds-breadcrumb__current {
+  color: var(--color-foreground);
+  font-weight: var(--font-weight-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ─── Responsive collapse: hide ellipsis on tablet+, hide middle items on mobile ── */
+
+/* Tablet and up: show all items, hide ellipsis */
+@media (min-width: 768px) {
+  .ds-breadcrumb__item--collapsible {
+    display: flex;
+  }
+
+  .ds-breadcrumb__ellipsis,
+  .ds-breadcrumb__separator--after-ellipsis {
+    display: none;
+  }
+}
+
+/* Mobile: hide collapsible middle items, show ellipsis, single-line truncation */
+@media (max-width: 767px) {
+  .ds-breadcrumb__list {
+    flex-wrap: nowrap;
+    max-width: 100%;
+  }
+
+  .ds-breadcrumb__item--collapsible {
+    display: none;
+  }
+
+  .ds-breadcrumb__ellipsis,
+  .ds-breadcrumb__separator--after-ellipsis {
+    display: inline;
+  }
+
+  .ds-breadcrumb__item:last-child {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
+}

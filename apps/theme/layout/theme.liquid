@@ -29,6 +29,16 @@
     {{ 'base.css' | asset_url | stylesheet_tag }}
     {{ 'layout.css' | asset_url | stylesheet_tag }}
 
+    {%- comment -%} Primitive component CSS — loaded on every page {%- endcomment -%}
+    {{ 'typography.css' | asset_url | stylesheet_tag }}
+    {{ 'button.css' | asset_url | stylesheet_tag }}
+    {{ 'input.css' | asset_url | stylesheet_tag }}
+    {{ 'select.css' | asset_url | stylesheet_tag }}
+    {{ 'badge.css' | asset_url | stylesheet_tag }}
+    {{ 'icon.css' | asset_url | stylesheet_tag }}
+    {{ 'price-display.css' | asset_url | stylesheet_tag }}
+    {{ 'breadcrumb.css' | asset_url | stylesheet_tag }}
+
     {{ content_for_header }}
   </head>
 

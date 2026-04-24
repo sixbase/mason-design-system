@@ -1,0 +1,47 @@
+/* ─── PriceDisplay ───────────────────────────────────── */
+.ds-price-display {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-2);
+}
+
+/* Price and compare use <Text> primitive — only layout-specific styles here */
+
+.ds-price-display__compare {
+  text-decoration: line-through;
+}
+
+/* ─── Sizes ──────────────────────────────────────────── */
+.ds-price-display--sm .ds-price-display__price {
+  font-size: var(--font-size-base);
+}
+.ds-price-display--sm .ds-price-display__compare {
+  font-size: var(--font-size-xs);
+}
+
+.ds-price-display--md .ds-price-display__price {
+  font-size: var(--font-size-lg);
+}
+.ds-price-display--md .ds-price-display__compare {
+  font-size: var(--font-size-sm);
+}
+
+.ds-price-display--lg .ds-price-display__price {
+  font-size: var(--font-size-2xl);
+}
+.ds-price-display--lg .ds-price-display__compare {
+  font-size: var(--font-size-base);
+}
+
+/* ─── Screen-reader only ─────────────────────────────── */
+.ds-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border-width: 0;
+}
