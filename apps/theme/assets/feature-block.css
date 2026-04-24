@@ -21,10 +21,24 @@
   }
 }
 
-.ds-feature-block__image img {
+.ds-feature-block__image img,
+.ds-feature-block__image svg,
+.ds-feature-block__placeholder {
   width: 100%;
+  height: auto;
   display: block;
   border-radius: var(--radius-lg);
+  background-color: var(--color-background-subtle);
+  aspect-ratio: 5 / 4;
+  object-fit: cover;
+}
+
+/* When feature-block sections are stacked, tighten the gap from
+   the default 64px (--spacing-16) to the reference 42px
+   (--spacing-phi-21) between adjacent blocks. Matches the docs
+   HomepageDemo layout. */
+.ds-feature-block-section + .ds-feature-block-section {
+  margin-top: calc(-1 * (var(--spacing-16) - var(--spacing-phi-21)));
 }
 
 .ds-feature-block__text {

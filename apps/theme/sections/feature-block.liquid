@@ -13,7 +13,7 @@
   endif
 -%}
 
-<section class="ds-section">
+<section class="ds-section ds-feature-block-section">
   <div class="ds-page-container">
     <div class="{{ block_class }}">
       <div class="ds-feature-block__image">
@@ -23,16 +23,18 @@
             alt: title,
             sizes: '(min-width: 768px) 50vw, 100vw'
           %}
+        {%- else -%}
+          {{ 'lifestyle-1' | placeholder_svg_tag: 'ds-feature-block__placeholder' }}
         {%- endif -%}
       </div>
 
       <div class="ds-feature-block__text">
         {%- if title != blank -%}
-          <h2 class="ds-heading ds-heading--xl ds-feature-block__title">{{ title | escape }}</h2>
+          <h2 class="ds-heading ds-heading--xl ds-heading--normal ds-feature-block__title">{{ title | escape }}</h2>
         {%- endif -%}
 
         {%- if description != blank -%}
-          <p class="ds-text ds-text--base">{{ description | escape }}</p>
+          <p class="ds-text ds-text--base ds-text--muted">{{ description | escape }}</p>
         {%- endif -%}
 
         {%- if cta_label != blank and cta_url != blank -%}

@@ -13,8 +13,8 @@
     <div class="ds-footer__grid">
       {%- comment -%} Brand column: logo, heading, tagline {%- endcomment -%}
       <div class="ds-footer__brand">
-        {%- if section.settings.logo != blank -%}
-          <a href="{{ routes.root_url }}" class="ds-footer__logo" aria-label="{{ shop.name | escape }}">
+        <a href="{{ routes.root_url }}" class="ds-footer__logo" aria-label="{{ shop.name | escape }}">
+          {%- if section.settings.logo != blank -%}
             <img
               src="{{ section.settings.logo | image_url: width: 320 }}"
               srcset="{{ section.settings.logo | image_url: width: 160 }} 160w, {{ section.settings.logo | image_url: width: 320 }} 320w"
@@ -25,43 +25,84 @@
               alt="{{ shop.name | escape }}"
               class="ds-footer__logo-img"
             >
-          </a>
-        {%- else -%}
-          <a href="{{ routes.root_url }}" class="ds-footer__logo" aria-label="{{ shop.name | escape }}">
-            <span class="ds-footer__heading-text">{{ shop.name }}</span>
-          </a>
-        {%- endif -%}
+          {%- else -%}
+            <img
+              src="{{ 'mason-supply-co-logo.svg' | asset_url }}"
+              alt="{{ shop.name | escape }}"
+              class="ds-footer__logo-img"
+              width="180"
+              height="24"
+              loading="lazy"
+            >
+          {%- endif -%}
+        </a>
 
         {%- if section.settings.heading != blank -%}
           <p class="ds-footer__heading-text">{{ section.settings.heading | escape }}</p>
         {%- endif -%}
 
-        {%- if section.settings.tagline != blank -%}
-          <p class="ds-footer__tagline">{{ section.settings.tagline | escape }}</p>
+        {%- assign tagline_text = section.settings.tagline | default: 'Thoughtfully designed accessories for everyday carry.' -%}
+        {%- if tagline_text != blank -%}
+          <p class="ds-footer__tagline">{{ tagline_text | escape }}</p>
         {%- endif -%}
       </div>
 
-      {%- comment -%} Link columns 1–4 {%- endcomment -%}
+      {%- comment -%}
+        Link columns 1–4.
+        When a column's link_list setting is configured and the linklist
+        has links, render those. When it's blank, render the static
+        defaults below (handles + labels from the docs reference layout).
+      {%- endcomment -%}
+      {%- liquid
+        assign default_headings = 'Shop|Company|Support|' | split: '|'
+        assign default_links_1 = 'Phone Cases,/collections/all;Wallets,/collections/all;Bags,/collections/all;Accessories,/collections/all' | split: ';'
+        assign default_links_2 = 'About,/pages/about;Journal,/blogs/news;Sustainability,/pages/sustainability;Careers,/pages/careers' | split: ';'
+        assign default_links_3 = 'Contact,/pages/contact;Shipping & Returns,/pages/shipping-returns;FAQ,/pages/faq;Warranty,/pages/warranty' | split: ';'
+      -%}
       {%- for i in (1..4) -%}
         {%- assign heading_key = 'column_' | append: i | append: '_heading' -%}
         {%- assign menu_key    = 'column_' | append: i | append: '_menu' -%}
         {%- assign column_heading = section.settings[heading_key] -%}
         {%- assign column_menu    = section.settings[menu_key] -%}
+        {%- assign has_linklist = false -%}
         {%- if column_menu != blank and linklists[column_menu].links.size > 0 -%}
+          {%- assign has_linklist = true -%}
+        {%- endif -%}
+
+        {%- assign default_heading = default_headings[forloop.index0] -%}
+        {%- assign default_links = empty -%}
+        {%- if i == 1 -%}{%- assign default_links = default_links_1 -%}
+        {%- elsif i == 2 -%}{%- assign default_links = default_links_2 -%}
+        {%- elsif i == 3 -%}{%- assign default_links = default_links_3 -%}
+        {%- endif -%}
+
+        {%- if has_linklist or default_links != empty -%}
           <div class="ds-footer__column">
             {%- if column_heading != blank -%}
               <h2 class="ds-footer__heading">{{ column_heading | escape }}</h2>
-            {%- else -%}
+            {%- elsif has_linklist -%}
               <h2 class="ds-footer__heading">{{ linklists[column_menu].title | escape }}</h2>
+            {%- elsif default_heading != blank -%}
+              <h2 class="ds-footer__heading">{{ default_heading | escape }}</h2>
             {%- endif -%}
+
             <ul class="ds-footer__links">
-              {%- for link in linklists[column_menu].links -%}
-                <li>
-                  <a href="{{ link.url }}"{% if link.current %} aria-current="page"{% endif %}>
-                    {{- link.title | escape -}}
-                  </a>
-                </li>
-              {%- endfor -%}
+              {%- if has_linklist -%}
+                {%- for link in linklists[column_menu].links -%}
+                  <li>
+                    <a href="{{ link.url }}"{% if link.current %} aria-current="page"{% endif %}>
+                      {{- link.title | escape -}}
+                    </a>
+                  </li>
+                {%- endfor -%}
+              {%- else -%}
+                {%- for entry in default_links -%}
+                  {%- assign parts = entry | split: ',' -%}
+                  <li>
+                    <a href="{{ parts[1] }}">{{ parts[0] | escape }}</a>
+                  </li>
+                {%- endfor -%}
+              {%- endif -%}
             </ul>
           </div>
         {%- endif -%}
@@ -136,9 +177,32 @@
       </div>
     {%- endif -%}
 
-    {%- comment -%} Bottom strip: copyright, social, payments {%- endcomment -%}
+    {%- comment -%} Bottom strip: copyright, legal, social, payments {%- endcomment -%}
     <div class="ds-footer__bottom">
       <p class="ds-footer__copyright">{{ copyright_text | escape }}</p>
+
+      {%- liquid
+        assign legal_menu = section.settings.legal_menu
+        assign has_legal_linklist = false
+        if legal_menu != blank and linklists[legal_menu].links.size > 0
+          assign has_legal_linklist = true
+        endif
+        assign default_legal = 'Privacy Policy,/policies/privacy-policy;Terms of Service,/policies/terms-of-service' | split: ';'
+      -%}
+      {%- if has_legal_linklist or default_legal.size > 0 -%}
+        <div class="ds-footer__legal">
+          {%- if has_legal_linklist -%}
+            {%- for link in linklists[legal_menu].links -%}
+              <a href="{{ link.url }}">{{ link.title | escape }}</a>
+            {%- endfor -%}
+          {%- else -%}
+            {%- for entry in default_legal -%}
+              {%- assign parts = entry | split: ',' -%}
+              <a href="{{ parts[1] }}">{{ parts[0] | escape }}</a>
+            {%- endfor -%}
+          {%- endif -%}
+        </div>
+      {%- endif -%}
 
       {%- assign has_social =
         section.settings.twitter_url
@@ -289,7 +353,8 @@
     {
       "type": "text",
       "id": "tagline",
-      "label": "Tagline"
+      "label": "Tagline",
+      "default": "Thoughtfully designed accessories for everyday carry."
     },
 
     {
@@ -299,12 +364,14 @@
     {
       "type": "text",
       "id": "column_1_heading",
-      "label": "Heading"
+      "label": "Heading",
+      "default": "Shop"
     },
     {
       "type": "link_list",
       "id": "column_1_menu",
-      "label": "Menu"
+      "label": "Menu",
+      "info": "Leave blank to use the default links (Phone Cases, Wallets, Bags, Accessories)."
     },
 
     {
@@ -314,12 +381,14 @@
     {
       "type": "text",
       "id": "column_2_heading",
-      "label": "Heading"
+      "label": "Heading",
+      "default": "Company"
     },
     {
       "type": "link_list",
       "id": "column_2_menu",
-      "label": "Menu"
+      "label": "Menu",
+      "info": "Leave blank to use the default links (About, Journal, Sustainability, Careers)."
     },
 
     {
@@ -329,12 +398,14 @@
     {
       "type": "text",
       "id": "column_3_heading",
-      "label": "Heading"
+      "label": "Heading",
+      "default": "Support"
     },
     {
       "type": "link_list",
       "id": "column_3_menu",
-      "label": "Menu"
+      "label": "Menu",
+      "info": "Leave blank to use the default links (Contact, Shipping, FAQ, Warranty)."
     },
 
     {
@@ -350,6 +421,17 @@
       "type": "link_list",
       "id": "column_4_menu",
       "label": "Menu"
+    },
+
+    {
+      "type": "header",
+      "content": "Legal"
+    },
+    {
+      "type": "link_list",
+      "id": "legal_menu",
+      "label": "Legal menu",
+      "info": "Leave blank to use Shopify's Privacy Policy and Terms of Service policy pages."
     },
 
     {

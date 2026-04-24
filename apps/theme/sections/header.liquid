@@ -37,7 +37,15 @@
           loading="eager"
         >
       {%- else -%}
-        <span class="ds-header__logo-text">{{ shop.name }}</span>
+        {%- comment -%} Default: brand wordmark SVG shipped with the theme {%- endcomment -%}
+        <img
+          src="{{ 'mason-supply-co-logo.svg' | asset_url }}"
+          alt="{{ logo_alt | escape }}"
+          class="ds-header__logo-img"
+          width="180"
+          height="24"
+          loading="eager"
+        >
       {%- endif -%}
     </a>
 
@@ -49,6 +57,16 @@
             {% if link.active %}aria-current="page"{% endif %}
           >{{ link.title }}</a>
         {%- endfor -%}
+      </nav>
+    {%- else -%}
+      {%- comment -%}
+        Fallback nav when the merchant hasn't configured the main-menu
+        linklist. Mirrors the docs FullWidthLayout defaults.
+      {%- endcomment -%}
+      <nav class="ds-header__nav" aria-label="Main">
+        <a href="{{ routes.all_products_collection_url }}">Shop</a>
+        <a href="{{ routes.collections_url }}">Collections</a>
+        <a href="{{ routes.root_url }}pages/about">About</a>
       </nav>
     {%- endif -%}
 
@@ -129,15 +147,8 @@
     var toggle = document.querySelector('[data-theme-toggle]');
     if (!toggle) return;
 
-    try {
-      var stored = localStorage.getItem('ds-theme');
-      if (stored === 'dark') {
-        root.classList.add('dark');
-      } else if (stored === 'light') {
-        root.classList.remove('dark');
-      }
-    } catch (e) {}
-
+    /* Initial class restoration is handled by the inline <head> script
+       in theme.liquid — this handler only flips the class on click. */
     toggle.addEventListener('click', function () {
       var next = !root.classList.contains('dark');
       root.classList.toggle('dark', next);
@@ -179,7 +190,7 @@
       "type": "checkbox",
       "id": "show_theme_toggle",
       "label": "Show dark/light theme toggle",
-      "default": false
+      "default": true
     }
   ],
   "presets": [{ "name": "Header" }]

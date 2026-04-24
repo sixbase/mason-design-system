@@ -43,3 +43,14 @@ a {
 button {
   font-family: inherit;
 }
+
+/* Main content vertical breathing room — mirrors FullWidthLayout.astro */
+.ds-main {
+  padding-block: var(--spacing-4);
+}
+
+@media (min-width: 768px) {
+  .ds-main {
+    padding-block: var(--spacing-6);
+  }
+}
