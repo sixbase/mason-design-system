@@ -24,18 +24,14 @@
 }
 
 /* ─── Label ──────────────────────────────────────────────── */
+/* Typography (size, weight) set via .ds-text classes in Liquid.
+   This rule only handles color and the selected-value inline child. */
 .ds-variant-selector__label {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  letter-spacing: var(--letter-spacing-wide);
-  text-transform: uppercase;
   color: var(--color-foreground);
 }
 
 .ds-variant-selector__selected-value {
   font-weight: var(--font-weight-normal);
-  text-transform: none;
-  letter-spacing: var(--letter-spacing-normal);
   color: var(--color-foreground-secondary);
 }
 
