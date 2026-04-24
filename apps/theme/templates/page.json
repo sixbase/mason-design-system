@@ -1,0 +1,12 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-placeholder",
+      "settings": {
+        "heading": "Page",
+        "body": "Page template placeholder."
+      }
+    }
+  },
+  "order": ["main"]
+}

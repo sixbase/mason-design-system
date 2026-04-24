@@ -1,0 +1,33 @@
+<section class="ds-page-container" style="padding-block: var(--spacing-16);">
+  <h1 style="font-family: var(--font-family-body); color: var(--color-foreground);">
+    {{ section.settings.heading | default: 'Design System Theme' }}
+  </h1>
+  <p style="font-family: var(--font-family-body); color: var(--color-foreground-muted); max-width: 65ch;">
+    {{ section.settings.body | default: 'This theme consumes @ds/tokens. Sections will be built on top of the design system.' }}
+  </p>
+</section>
+
+{% schema %}
+{
+  "name": "Placeholder",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Design System Theme"
+    },
+    {
+      "type": "textarea",
+      "id": "body",
+      "label": "Body",
+      "default": "This theme consumes @ds/tokens."
+    }
+  ],
+  "presets": [
+    {
+      "name": "Placeholder"
+    }
+  ]
+}
+{% endschema %}

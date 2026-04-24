@@ -75,6 +75,7 @@ These are the non-negotiable constraints that govern all work on this project. I
 | [07-lessons-learned.md](./07-lessons-learned.md) | Gotchas, bugs, antipatterns, rules | Before doing anything you haven't done before |
 | [08-page-templates.md](./08-page-templates.md) | PLP, Search, Account, Terms, Sale specs | Composing pages or preparing for Shopify |
 | [09-layout-grid.md](./09-layout-grid.md) | 12-column grid, container, splits, responsive | Any page layout work |
+| [10-shopify-theme.md](./10-shopify-theme.md) | Theme architecture, strip strategy, dev workflow, Shopify gotchas | Any work inside `apps/theme/` |
 
 ---
 

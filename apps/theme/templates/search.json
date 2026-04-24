@@ -1,0 +1,12 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-placeholder",
+      "settings": {
+        "heading": "Search",
+        "body": "Search template placeholder."
+      }
+    }
+  },
+  "order": ["main"]
+}

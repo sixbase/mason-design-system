@@ -124,6 +124,14 @@ Use this to find decisions by topic without scrolling 1300+ lines.
 | Token Compliance Audit: docs site inline styles → CSS classes | Active |
 | Docs parity: every Storybook story needs live preview in docs | Active |
 
+### Shopify Integration
+
+| Decision | Status |
+|----------|--------|
+| Theme location: `apps/theme/` in monorepo | Active |
+| Base theme: aggressive strip of Dawn (delete all assets/sections/snippets) | Active |
+| Tokens distribution: copy `tokens.css` into theme assets (automation pending) | Active |
+
 ---
 
 ## Entries
@@ -1758,3 +1766,36 @@ Also replaced Footer.css hardcoded `1280px` with `var(--size-content-xl)`.
 **Decision:** Option (b) — `VariantSelector` accepts `options: VariantOption[]` where each option specifies `type: 'color' | 'button'`. Color options delegate to the existing `ColorPicker` component. Button options render `role="radiogroup"` with pill-style buttons supporting `available` (out-of-stock strikethrough) and `disabled` states.
 **Rationale:** Color swatches and text pills are fundamentally different UI patterns — forcing them through a single component would require complex conditional rendering at the call site. Delegating to `ColorPicker` for color options reuses an existing tested component. The `selectedValues` map + `onValueChange` callback keeps the component controlled and composable with cart state management.
 **Status:** Active
+
+---
+
+### Shopify Theme Location: `apps/theme/` in Monorepo
+
+**Date/Phase:** 2026-04-23 — Phase 4 (Shopify Integration)
+**Context:** Need a location for the Liquid theme that consumes the design system. Choices affect build tooling, Turborepo graph, and how tokens flow into the theme.
+**Options considered:** (a) New `apps/theme/` inside this monorepo; (b) Separate repo that installs `@ds/tokens` via npm; (c) Nested under `packages/` as a non-published package.
+**Decision:** Option (a) — `apps/theme/` alongside `apps/docs` and `apps/storybook`.
+**Rationale:** Matches the existing app pattern. Turborepo can wire token builds as a dependency (`@ds/tokens` build → theme sync). Token changes propagate to the theme in the same PR that changes them — no npm publish step required to test. Shopify CLI expects the theme dir to be the working directory; we work around this by running `shopify theme dev` from inside `apps/theme/`.
+**Status:** Active
+
+---
+
+### Shopify Theme: Strip Dawn Aggressively
+
+**Date/Phase:** 2026-04-23 — Phase 4 (Shopify Integration)
+**Context:** Starting a Shopify theme from scratch is slow; starting from Dawn gives a working baseline but ships 185 assets + 54 sections + 37 snippets of Dawn's CSS and opinions. The design system must be the single source of truth — Dawn's CSS system would conflict on every spacing, color, and typography decision.
+**Options considered:** (a) Start from empty — build every section from zero; (b) Keep Dawn, swap CSS files file-by-file as sections are migrated; (c) Aggressive strip — delete all of Dawn's assets, sections, and snippets the day it's cloned, keep only the Liquid scaffolding.
+**Decision:** Option (c). Deleted all 65 CSS files, 32 JS files, 88 other assets, 54 sections, 37 snippets. Replaced `layout/theme.liquid` with a minimal version. Replaced all template JSONs with pointers to a `main-placeholder` section. Kept `locales/` (51 translation files) unchanged.
+**Rationale:** Dawn's CSS contamination risk is high. A clean slate means the design system is the only source of truth from day one. Slower initial ramp is worth zero contamination. The kept Liquid scaffolding (`theme.liquid`, `templates/`, `config/`, `locales/`) is boilerplate Shopify requires regardless of styling approach.
+**Status:** Active
+
+---
+
+### Tokens Distribution: Copy `tokens.css` into Theme Assets
+
+**Date/Phase:** 2026-04-23 — Phase 4 (Shopify Integration)
+**Context:** Shopify themes can only load CSS files that live in `assets/`. The compiled tokens CSS lives at `packages/tokens/dist/tokens.css`. Some mechanism has to bridge them.
+**Options considered:** (a) Manual copy each time tokens change; (b) Postbuild script in `apps/theme/package.json` that copies on rebuild; (c) Symlink (not supported by Shopify CLI); (d) Inline the tokens as a `{% style %}` block in `theme.liquid`.
+**Decision:** Currently manual copy. Postbuild automation is the [PENDING DECISION] — decision deferred until we hit token churn.
+**Rationale:** Tokens churn is low once the system stabilizes. Manual copy is acceptable for now; revisit if tokens change more than weekly during theme build phase. Symlinks are ruled out — Shopify CLI resolves them as zero-byte files. Inlining as a `{% style %}` block is rejected because it prevents browser caching of `tokens.css` across pageviews.
+**Status:** Active — revisit after first 3 sections are ported.

@@ -1,0 +1,9 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-placeholder",
+      "settings": { "heading": "Activate account", "body": "Activate account placeholder." }
+    }
+  },
+  "order": ["main"]
+}

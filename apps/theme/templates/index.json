@@ -1,0 +1,12 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-placeholder",
+      "settings": {
+        "heading": "Home",
+        "body": "Home template. Sections will be built on the design system."
+      }
+    }
+  },
+  "order": ["main"]
+}

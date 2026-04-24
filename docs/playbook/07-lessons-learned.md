@@ -29,6 +29,9 @@ Every lesson produced a rule. This table collects them all so Claude can scan fo
 | Component CSS changes require library rebuild (`pnpm turbo build --filter=@ds/components --force`) | [css-hot-reload](#css-hot-reload) |
 | Chromatic needs `fetch-depth: 0` in GitHub Actions | [chromatic-fetch-depth](#chromatic-fetch-depth) |
 | Clear Storybook cache after adding any Radix package | [storybook-cache](#storybook-cache) |
+| Always `cd apps/theme` before `shopify theme dev`; never from monorepo root | [shopify-theme-dev-cwd](#shopify-theme-dev-cwd) |
+| `settings_schema.json` `theme_info`: `theme_documentation_url` required; exactly one of `theme_support_email` or `theme_support_url` | [shopify-settings-schema-validation](#shopify-settings-schema-validation) |
+| Transient Shopify CLI SSL errors — retry before debugging | [shopify-cli-ssl](#shopify-cli-ssl) |
 
 ### Token & CSS Rules
 
@@ -272,6 +275,37 @@ Component library: 100% compliance. Docs site: accumulated inline styles over ti
 **Also learned:** Debounce for a single use case (search input) is trivially implemented with `useEffect` + `setTimeout` — no library needed. The cleanup function clears the timer on query change or unmount.
 
 **Rule:** In combobox/autocomplete components, never move DOM focus to options. Use `aria-activedescendant` on the input to reference the visually highlighted option. Focus only returns to the input on Escape or selection. See WAI-ARIA Combobox APG for the canonical pattern.
+
+---
+
+### `shopify theme dev` must run from the theme root {#shopify-theme-dev-cwd}
+
+**What happened:** Ran `shopify theme dev --store=...` from the monorepo root. The CLI syncs the current working directory to the remote dev theme by comparing local vs remote files — files present remotely but absent locally get deleted. The monorepo root has no `layout/theme.liquid` or `config/settings_schema.json`, so the CLI tried to delete the remote originals. Shopify rejects deletion of required files, leaving the dev theme in a half-synced broken state. The browser preview showed Shopify's system 404 instead of our content.
+
+**Also learned:** The `--path=apps/theme` flag is documented but flaky in CLI 3.90.0 — the cleanest path is `cd apps/theme` then run `shopify theme dev` with no `--path`.
+
+**Also learned:** Broken dev themes persist across sessions. The CLI reuses the same `preview_theme_id` on subsequent runs. Once corrupted, the only fix is `shopify theme delete --theme=<id>` and let the CLI create a fresh one.
+
+**Rule:** Always `cd apps/theme` before running `shopify theme dev`. Never run the Shopify CLI from the monorepo root. If a dev session shows `Failed to delete file "layout/theme.liquid"` or similar, stop immediately — the working directory is wrong. When a dev theme is corrupted, `shopify theme list` → identify the `[development] [yours]` theme → `shopify theme delete --theme=<id>` → restart from the correct directory.
+
+---
+
+### Shopify `settings_schema.json` validation quirks {#shopify-settings-schema-validation}
+
+**What happened:** Simplified `config/settings_schema.json` to strip Dawn's exhaustive design settings. Upload failed with escalating validation errors as I fixed each one:
+1. `theme_support_url must be a URL` — empty string `""` fails URL validation; the field must either be a valid URL or omitted.
+2. `theme_info must contain either 'theme_support_email' or 'theme_support_url', but not both` — omitting both also fails; Shopify requires exactly one.
+3. `theme_documentation_url is required` — documentation URL is mandatory, cannot be omitted.
+
+**Rule:** The `theme_info` section of `config/settings_schema.json` has non-obvious requirements: (a) `theme_documentation_url` is **required** and must be a valid URL (not empty string); (b) **exactly one** of `theme_support_email` or `theme_support_url` is required (not both, not neither). Never leave URL fields as empty strings — omit them entirely or provide a real URL.
+
+---
+
+### Shopify CLI transient SSL errors {#shopify-cli-ssl}
+
+**What happened:** Occasional `SSL alert number 20 (bad record mac)` errors when the CLI calls `admin/api/.../graphql.json`. Error is not reproducible — retrying the same command succeeded immediately. Suspect environmental (VPN interference, flaky connection, or TLS stack issue in Node's https module).
+
+**Rule:** Treat `SSL alert number 20` and similar mid-request TLS errors from the Shopify CLI as transient. Retry once before debugging. If it persists across 3 retries, check VPN/proxy and consider upgrading the CLI (`npm install -g @shopify/cli@latest`). Not a code issue — no theme changes required.
 
 ---
 

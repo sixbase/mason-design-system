@@ -1,0 +1,145 @@
+/* ─── Layout Grid System ─────────────────────────────────── */
+/*
+ * 12-column CSS Grid inside a 1200px max-width container.
+ * All spacing values use existing design tokens.
+ *
+ * Container:  1200px max-width, centered, responsive padding
+ * Columns:    12, with var(--spacing-6) (24px) gutters
+ * Sections:   var(--spacing-16) (64px) vertical rhythm
+ *
+ * Gutter rationale: 24px provides clear column separation
+ * at 1200px without consuming excessive content width.
+ * 12 columns × 1fr + 11 gutters × 24px = proportional,
+ * clean divisions for halves, thirds, and quarters.
+ */
+
+/* ─── Page Container ─────────────────────────────────────── */
+
+.ds-page-container {
+  width: 100%;
+  max-width: 1200px;
+  margin-inline: auto;
+  padding-inline: var(--spacing-4);     /* 16px — mobile */
+}
+
+/* @breakpoint-md = 768px */
+@media (min-width: 768px) {
+  .ds-page-container {
+    padding-inline: var(--spacing-8);   /* 32px — tablet */
+  }
+}
+
+/* @breakpoint-lg = 1024px */
+@media (min-width: 1024px) {
+  .ds-page-container {
+    padding-inline: var(--spacing-12);  /* 48px — desktop */
+  }
+}
+
+/* ─── Section Rhythm ─────────────────────────────────────── */
+/*
+ * Every major page section uses this vertical spacing.
+ * --spacing-16 (64px) sits at the upper end of the standard
+ * spacing scale, creating clear visual chapter breaks.
+ */
+
+.ds-section {
+  margin-bottom: var(--spacing-16);     /* 64px — section rhythm */
+}
+
+.ds-section:last-child {
+  margin-bottom: 0;
+}
+
+/* ─── 12-Column Layout Grid ──────────────────────────────── */
+
+.ds-layout {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--spacing-6);               /* 24px — universal gutter */
+}
+
+/* ─── Column Split Variants ──────────────────────────────── */
+
+/* Full width: 12 columns */
+.ds-layout--full > * {
+  grid-column: span 12;
+}
+
+/* Equal halves: 6 + 6 */
+.ds-layout--halves > :first-child  { grid-column: span 6; }
+.ds-layout--halves > :nth-child(2) { grid-column: span 6; }
+
+/* Golden split: 7 + 5 — primary + secondary (7/12 ≈ 0.583) */
+.ds-layout--golden > :first-child  { grid-column: span 7; }
+.ds-layout--golden > :nth-child(2) { grid-column: span 5; }
+
+/* Reverse golden: 5 + 7 — secondary + primary */
+.ds-layout--golden-reverse > :first-child  { grid-column: span 5; }
+.ds-layout--golden-reverse > :nth-child(2) { grid-column: span 7; }
+
+/* Thirds: 4 + 4 + 4 */
+.ds-layout--thirds > * { grid-column: span 4; }
+
+/* Quarters: 3 + 3 + 3 + 3 */
+.ds-layout--quarters > * { grid-column: span 3; }
+
+/* Wide + narrow: 8 + 4 — heavy primary + sidebar */
+.ds-layout--wide-narrow > :first-child  { grid-column: span 8; }
+.ds-layout--wide-narrow > :nth-child(2) { grid-column: span 4; }
+
+/* ─── Span Utility ───────────────────────────────────────── */
+
+.ds-layout__span-all {
+  grid-column: 1 / -1;
+}
+
+/* ─── Sticky Sidebar ─────────────────────────────────────── */
+/* Common pattern for PDP details or cart summary columns */
+
+.ds-layout__sticky {
+  position: sticky;
+  top: var(--spacing-6);
+  align-self: start;
+}
+
+/* ─── Responsive Behavior ────────────────────────────────── */
+/*
+ * Breakpoint collapse rules:
+ *   < 768px  (mobile):  ALL layouts → single column
+ *   768–1023 (tablet):  quarters → 2-up, thirds → 2-up (last wraps)
+ *   ≥ 1024   (desktop): full 12-column grid active
+ *
+ * Gutters step down at smaller breakpoints:
+ *   Desktop: --spacing-6  (24px)
+ *   Tablet:  --spacing-4  (16px)
+ *   Mobile:  --spacing-6  (24px) vertical gap between stacked items
+ */
+
+/* Tablet: 768px – 1023px */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .ds-layout {
+    gap: var(--spacing-4);              /* 16px gutters on tablet */
+  }
+
+  /* Quarters collapse to 2-up on tablet */
+  .ds-layout--quarters > * {
+    grid-column: span 6;
+  }
+
+  /* Thirds collapse to 2-up on tablet (third item wraps) */
+  .ds-layout--thirds > * {
+    grid-column: span 6;
+  }
+}
+
+/* Mobile: below 768px — everything stacks */
+@media (max-width: 767px) {
+  .ds-layout > * {
+    grid-column: 1 / -1 !important;
+  }
+
+  .ds-layout__sticky {
+    position: static;
+  }
+}

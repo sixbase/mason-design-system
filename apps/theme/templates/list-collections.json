@@ -1,0 +1,12 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-placeholder",
+      "settings": {
+        "heading": "Collections",
+        "body": "List collections placeholder."
+      }
+    }
+  },
+  "order": ["main"]
+}

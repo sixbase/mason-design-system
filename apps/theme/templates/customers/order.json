@@ -1,0 +1,9 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-placeholder",
+      "settings": { "heading": "Order", "body": "Order placeholder." }
+    }
+  },
+  "order": ["main"]
+}

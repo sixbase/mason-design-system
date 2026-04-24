@@ -1,0 +1,12 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-placeholder",
+      "settings": {
+        "heading": "Contact",
+        "body": "Contact page placeholder."
+      }
+    }
+  },
+  "order": ["main"]
+}

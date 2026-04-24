@@ -1,0 +1,12 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-placeholder",
+      "settings": {
+        "heading": "Blog",
+        "body": "Blog template placeholder."
+      }
+    }
+  },
+  "order": ["main"]
+}
