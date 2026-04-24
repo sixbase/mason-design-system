@@ -16,12 +16,6 @@
   font-family: var(--font-family-body);
 }
 
-/* ─── Size: sm ───────────────────────────────────────────── */
-.ds-variant-selector--sm {
-  --variant-selector-gap: var(--spacing-4);
-  --variant-selector-group-gap: var(--spacing-2);
-}
-
 /* ─── Option group ───────────────────────────────────────── */
 .ds-variant-selector__group {
   display: flex;

@@ -76,10 +76,6 @@
   gap: var(--cf-gap);
 }
 
-.ds-collection-filters__header {
-  margin-bottom: var(--spacing-2);
-}
-
 /* ─── Clear row ───────────────────────────────────────── */
 .ds-collection-filters__clear-row {
   display: flex;
@@ -272,11 +268,6 @@
 
 .ds-collection-filters__price-apply {
   align-self: flex-start;
-}
-
-/* ─── Form wrapping (price range + list uses GET form) ── */
-.ds-collection-filters__form {
-  display: contents;
 }
 
 /* ─── Mobile drawer (<details>-driven) ────────────────── */

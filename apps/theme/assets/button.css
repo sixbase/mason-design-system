@@ -129,20 +129,6 @@
   pointer-events: none;
 }
 
-.ds-button__spinner {
-  width: 1em;
-  height: 1em;
-  border: var(--border-width-lg) solid currentColor;
-  border-right-color: transparent;
-  border-radius: var(--radius-full);
-  animation: ds-button-spin 0.65s linear infinite;
-  flex-shrink: 0;
-}
-
-@keyframes ds-button-spin {
-  to { transform: rotate(360deg); }
-}
-
 /* ─── Icon-only variant ─────────────────────────────────── */
 .ds-button--icon-only { padding: 0; }
 .ds-button--icon-only.ds-button--sm  { width: var(--size-control-sm); }
@@ -165,13 +151,7 @@
 }
 
 /* ─── Reduced motion ───────────────────────────────────── */
-/* Placed last so cascade order wins over @supports fallback
-   at equal specificity. No !important needed. */
 @media (prefers-reduced-motion: reduce) {
-  .ds-button__spinner {
-    animation: none;
-    opacity: 0.5;
-  }
   .ds-button:active:not(:disabled) {
     transform: none;
   }
