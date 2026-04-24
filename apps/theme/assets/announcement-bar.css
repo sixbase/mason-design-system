@@ -1,0 +1,91 @@
+/* ─── Announcement bar ────────────────────────────────────── */
+/*
+ * Thin banner above the header. Inverse colours so it reads as
+ * distinct chrome from the main header. Dismissible via a session
+ * cookie set by the section's inline script — no persistent storage.
+ */
+.ds-announcement-bar {
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+.ds-announcement-bar[hidden] {
+  display: none;
+}
+
+.ds-announcement-bar__inner {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-10);
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .ds-announcement-bar__inner {
+    padding: var(--spacing-2) var(--spacing-12);
+  }
+}
+
+.ds-announcement-bar__message {
+  color: var(--color-primary-foreground);
+  max-width: none;
+}
+
+.ds-announcement-bar__link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: var(--spacing-1);
+  transition: opacity var(--transition-fast);
+}
+
+.ds-announcement-bar__link:hover {
+  opacity: var(--opacity-high);
+}
+
+.ds-announcement-bar__link:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-sm);
+}
+
+/* ─── Dismiss button ──────────────────────────────────────── */
+.ds-announcement-bar__dismiss {
+  position: absolute;
+  top: 50%;
+  right: var(--spacing-2);
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--spacing-6);
+  height: var(--spacing-6);
+  border: none;
+  background: none;
+  color: var(--color-primary-foreground);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding: 0;
+  transition: background-color var(--transition-fast);
+}
+
+.ds-announcement-bar__dismiss:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.ds-announcement-bar__dismiss:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* ─── Reduced motion ──────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .ds-announcement-bar__link,
+  .ds-announcement-bar__dismiss {
+    transition: none;
+  }
+}

@@ -1,9 +1,97 @@
-{%- comment -%} Stub — Stream A will replace with the full announcement bar section. {%- endcomment -%}
+{{ 'announcement-bar.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign message = section.settings.message
+  assign link_url = section.settings.link_url
+  assign dismissible = section.settings.dismissible
+-%}
+
+{%- if message != blank -%}
+  <aside
+    class="ds-announcement-bar"
+    data-announcement-bar
+    data-announcement-id="{{ section.id }}"
+    role="region"
+    aria-label="Store announcement"
+  >
+    <div class="ds-announcement-bar__inner">
+      {%- if link_url != blank -%}
+        <a href="{{ link_url }}" class="ds-announcement-bar__link">
+          <span class="ds-text ds-text--sm ds-announcement-bar__message">{{ message | escape }}</span>
+        </a>
+      {%- else -%}
+        <span class="ds-text ds-text--sm ds-announcement-bar__message">{{ message | escape }}</span>
+      {%- endif -%}
+
+      {%- if dismissible -%}
+        <button
+          type="button"
+          class="ds-announcement-bar__dismiss"
+          aria-label="Dismiss announcement"
+          data-announcement-dismiss
+        >
+          {% render 'icon', name: 'close', size: 'sm' %}
+        </button>
+      {%- endif -%}
+    </div>
+  </aside>
+
+  {%- if dismissible -%}
+    <script>
+      (function () {
+        var bar = document.querySelector('[data-announcement-bar]');
+        if (!bar) return;
+
+        var id = bar.getAttribute('data-announcement-id');
+        var cookieName = 'ds-announcement-dismissed-' + id;
+
+        function readCookie(name) {
+          var match = document.cookie.match(
+            new RegExp('(?:^|; )' + name.replace(/([.$?*|{}()\[\]\\\/\+^])/g, '\\$1') + '=([^;]*)')
+          );
+          return match ? decodeURIComponent(match[1]) : null;
+        }
+
+        if (readCookie(cookieName) === '1') {
+          bar.hidden = true;
+          return;
+        }
+
+        var dismiss = bar.querySelector('[data-announcement-dismiss]');
+        if (!dismiss) return;
+
+        dismiss.addEventListener('click', function () {
+          bar.hidden = true;
+          // Session cookie: no Expires/Max-Age — cleared when browser closes.
+          document.cookie = cookieName + '=1; path=/; SameSite=Lax';
+        });
+      })();
+    </script>
+  {%- endif -%}
+{%- endif -%}
 
 {% schema %}
 {
   "name": "Announcement bar",
-  "settings": [],
+  "settings": [
+    {
+      "type": "text",
+      "id": "message",
+      "label": "Message",
+      "default": "Free shipping on orders over $50."
+    },
+    {
+      "type": "url",
+      "id": "link_url",
+      "label": "Link (optional)"
+    },
+    {
+      "type": "checkbox",
+      "id": "dismissible",
+      "label": "Allow visitors to dismiss",
+      "default": true
+    }
+  ],
   "presets": [{ "name": "Announcement bar" }]
 }
 {% endschema %}

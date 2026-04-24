@@ -1,9 +1,431 @@
-{%- comment -%} Stub — Stream B will replace with the full footer section. {%- endcomment -%}
+{{ 'footer.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign current_year = 'now' | date: '%Y'
+  assign copyright_text = section.settings.copyright_text
+  if copyright_text == blank
+    assign copyright_text = '© ' | append: current_year | append: ' ' | append: shop.name | append: '. All rights reserved.'
+  endif
+-%}
+
+<footer class="ds-footer" role="contentinfo">
+  <div class="ds-footer__inner">
+    <div class="ds-footer__grid">
+      {%- comment -%} Brand column: logo, heading, tagline {%- endcomment -%}
+      <div class="ds-footer__brand">
+        {%- if section.settings.logo != blank -%}
+          <a href="{{ routes.root_url }}" class="ds-footer__logo" aria-label="{{ shop.name | escape }}">
+            <img
+              src="{{ section.settings.logo | image_url: width: 320 }}"
+              srcset="{{ section.settings.logo | image_url: width: 160 }} 160w, {{ section.settings.logo | image_url: width: 320 }} 320w"
+              sizes="160px"
+              width="{{ section.settings.logo.width }}"
+              height="{{ section.settings.logo.height }}"
+              loading="lazy"
+              alt="{{ shop.name | escape }}"
+              class="ds-footer__logo-img"
+            >
+          </a>
+        {%- else -%}
+          <a href="{{ routes.root_url }}" class="ds-footer__logo" aria-label="{{ shop.name | escape }}">
+            <span class="ds-footer__heading-text">{{ shop.name }}</span>
+          </a>
+        {%- endif -%}
+
+        {%- if section.settings.heading != blank -%}
+          <p class="ds-footer__heading-text">{{ section.settings.heading | escape }}</p>
+        {%- endif -%}
+
+        {%- if section.settings.tagline != blank -%}
+          <p class="ds-footer__tagline">{{ section.settings.tagline | escape }}</p>
+        {%- endif -%}
+      </div>
+
+      {%- comment -%} Link columns 1–4 {%- endcomment -%}
+      {%- for i in (1..4) -%}
+        {%- assign heading_key = 'column_' | append: i | append: '_heading' -%}
+        {%- assign menu_key    = 'column_' | append: i | append: '_menu' -%}
+        {%- assign column_heading = section.settings[heading_key] -%}
+        {%- assign column_menu    = section.settings[menu_key] -%}
+        {%- if column_menu != blank and linklists[column_menu].links.size > 0 -%}
+          <div class="ds-footer__column">
+            {%- if column_heading != blank -%}
+              <h2 class="ds-footer__heading">{{ column_heading | escape }}</h2>
+            {%- else -%}
+              <h2 class="ds-footer__heading">{{ linklists[column_menu].title | escape }}</h2>
+            {%- endif -%}
+            <ul class="ds-footer__links">
+              {%- for link in linklists[column_menu].links -%}
+                <li>
+                  <a href="{{ link.url }}"{% if link.current %} aria-current="page"{% endif %}>
+                    {{- link.title | escape -}}
+                  </a>
+                </li>
+              {%- endfor -%}
+            </ul>
+          </div>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+
+    {%- comment -%} Newsletter signup {%- endcomment -%}
+    {%- if section.settings.newsletter_heading != blank or section.settings.newsletter_body != blank -%}
+      <div class="ds-footer__newsletter">
+        <div class="ds-footer__newsletter-copy">
+          {%- if section.settings.newsletter_heading != blank -%}
+            <h2 class="ds-footer__newsletter-heading">{{ section.settings.newsletter_heading | escape }}</h2>
+          {%- endif -%}
+          {%- if section.settings.newsletter_body != blank -%}
+            <p class="ds-footer__newsletter-body">{{ section.settings.newsletter_body | escape }}</p>
+          {%- endif -%}
+        </div>
+
+        {%- form 'customer', class: 'ds-footer__newsletter-form', id: 'footer-newsletter' -%}
+          <input type="hidden" name="contact[tags]" value="newsletter">
+          <input type="hidden" name="contact[accepts_marketing]" value="true">
+
+          <label for="footer-newsletter-email" class="visually-hidden">
+            {{ section.settings.newsletter_placeholder | default: 'Email address' | escape }}
+          </label>
+
+          <div class="ds-footer__newsletter-row">
+            <input
+              id="footer-newsletter-email"
+              type="email"
+              name="contact[email]"
+              class="ds-input-field ds-input-field--md"
+              placeholder="{{ section.settings.newsletter_placeholder | default: 'Email address' | escape }}"
+              autocomplete="email"
+              autocorrect="off"
+              autocapitalize="off"
+              spellcheck="false"
+              required
+              {% if form.errors %}aria-invalid="true" aria-describedby="footer-newsletter-errors"{% endif %}
+              value="{{ form.email }}"
+            >
+            <button type="submit" class="ds-button ds-button--primary ds-button--md" name="commit">
+              {{ section.settings.newsletter_button_label | default: 'Subscribe' | escape }}
+            </button>
+          </div>
+
+          {%- if form.posted_successfully? -%}
+            <p class="ds-footer__newsletter-success" role="status">
+              {{ 'general.newsletter_form.confirmation' | t | default: 'Thanks for subscribing.' }}
+            </p>
+          {%- endif -%}
+
+          {%- if form.errors -%}
+            <ul
+              id="footer-newsletter-errors"
+              class="ds-footer__newsletter-errors"
+              role="alert"
+            >
+              {%- for field in form.errors -%}
+                <li>
+                  {%- if field == 'form' -%}
+                    {{ form.errors.messages[field] }}
+                  {%- else -%}
+                    {{ form.errors.translated_fields[field] | capitalize }}
+                    {{ form.errors.messages[field] }}
+                  {%- endif -%}
+                </li>
+              {%- endfor -%}
+            </ul>
+          {%- endif -%}
+        {%- endform -%}
+      </div>
+    {%- endif -%}
+
+    {%- comment -%} Bottom strip: copyright, social, payments {%- endcomment -%}
+    <div class="ds-footer__bottom">
+      <p class="ds-footer__copyright">{{ copyright_text | escape }}</p>
+
+      {%- assign has_social =
+        section.settings.twitter_url
+        | append: section.settings.instagram_url
+        | append: section.settings.facebook_url
+        | append: section.settings.youtube_url
+        | append: section.settings.tiktok_url
+      -%}
+      {%- if has_social != '' -%}
+        <ul class="ds-footer__social" aria-label="Social media">
+          {%- if section.settings.instagram_url != blank -%}
+            <li>
+              <a href="{{ section.settings.instagram_url }}" rel="noopener" target="_blank" aria-label="Instagram">
+                <svg
+                  class="ds-icon ds-icon--md"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="5" ry="5"/>
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+                </svg>
+              </a>
+            </li>
+          {%- endif -%}
+
+          {%- if section.settings.twitter_url != blank -%}
+            <li>
+              <a href="{{ section.settings.twitter_url }}" rel="noopener" target="_blank" aria-label="Twitter">
+                <svg
+                  class="ds-icon ds-icon--md"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M22 4.01c-1 .49-1.98.689-3 .99-1.121-1.265-2.783-1.335-4.38-.737S11.977 6.323 12 8v1c-3.245.083-6.135-1.395-8-4 0 0-4.182 7.433 4 11-1.872 1.247-3.739 2.088-6 2 3.308 1.803 6.913 2.423 10.034 1.517 3.58-1.04 6.522-3.723 7.651-7.742a13.84 13.84 0 0 0 .497-3.753c0-.249 1.51-2.772 1.818-4.013z"/>
+                </svg>
+              </a>
+            </li>
+          {%- endif -%}
+
+          {%- if section.settings.facebook_url != blank -%}
+            <li>
+              <a href="{{ section.settings.facebook_url }}" rel="noopener" target="_blank" aria-label="Facebook">
+                <svg
+                  class="ds-icon ds-icon--md"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+                </svg>
+              </a>
+            </li>
+          {%- endif -%}
+
+          {%- if section.settings.youtube_url != blank -%}
+            <li>
+              <a href="{{ section.settings.youtube_url }}" rel="noopener" target="_blank" aria-label="YouTube">
+                <svg
+                  class="ds-icon ds-icon--md"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/>
+                  <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/>
+                </svg>
+              </a>
+            </li>
+          {%- endif -%}
+
+          {%- if section.settings.tiktok_url != blank -%}
+            <li>
+              <a href="{{ section.settings.tiktok_url }}" rel="noopener" target="_blank" aria-label="TikTok">
+                <svg
+                  class="ds-icon ds-icon--md"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M15 3v10.5a3.5 3.5 0 1 1-3.5-3.5"/>
+                  <path d="M15 3c0 2.5 2 4.5 4.5 4.5"/>
+                </svg>
+              </a>
+            </li>
+          {%- endif -%}
+        </ul>
+      {%- endif -%}
+
+      {%- if section.settings.show_payment_icons and shop.enabled_payment_types.size > 0 -%}
+        <ul class="ds-footer__payments" aria-label="Accepted payment methods">
+          {%- for type in shop.enabled_payment_types -%}
+            <li>
+              {{ type | payment_type_svg_tag: class: 'ds-footer__payment-icon' }}
+            </li>
+          {%- endfor -%}
+        </ul>
+      {%- endif -%}
+    </div>
+  </div>
+</footer>
 
 {% schema %}
 {
   "name": "Footer",
-  "settings": [],
+  "settings": [
+    {
+      "type": "header",
+      "content": "Brand"
+    },
+    {
+      "type": "image_picker",
+      "id": "logo",
+      "label": "Logo"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading"
+    },
+    {
+      "type": "text",
+      "id": "tagline",
+      "label": "Tagline"
+    },
+
+    {
+      "type": "header",
+      "content": "Link column 1"
+    },
+    {
+      "type": "text",
+      "id": "column_1_heading",
+      "label": "Heading"
+    },
+    {
+      "type": "link_list",
+      "id": "column_1_menu",
+      "label": "Menu"
+    },
+
+    {
+      "type": "header",
+      "content": "Link column 2"
+    },
+    {
+      "type": "text",
+      "id": "column_2_heading",
+      "label": "Heading"
+    },
+    {
+      "type": "link_list",
+      "id": "column_2_menu",
+      "label": "Menu"
+    },
+
+    {
+      "type": "header",
+      "content": "Link column 3"
+    },
+    {
+      "type": "text",
+      "id": "column_3_heading",
+      "label": "Heading"
+    },
+    {
+      "type": "link_list",
+      "id": "column_3_menu",
+      "label": "Menu"
+    },
+
+    {
+      "type": "header",
+      "content": "Link column 4"
+    },
+    {
+      "type": "text",
+      "id": "column_4_heading",
+      "label": "Heading"
+    },
+    {
+      "type": "link_list",
+      "id": "column_4_menu",
+      "label": "Menu"
+    },
+
+    {
+      "type": "header",
+      "content": "Newsletter"
+    },
+    {
+      "type": "text",
+      "id": "newsletter_heading",
+      "label": "Heading"
+    },
+    {
+      "type": "textarea",
+      "id": "newsletter_body",
+      "label": "Body"
+    },
+    {
+      "type": "text",
+      "id": "newsletter_placeholder",
+      "label": "Email placeholder",
+      "default": "Email address"
+    },
+    {
+      "type": "text",
+      "id": "newsletter_button_label",
+      "label": "Button label",
+      "default": "Subscribe"
+    },
+
+    {
+      "type": "header",
+      "content": "Social links"
+    },
+    {
+      "type": "url",
+      "id": "twitter_url",
+      "label": "Twitter URL"
+    },
+    {
+      "type": "url",
+      "id": "instagram_url",
+      "label": "Instagram URL"
+    },
+    {
+      "type": "url",
+      "id": "facebook_url",
+      "label": "Facebook URL"
+    },
+    {
+      "type": "url",
+      "id": "youtube_url",
+      "label": "YouTube URL"
+    },
+    {
+      "type": "url",
+      "id": "tiktok_url",
+      "label": "TikTok URL"
+    },
+
+    {
+      "type": "header",
+      "content": "Bottom strip"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_payment_icons",
+      "label": "Show payment method icons",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "copyright_text",
+      "label": "Copyright text",
+      "info": "Leave blank to auto-generate from shop name and current year."
+    }
+  ],
   "presets": [{ "name": "Footer" }]
 }
 {% endschema %}

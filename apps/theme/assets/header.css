@@ -1,0 +1,203 @@
+/* ─── Skip-to-content link ────────────────────────────────── */
+/*
+ * Visible only on keyboard focus. Pinned to the top-left once
+ * focused so a sighted keyboard user sees it clearly.
+ */
+.ds-header__skip-link {
+  position: absolute;
+  top: var(--spacing-2);
+  left: var(--spacing-2);
+  z-index: 100;
+  padding: var(--spacing-2) var(--spacing-3);
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  border-radius: var(--radius-md);
+  transform: translateY(-200%);
+  transition: transform var(--transition-fast);
+}
+
+.ds-header__skip-link:focus,
+.ds-header__skip-link:focus-visible {
+  transform: translateY(0);
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* ─── Header shell ────────────────────────────────────────── */
+.ds-header {
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-background);
+}
+
+.ds-header__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-4);
+  gap: var(--spacing-4);
+}
+
+@media (min-width: 768px) {
+  .ds-header__inner {
+    padding: var(--spacing-4) var(--spacing-8);
+  }
+}
+
+@media (min-width: 1024px) {
+  .ds-header__inner {
+    padding: var(--spacing-4) var(--spacing-12);
+  }
+}
+
+/* ─── Logo ────────────────────────────────────────────────── */
+.ds-header__logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.ds-header__logo:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-md);
+}
+
+.ds-header__logo-img {
+  display: block;
+  height: var(--spacing-5);
+  width: auto;
+  color: var(--color-foreground);
+}
+
+/* Text fallback when no logo image is set */
+.ds-header__logo-text {
+  color: var(--color-foreground);
+}
+
+/* ─── Nav ─────────────────────────────────────────────────── */
+.ds-header__nav {
+  display: none;
+  gap: var(--spacing-6);
+}
+
+@media (min-width: 768px) {
+  .ds-header__nav {
+    display: flex;
+  }
+}
+
+.ds-header__nav a {
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-sm);
+  color: var(--color-foreground-subtle);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.ds-header__nav a:hover {
+  color: var(--color-foreground);
+}
+
+.ds-header__nav a[aria-current='page'] {
+  color: var(--color-foreground);
+}
+
+.ds-header__nav a:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-sm);
+}
+
+/* ─── Actions ─────────────────────────────────────────────── */
+.ds-header__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+}
+
+.ds-header__icon-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-touch-target, 36px);
+  height: var(--size-touch-target, 36px);
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--color-foreground);
+  border-radius: var(--radius-md);
+  transition: background-color var(--transition-fast);
+  padding: 0;
+  text-decoration: none;
+
+  /* Optical centering: trim em-box to cap height + baseline */
+  text-box-trim: both;
+  text-box-edge: cap alphabetic;
+}
+
+.ds-header__icon-btn:hover {
+  background-color: var(--color-background-subtle);
+}
+
+.ds-header__icon-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* ─── Cart count badge ────────────────────────────────────── */
+/*
+ * Consumes the .ds-badge primitive. Positioned over the cart icon's
+ * top-right corner. Uses negative insets scaled from spacing tokens
+ * so the badge nudges just outside the icon's bounding box.
+ */
+.ds-header__cart-count {
+  position: absolute;
+  top: calc(var(--spacing-1) * -0.5);
+  right: calc(var(--spacing-1) * -0.5);
+  min-width: var(--spacing-4);
+  height: var(--spacing-4);
+  padding: 0 var(--spacing-1);
+  font-size: var(--font-size-xs);
+  pointer-events: none;
+}
+
+/* ─── Theme toggle icon visibility ────────────────────────── */
+.ds-header__theme-icon--moon {
+  display: none;
+}
+
+.dark .ds-header__theme-icon--sun {
+  display: none;
+}
+
+.dark .ds-header__theme-icon--moon {
+  display: block;
+}
+
+/* Invert logo in dark mode (SVG loaded as <img> can't use currentColor) */
+.dark .ds-header__logo-img {
+  filter: invert(1);
+}
+
+/* ─── Reduced motion ──────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .ds-header__skip-link,
+  .ds-header__nav a,
+  .ds-header__icon-btn {
+    transition: none;
+  }
+}
+
+/* ─── Optical centering fallback ─────────────────────────── */
+@supports not (text-box-trim: both) {
+  .ds-header__icon-btn {
+    transform: translateY(0.05em);
+  }
+}

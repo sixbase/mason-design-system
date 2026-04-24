@@ -1,0 +1,316 @@
+/* ─────────────────────────────────────────────────────────────
+ * Footer — ported from packages/components/src/footer/Footer.css
+ * BEM classes preserved; Shopify-only additions: newsletter form,
+ * social links, payment icons row. Every value is a token.
+ * ───────────────────────────────────────────────────────────── */
+
+.ds-footer {
+  font-family: var(--font-family-body);
+  border-top: 1px solid var(--color-border);
+  margin-top: var(--spacing-16);
+}
+
+.ds-footer__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--spacing-12) var(--spacing-4) var(--spacing-8);
+}
+
+@media (min-width: 768px) {
+  .ds-footer__inner {
+    padding: var(--spacing-12) var(--spacing-8) var(--spacing-8);
+  }
+}
+
+@media (min-width: 1024px) {
+  .ds-footer__inner {
+    padding: var(--spacing-16) var(--spacing-12) var(--spacing-8);
+  }
+}
+
+/* ─── Top grid: brand + link columns ──────────────────────── */
+.ds-footer__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-8);
+}
+
+@media (min-width: 768px) {
+  .ds-footer__grid {
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: var(--spacing-8);
+  }
+}
+
+/* ─── Brand column ────────────────────────────────────────── */
+.ds-footer__brand {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.ds-footer__logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.ds-footer__logo-img {
+  display: block;
+  height: var(--spacing-5);
+  width: auto;
+  color: var(--color-foreground);
+}
+
+.dark .ds-footer__logo-img {
+  filter: invert(1);
+}
+
+.ds-footer__heading-text {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-foreground);
+  line-height: var(--line-height-tight);
+  margin: 0;
+}
+
+.ds-footer__tagline {
+  font-size: var(--font-size-sm);
+  color: var(--color-foreground-subtle);
+  margin-top: var(--spacing-2);
+  line-height: var(--line-height-relaxed);
+  max-width: 65ch;
+}
+
+/* ─── Link columns ────────────────────────────────────────── */
+.ds-footer .ds-footer__heading {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-foreground);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wider);
+  margin: 0 0 var(--spacing-3) 0;
+}
+
+.ds-footer__links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.ds-footer__links a {
+  font-size: var(--font-size-sm);
+  color: var(--color-foreground-subtle);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.ds-footer__links a:hover {
+  color: var(--color-foreground);
+}
+
+.ds-footer__links a:focus-visible {
+  outline: none;
+  color: var(--color-foreground);
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-sm);
+}
+
+/* ─── Newsletter ──────────────────────────────────────────── */
+.ds-footer__newsletter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-10);
+  padding-top: var(--spacing-8);
+  border-top: 1px solid var(--color-border);
+}
+
+@media (min-width: 768px) {
+  .ds-footer__newsletter {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--spacing-8);
+  }
+}
+
+.ds-footer__newsletter-copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  max-width: 65ch;
+}
+
+.ds-footer__newsletter-heading {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-foreground);
+  line-height: var(--line-height-tight);
+  margin: 0;
+}
+
+.ds-footer__newsletter-body {
+  font-size: var(--font-size-sm);
+  color: var(--color-foreground-subtle);
+  line-height: var(--line-height-relaxed);
+  margin: 0;
+  max-width: 65ch;
+}
+
+.ds-footer__newsletter-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .ds-footer__newsletter-form {
+    /* 26rem ≈ 416px — Fibonacci-aligned (phi-21 × ~10) max width for the form column */
+    max-width: 26rem;
+  }
+}
+
+.ds-footer__newsletter-row {
+  display: flex;
+  gap: var(--spacing-2);
+  width: 100%;
+}
+
+.ds-footer__newsletter-row .ds-input-field {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ds-footer__newsletter-success {
+  font-size: var(--font-size-sm);
+  color: var(--color-foreground);
+  margin: 0;
+}
+
+.ds-footer__newsletter-errors {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-destructive);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+/* ─── Bottom strip: copyright + social + payment ──────────── */
+.ds-footer__bottom {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  margin-top: var(--spacing-12);
+  padding-top: var(--spacing-6);
+  border-top: 1px solid var(--color-border);
+}
+
+@media (min-width: 768px) {
+  .ds-footer__bottom {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-8);
+  }
+}
+
+.ds-footer__copyright {
+  font-size: var(--font-size-xs);
+  color: var(--color-foreground-subtle);
+  margin: 0;
+}
+
+.ds-footer__legal {
+  display: flex;
+  gap: var(--spacing-4);
+  flex-wrap: wrap;
+}
+
+.ds-footer__legal a {
+  font-size: var(--font-size-xs);
+  color: var(--color-foreground-subtle);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.ds-footer__legal a:hover {
+  color: var(--color-foreground);
+}
+
+.ds-footer__legal a:focus-visible {
+  outline: none;
+  color: var(--color-foreground);
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-sm);
+}
+
+/* ─── Social links ────────────────────────────────────────── */
+.ds-footer__social {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ds-footer__social a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-control-sm);
+  height: var(--size-control-sm);
+  color: var(--color-foreground-subtle);
+  border-radius: var(--radius-full);
+  text-decoration: none;
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.ds-footer__social a:hover {
+  color: var(--color-foreground);
+  background-color: var(--color-background-subtle);
+}
+
+.ds-footer__social a:focus-visible {
+  outline: none;
+  color: var(--color-foreground);
+  box-shadow: var(--focus-ring);
+}
+
+/* ─── Payment icons ───────────────────────────────────────── */
+.ds-footer__payments {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex-wrap: wrap;
+}
+
+.ds-footer__payments img,
+.ds-footer__payments svg {
+  display: block;
+  height: var(--spacing-5);
+  width: auto;
+  opacity: var(--opacity-high);
+}
+
+/* ─── Reduced motion ──────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .ds-footer__links a,
+  .ds-footer__legal a,
+  .ds-footer__social a {
+    transition: none;
+  }
+}
