@@ -10,7 +10,7 @@
   assign align = section.settings.text_align
 -%}
 
-<section class="ds-hero ds-hero--align-{{ align }}">
+<section class="ds-hero ds-hero--align-{{ align }}{% if image != blank %} ds-hero--has-image{% endif %}">
   {%- if image != blank -%}
     <div class="ds-hero__media">
       {% render 'responsive-image',

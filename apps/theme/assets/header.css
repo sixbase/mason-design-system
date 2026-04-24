@@ -75,9 +75,16 @@
   color: var(--color-foreground);
 }
 
-/* Text fallback when no logo image is set */
+/* Text fallback when no logo image is set — render as a wordmark,
+   not a generic heading: compact, tracked, caps. */
 .ds-header__logo-text {
   color: var(--color-foreground);
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 /* ─── Nav ─────────────────────────────────────────────────── */

@@ -5,8 +5,15 @@
   min-height: 60vh;
   display: flex;
   align-items: flex-end;
-  color: var(--color-primary-foreground);
+  color: var(--color-foreground);
   overflow: hidden;
+  background-color: var(--color-background-subtle);
+}
+
+/* When a background image is set, text and overlays lean darker —
+   flip the foreground to primary-foreground for contrast. */
+.ds-hero--has-image {
+  color: var(--color-primary-foreground);
   background-color: var(--color-primary);
 }
 
