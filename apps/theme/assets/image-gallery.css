@@ -62,22 +62,6 @@
   position: relative;
 }
 
-/* ─── Stacked layout (no thumbnails; all images rendered) ─ */
-.ds-image-gallery--stacked {
-  gap: var(--spacing-3);
-}
-
-.ds-image-gallery--stacked .ds-image-gallery__main {
-  aspect-ratio: auto;
-}
-
-.ds-image-gallery--stacked .ds-image-gallery__stack-item {
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  background-color: var(--color-background-subtle);
-  aspect-ratio: var(--gallery-ratio, 4/5);
-}
-
 /* ─── Thumbnails ─────────────────────────────────────────── */
 .ds-image-gallery__thumbs {
   display: flex;

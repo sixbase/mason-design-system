@@ -220,20 +220,3 @@
   }
 }
 
-/* ─── Large variant ──────────────────────────────────── */
-.ds-product-card--lg {
-  --card-radius: var(--radius-lg);
-}
-
-.ds-product-card--lg .ds-card-body {
-  gap: var(--spacing-phi-2);
-  padding: var(--spacing-phi-5) 0 0 0;
-}
-
-.ds-product-card--lg .ds-product-card__name {
-  font-size: var(--font-size-base);
-}
-
-.ds-product-card--lg .ds-product-card__price {
-  font-size: var(--font-size-base);
-}

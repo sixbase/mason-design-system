@@ -115,24 +115,6 @@
   transform: scale(0.98);
 }
 
-/* ─── Variant: destructive ──────────────────────────────── */
-.ds-button--destructive {
-  background-color: var(--color-destructive);
-  color: var(--color-destructive-foreground);
-  border-color: var(--color-destructive);
-}
-
-.ds-button--destructive:hover:not(:disabled) {
-  background-color: var(--color-destructive-hover);
-  border-color: var(--color-destructive-hover);
-}
-
-.ds-button--destructive:active:not(:disabled) {
-  background-color: var(--color-destructive-active);
-  border-color: var(--color-destructive-active);
-  transform: scale(0.98);
-}
-
 /* ─── Disabled state ────────────────────────────────────── */
 .ds-button:disabled,
 .ds-button[aria-disabled="true"] {

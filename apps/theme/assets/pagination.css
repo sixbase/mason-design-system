@@ -46,13 +46,7 @@
   color: var(--color-primary-foreground);
 }
 
-/* Current page sizes — match button icon-only dimensions */
-.ds-pagination__page--sm {
-  width: var(--size-control-sm);
-  height: var(--size-control-sm);
-  font-size: var(--font-size-sm);
-}
-
+/* Current page size — match button icon-only dimensions (md). */
 .ds-pagination__page--md {
   width: var(--size-control-md);
   height: var(--size-control-md);
@@ -70,11 +64,6 @@
   user-select: none;
   font-family: var(--font-family-body);
   font-size: var(--font-size-sm);
-}
-
-.ds-pagination--sm .ds-pagination__ellipsis {
-  width: var(--size-control-sm);
-  height: var(--size-control-sm);
 }
 
 /* Default (md) pagination size — base sizing already on .ds-pagination. */

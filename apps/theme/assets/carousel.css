@@ -1,4 +1,8 @@
 /* ─── Carousel ──────────────────────────────────────────── */
+/* Only the variants emitted by theme templates are shipped:
+   .ds-carousel--gap-md (featured-collection) and
+   .ds-carousel__slide--sm (product-card slides). */
+
 .ds-carousel {
   overflow: hidden;
 }
@@ -11,17 +15,8 @@
   padding-bottom: var(--spacing-2);
 }
 
-/* Gap variants */
-.ds-carousel--gap-sm .ds-carousel__track {
-  gap: var(--spacing-2);
-}
-
 .ds-carousel--gap-md .ds-carousel__track {
   gap: var(--spacing-3);
-}
-
-.ds-carousel--gap-lg .ds-carousel__track {
-  gap: var(--spacing-4);
 }
 
 /* ─── Slide ─────────────────────────────────────────────── */
@@ -30,7 +25,6 @@
   scroll-snap-align: start;
 }
 
-/* sm: narrow slides */
 .ds-carousel__slide--sm {
   flex-basis: 70%;
 }
@@ -44,39 +38,5 @@
 @media (min-width: 1024px) {
   .ds-carousel__slide--sm {
     flex-basis: 33.333%;
-  }
-}
-
-/* md: default slides */
-.ds-carousel__slide--md {
-  flex-basis: 85%;
-}
-
-@media (min-width: 768px) {
-  .ds-carousel__slide--md {
-    flex-basis: 65%;
-  }
-}
-
-@media (min-width: 1024px) {
-  .ds-carousel__slide--md {
-    flex-basis: 50%;
-  }
-}
-
-/* lg: wide slides */
-.ds-carousel__slide--lg {
-  flex-basis: 95%;
-}
-
-@media (min-width: 768px) {
-  .ds-carousel__slide--lg {
-    flex-basis: 80%;
-  }
-}
-
-@media (min-width: 1024px) {
-  .ds-carousel__slide--lg {
-    flex-basis: 66.666%;
   }
 }

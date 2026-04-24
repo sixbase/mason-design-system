@@ -38,17 +38,7 @@
   color: var(--color-foreground-subtle);
 }
 
-/* ─── Size: sm ──────────────────────────────────────────── */
-.ds-star-rating--sm .ds-star-rating__star {
-  width: var(--font-size-sm);
-  height: var(--font-size-sm);
-}
-
-.ds-star-rating--sm .ds-star-rating__count {
-  font-size: var(--font-size-xs);
-}
-
-/* ─── Size: md ──────────────────────────────────────────── */
+/* ─── Size: md (default) ────────────────────────────────── */
 .ds-star-rating--md .ds-star-rating__star {
   width: var(--size-icon);
   height: var(--size-icon);
@@ -56,14 +46,4 @@
 
 .ds-star-rating--md .ds-star-rating__count {
   font-size: var(--font-size-sm);
-}
-
-/* ─── Size: lg ──────────────────────────────────────────── */
-.ds-star-rating--lg .ds-star-rating__star {
-  width: var(--spacing-5);
-  height: var(--spacing-5);
-}
-
-.ds-star-rating--lg .ds-star-rating__count {
-  font-size: var(--font-size-base);
 }

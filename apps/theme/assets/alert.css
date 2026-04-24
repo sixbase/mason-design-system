@@ -31,12 +31,6 @@
 
 /* ─── Variants ──────────────────────────────────────────── */
 
-.ds-alert--info {
-  --alert-bg: var(--color-info-subtle);
-  --alert-fg: var(--color-info-foreground);
-  --alert-accent: var(--color-info);
-}
-
 .ds-alert--success {
   --alert-bg: var(--color-success-subtle);
   --alert-fg: var(--color-success-foreground);
