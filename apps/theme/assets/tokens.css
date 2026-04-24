@@ -229,7 +229,7 @@
   --color-warning:              #B8853A;
   --color-info:                 #7A90B8;
   --color-info-subtle:          color-mix(in srgb, var(--color-info) 12%, var(--color-background-subtle));
-  --color-info-foreground:      undefined;
+  --color-info-foreground:      #A9B8D4;
   --color-focus-ring:           #A59E94;
   --color-primary-active:      #FAF9F7;
   --color-secondary-active:    #4E473F;

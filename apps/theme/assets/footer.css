@@ -146,7 +146,7 @@
 }
 
 .ds-footer__newsletter-heading {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-xl);
   font-weight: var(--font-weight-semibold);
   color: var(--color-foreground);
   line-height: var(--line-height-tight);
@@ -156,7 +156,7 @@
 .ds-footer__newsletter-body {
   font-size: var(--font-size-sm);
   color: var(--color-foreground-subtle);
-  line-height: var(--line-height-relaxed);
+  line-height: var(--line-height-normal);
   margin: 0;
   max-width: 65ch;
 }

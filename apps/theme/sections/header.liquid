@@ -63,10 +63,11 @@
         Fallback nav when the merchant hasn't configured the main-menu
         linklist. Mirrors the docs FullWidthLayout defaults.
       {%- endcomment -%}
+      {%- assign fallback_path = request.path -%}
       <nav class="ds-header__nav" aria-label="Main">
-        <a href="{{ routes.all_products_collection_url }}">Shop</a>
-        <a href="{{ routes.collections_url }}">Collections</a>
-        <a href="{{ routes.root_url }}pages/about">About</a>
+        <a href="{{ routes.all_products_collection_url }}"{% if fallback_path contains '/collections/all' %} aria-current="page"{% endif %}>Shop</a>
+        <a href="{{ routes.collections_url }}"{% if fallback_path == routes.collections_url %} aria-current="page"{% endif %}>Collections</a>
+        <a href="{{ routes.root_url }}pages/about"{% if fallback_path contains '/pages/about' %} aria-current="page"{% endif %}>About</a>
       </nav>
     {%- endif -%}
 
@@ -86,6 +87,7 @@
           type="button"
           class="ds-header__icon-btn ds-header__theme-toggle"
           aria-label="Toggle dark mode"
+          aria-pressed="false"
           data-theme-toggle
         >
           <svg
@@ -149,9 +151,13 @@
 
     /* Initial class restoration is handled by the inline <head> script
        in theme.liquid — this handler only flips the class on click. */
+    /* Reflect current .dark state in aria-pressed on first load. */
+    toggle.setAttribute('aria-pressed', root.classList.contains('dark') ? 'true' : 'false');
+
     toggle.addEventListener('click', function () {
       var next = !root.classList.contains('dark');
       root.classList.toggle('dark', next);
+      toggle.setAttribute('aria-pressed', next ? 'true' : 'false');
       try {
         localStorage.setItem('ds-theme', next ? 'dark' : 'light');
       } catch (e) {}

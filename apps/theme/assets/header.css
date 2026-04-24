@@ -75,18 +75,6 @@
   color: var(--color-foreground);
 }
 
-/* Text fallback when no logo image is set — render as a wordmark,
-   not a generic heading: compact, tracked, caps. */
-.ds-header__logo-text {
-  color: var(--color-foreground);
-  font-family: var(--font-family-body);
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-bold);
-  line-height: 1;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
 /* ─── Nav ─────────────────────────────────────────────────── */
 .ds-header__nav {
   display: none;
@@ -133,8 +121,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: var(--size-touch-target, 36px);
-  height: var(--size-touch-target, 36px);
+  /* WCAG 2.5.5 target size: 44px on touch/mobile, 36px on desktop. */
+  width: 44px;
+  height: 44px;
   border: none;
   background: none;
   cursor: pointer;
@@ -147,6 +136,13 @@
   /* Optical centering: trim em-box to cap height + baseline */
   text-box-trim: both;
   text-box-edge: cap alphabetic;
+}
+
+@media (min-width: 1024px) {
+  .ds-header__icon-btn {
+    width: var(--size-touch-target, 36px);
+    height: var(--size-touch-target, 36px);
+  }
 }
 
 .ds-header__icon-btn:hover {

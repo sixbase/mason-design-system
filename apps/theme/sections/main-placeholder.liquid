@@ -1,8 +1,8 @@
-<section class="ds-page-container" style="padding-block: var(--spacing-16);">
-  <h1 style="font-family: var(--font-family-body); color: var(--color-foreground);">
+<section class="ds-page-container ds-section">
+  <h1 class="ds-heading ds-heading--2xl">
     {{ section.settings.heading | default: 'Design System Theme' }}
   </h1>
-  <p style="font-family: var(--font-family-body); color: var(--color-foreground-muted); max-width: 65ch;">
+  <p class="ds-text ds-text--base ds-text--muted">
     {{ section.settings.body | default: 'This theme consumes @ds/tokens. Sections will be built on top of the design system.' }}
   </p>
 </section>

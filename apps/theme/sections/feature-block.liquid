@@ -7,6 +7,7 @@
   assign reverse = section.settings.reverse
   assign cta_label = section.settings.cta_label
   assign cta_url = section.settings.cta_url
+  assign placeholder = section.settings.placeholder
   assign block_class = 'ds-feature-block'
   if reverse
     assign block_class = block_class | append: ' ds-feature-block--reverse'
@@ -23,6 +24,16 @@
             alt: title,
             sizes: '(min-width: 768px) 50vw, 100vw'
           %}
+        {%- elsif placeholder != blank and placeholder != 'none' -%}
+          {%- assign placeholder_src = 'feature-' | append: placeholder | append: '.svg' | asset_url -%}
+          <img
+            src="{{ placeholder_src }}"
+            alt="{{ title | escape }}"
+            class="ds-feature-block__placeholder"
+            width="1000"
+            height="800"
+            loading="lazy"
+          >
         {%- else -%}
           {{ 'lifestyle-1' | placeholder_svg_tag: 'ds-feature-block__placeholder' }}
         {%- endif -%}
@@ -55,6 +66,18 @@
     { "type": "text", "id": "title", "label": "Title", "default": "Our craft" },
     { "type": "textarea", "id": "description", "label": "Description" },
     { "type": "image_picker", "id": "image", "label": "Image" },
+    {
+      "type": "select",
+      "id": "placeholder",
+      "label": "Fallback placeholder (when no image is set)",
+      "options": [
+        { "value": "none", "label": "Shopify default (lifestyle-1)" },
+        { "value": "materials", "label": "Materials — warm stone" },
+        { "value": "durability", "label": "Durability — muted stone" },
+        { "value": "zero-waste", "label": "Zero Waste — deep stone" }
+      ],
+      "default": "materials"
+    },
     { "type": "text", "id": "cta_label", "label": "Button label" },
     { "type": "url", "id": "cta_url", "label": "Button link" },
     { "type": "checkbox", "id": "reverse", "label": "Swap image and text positions", "default": false }

@@ -26,6 +26,7 @@
       "settings": {
         "title": "Thoughtfully Sourced Materials",
         "description": "Every product starts with the best raw materials — organic cotton, vegetable-tanned leather, and sustainably harvested wood. We partner directly with mills and tanneries to ensure quality from the source.",
+        "placeholder": "materials",
         "reverse": false
       }
     },
@@ -34,6 +35,7 @@
       "settings": {
         "title": "Designed to Last",
         "description": "We believe the most sustainable product is one you never have to replace. Our pieces are stress-tested and refined until they meet a standard of durability that makes fast fashion obsolete.",
+        "placeholder": "durability",
         "reverse": true
       }
     },
@@ -42,6 +44,7 @@
       "settings": {
         "title": "Small-Batch, Zero Waste",
         "description": "We produce in small runs to minimize overstock and waste. Off-cuts are repurposed into accessories, and our packaging is 100% recyclable or compostable.",
+        "placeholder": "zero-waste",
         "reverse": false
       }
     },

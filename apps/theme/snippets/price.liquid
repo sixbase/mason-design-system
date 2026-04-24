@@ -27,7 +27,7 @@
 -%}
 
 <div class="ds-price-display ds-price-display--{{ price_size }}">
-  <span class="ds-text ds-text--base ds-text--medium ds-price-display__price">{{ price | money }}</span>
+  <span class="ds-text ds-text--base ds-price-display__price">{{ price | money }}</span>
   {%- if has_compare -%}
     <span class="ds-text ds-text--base ds-text--muted ds-price-display__compare">
       <span class="ds-sr-only">Original price:</span>{{ compare_at_price | money }}

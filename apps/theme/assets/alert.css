@@ -9,7 +9,7 @@
   --alert-padding-inline: var(--spacing-5);
   --alert-gap: var(--spacing-3);
   --alert-border-width: 3px;
-  --alert-bg: var(--color-surface);
+  --alert-bg: var(--color-background-surface);
   --alert-fg: var(--color-foreground);
   --alert-accent: var(--color-border);
 }

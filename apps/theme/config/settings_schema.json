@@ -12,9 +12,21 @@
     "settings": [
       {
         "type": "image_picker",
+        "id": "logo",
+        "label": "Store logo",
+        "info": "Used as the default Open Graph image fallback."
+      },
+      {
+        "type": "image_picker",
         "id": "favicon",
         "label": "Favicon",
         "info": "32x32px recommended"
+      },
+      {
+        "type": "image_picker",
+        "id": "share_image",
+        "label": "Social share image",
+        "info": "1200x630px recommended. Shown when pages are shared on social platforms."
       }
     ]
   }

@@ -26,6 +26,24 @@
     {%- endif -%}
 
     {%- if collection and collection.products.size > 0 -%}
+      <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          "name": {{ heading | default: collection.title | json }},
+          "itemListElement": [
+            {%- for product in collection.products limit: limit -%}
+              {
+                "@type": "ListItem",
+                "position": {{ forloop.index }},
+                "url": {{ shop.url | append: product.url | json }},
+                "name": {{ product.title | json }}
+              }{% unless forloop.last %},{% endunless %}
+            {%- endfor -%}
+          ]
+        }
+      </script>
+
       {%- if layout == 'carousel' -%}
         <div class="ds-carousel ds-carousel--gap-md">
           <div class="ds-carousel__track ds-scroll-hidden">
