@@ -59,6 +59,9 @@ Every lesson produced a rule. This table collects them all so Claude can scan fo
 | Grid gaps: two tiers max (mobile + desktop), same token for row/column | [gap-escalation](#gap-escalation) |
 | `text-overflow: ellipsis` not working? Trace `min-width: 0` up the chain | [flex-overflow](#flex-overflow) |
 | Prefer CSS responsive behavior over JS — render full content, CSS controls visibility | [css-vs-js-responsive](#css-vs-js-responsive) |
+| Icon buttons in `justify-content: space-between` flex rows need `flex-shrink: 0` — otherwise they collapse to content width | [icon-button-flex-shrink](#icon-button-flex-shrink) |
+| Inline SVGs in Liquid/Astro need `.ds-icon ds-icon--{size}` classes OR explicit `width`/`height` attrs — no default dimensions = invisible or 300×150 | [inline-svg-sizing](#inline-svg-sizing) |
+| Icon audits must verify render, not just path correctness — agents that only check `d=""` miss sizing/layout bugs | [icon-audit-render-check](#icon-audit-render-check) |
 
 ### Docs & Demo Rules
 
@@ -324,6 +327,22 @@ Component library: 100% compliance. Docs site: accumulated inline styles over ti
 **What happened:** Occasional `SSL alert number 20 (bad record mac)` errors when the CLI calls `admin/api/.../graphql.json`. Error is not reproducible — retrying the same command succeeded immediately. Suspect environmental (VPN interference, flaky connection, or TLS stack issue in Node's https module).
 
 **Rule:** Treat `SSL alert number 20` and similar mid-request TLS errors from the Shopify CLI as transient. Retry once before debugging. If it persists across 3 retries, check VPN/proxy and consider upgrading the CLI (`npm install -g @shopify/cli@latest`). Not a code issue — no theme changes required.
+
+---
+
+### Icon button squeezed to 16px by flex layout {#icon-button-flex-shrink}
+**Bug:** Theme toggle in docs sidebar header set `width: 36px` but rendered 16px wide. A 160px logo sharing the same `justify-content: space-between` row pushed the button below its declared width — flex's default `flex-shrink: 1` let it collapse to the SVG child's intrinsic 16px.
+**Fix:** `flex-shrink: 0` on the toggle.
+**Rule:** Any icon button in a flex row with a sibling that can grow needs `flex-shrink: 0`. Declared width is not honored without it.
+
+### Inline SVGs missing `.ds-icon` class = invisible {#inline-svg-sizing}
+**Bug:** Shopify theme's sun/moon toggle icons in `header.liquid` were hand-inlined without `class="ds-icon ds-icon--md"`. Sibling icons (cart, search) rendered through `{% render 'icon' %}` which adds those classes automatically. Without them, the inline SVGs had no width/height — browsers fall back to 300×150 or collapse, making them invisible inside a 36×36 button.
+**Fix:** Added `ds-icon ds-icon--md` to the inline SVG classes. Better long-term: all icons go through `icon.liquid`.
+**Rule:** Every inline `<svg>` in Liquid/Astro must either (a) use `{% render 'icon' %}` / `<Icon>` wrapper, or (b) carry `ds-icon ds-icon--{size}` classes. Never rely on viewBox alone for dimensions.
+
+### Icon audit only checked paths, missed render bugs {#icon-audit-render-check}
+**Bug:** Three subagents audited icon usage across components, docs, and theme. All three declared the theme toggle sun/moon ✅ correct because the SVG `d=""` paths drew valid sun and moon shapes. None caught that the moon was invisible in the Shopify theme (missing `.ds-icon` class) or that the docs toggle was squeezed to 16px (flex-shrink bug).
+**Rule:** Any icon/visual audit must include a render-verification step — open the dev server, inspect computed styles (`width`, `height`, `display`, `color`), and screenshot. Semantic path correctness ≠ visual correctness. When delegating to subagents, include "verify the icon actually renders visibly at the expected size" in the prompt.
 
 ---
 

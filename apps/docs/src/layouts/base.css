@@ -55,6 +55,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   width: var(--size-touch-target, 36px);
   height: var(--size-touch-target, 36px);
   border: none;
