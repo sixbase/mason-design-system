@@ -221,7 +221,7 @@
           {{ stock_label }}
         </p>
 
-        <p class="ds-text ds-text--sm ds-text--muted ds-product__trust-signals">
+        <p class="ds-text ds-text--sm ds-text--muted">
           Free shipping over $50 · 30-day returns
         </p>
       </div>
@@ -235,8 +235,8 @@
             <ul class="ds-product__specs-list">
               {%- for spec in specifications -%}
                 <li class="ds-product__specs-item">
-                  <span class="ds-text ds-text--sm ds-text--muted ds-product__specs-label">{{ spec.label | default: spec.name }}</span>
-                  <span class="ds-text ds-text--sm ds-product__specs-value">{{ spec.value }}</span>
+                  <span class="ds-text ds-text--sm ds-text--muted">{{ spec.label | default: spec.name }}</span>
+                  <span class="ds-text ds-text--sm">{{ spec.value }}</span>
                 </li>
               {%- endfor -%}
             </ul>
