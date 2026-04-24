@@ -35,7 +35,6 @@
   method="post"
   enctype="multipart/form-data"
   class="ds-product__form"
-  role="form"
   aria-label="Add to cart"
   data-product-form
 >
@@ -61,7 +60,7 @@
 
         <div class="ds-variant-selector__group" data-option-name="{{ option_name | escape }}">
           <span
-            class="ds-heading ds-heading--xl ds-variant-selector__label"
+            class="ds-text ds-text--sm ds-text--medium ds-variant-selector__label"
             id="{{ option_id }}"
           >
             {{ option_name }}
@@ -129,7 +128,7 @@
   <div class="ds-product__form-row">
     <label
       for="Quantity-{{ section.id }}"
-      class="ds-product__form-row-label"
+      class="ds-text ds-text--sm ds-text--medium ds-product__form-row-label"
     >
       Quantity
     </label>
@@ -229,8 +228,7 @@
     if (submitBtn) {
       form.addEventListener('submit', function () {
         submitBtn.setAttribute('aria-busy', 'true');
-        submitBtn.classList.remove('ds-add-to-cart--idle');
-        submitBtn.classList.add('ds-add-to-cart--loading', 'ds-button--loading');
+        submitBtn.classList.add('ds-button--loading');
         if (liveRegion) liveRegion.textContent = 'Adding…';
       });
     }

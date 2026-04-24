@@ -19,7 +19,12 @@
   if template.name == 'product'
     assign crumbs = crumbs | append: 'Home|' | append: routes.root_url | append: '||'
     if collection
-      assign crumbs = crumbs | append: collection.title | append: '|' | append: collection.url | append: '||'
+      assign product_collection = collection
+    else
+      assign product_collection = product.collections.first
+    endif
+    if product_collection
+      assign crumbs = crumbs | append: product_collection.title | append: '|' | append: product_collection.url | append: '||'
     endif
     assign crumbs = crumbs | append: product.title | append: '|' | append: product.url
   elsif template.name == 'collection'

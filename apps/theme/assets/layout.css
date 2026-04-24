@@ -84,9 +84,11 @@
    layout-grid/layout-grid.css when a template needs them. */
 
 /* Golden split: 7 + 5 — primary + secondary (7/12 ≈ 0.583)
-   Used by main-product and main-cart. */
-.ds-layout--golden > :first-child  { grid-column: span 7; }
-.ds-layout--golden > :nth-child(2) { grid-column: span 5; }
+   Used by main-product and main-cart.
+   `:where()` flattens specificity to (0,0,0) so the mobile stack
+   rule below can override without `!important`. */
+:where(.ds-layout--golden) > :first-child  { grid-column: span 7; }
+:where(.ds-layout--golden) > :nth-child(2) { grid-column: span 5; }
 
 /* ─── Responsive Behavior ────────────────────────────────── */
 /*

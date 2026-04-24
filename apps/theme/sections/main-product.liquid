@@ -76,13 +76,24 @@
                 data-index="{{ forloop.index0 }}"
                 {% unless forloop.first %}aria-hidden="true"{% endunless %}
               >
-                {% render 'responsive-image',
-                  image: image,
-                  alt: image.alt | default: product.title,
-                  sizes: '(min-width: 1024px) 58vw, 100vw',
-                  loading: forloop.first | default: false,
-                  class: 'ds-image-gallery__img'
-                %}
+                {%- if forloop.first -%}
+                  {% render 'responsive-image',
+                    image: image,
+                    alt: image.alt | default: product.title,
+                    sizes: '(min-width: 1024px) 58vw, 100vw',
+                    loading: 'eager',
+                    fetchpriority: 'high',
+                    class: 'ds-image-gallery__img'
+                  %}
+                {%- else -%}
+                  {% render 'responsive-image',
+                    image: image,
+                    alt: image.alt | default: product.title,
+                    sizes: '(min-width: 1024px) 58vw, 100vw',
+                    loading: 'lazy',
+                    class: 'ds-image-gallery__img'
+                  %}
+                {%- endif -%}
               </figure>
             {%- endfor -%}
           </div>
@@ -126,12 +137,12 @@
     <div class="ds-product__details">
       <header class="ds-product__header">
         {%- if section.settings.show_vendor and product.vendor != blank -%}
-          <span class="ds-text ds-text--sm ds-product__vendor">{{ product.vendor }}</span>
+          <span class="ds-text ds-text--sm ds-text--muted ds-product__vendor">{{ product.vendor }}</span>
         {%- endif -%}
 
         <h1
           id="ProductTitle-{{ section.id }}"
-          class="ds-heading ds-heading--3xl ds-product__title"
+          class="ds-heading ds-heading--2xl ds-heading--normal ds-product__title"
         >
           {{ product.title }}
         </h1>
@@ -140,7 +151,7 @@
           {%- assign review_count_int = review_count | plus: 0 -%}
           {%- assign review_rating_float = review_rating | times: 1.0 -%}
           <div
-            class="ds-star-rating ds-star-rating--md ds-product__rating"
+            class="ds-star-rating ds-star-rating--sm ds-product__rating"
             role="img"
             aria-label="{{ review_rating_float }} out of 5 stars ({{ review_count_int }} reviews)"
           >
@@ -179,7 +190,25 @@
           compare_at_price: current_variant.compare_at_price,
           size: 'lg'
         %}
+      </div>
 
+      {%- if product.description != blank -%}
+        <div class="ds-product__description">
+          <h2 class="ds-sr-only">Description</h2>
+          <div class="ds-text ds-text--sm ds-text--muted">{{ product.description }}</div>
+        </div>
+      {%- endif -%}
+
+      {%- if section.settings.show_sku and current_variant.sku != blank -%}
+        <p class="ds-text ds-text--sm ds-product__sku">
+          <span class="ds-sr-only">SKU:</span>
+          SKU: {{ current_variant.sku }}
+        </p>
+      {%- endif -%}
+
+      {% render 'product-form', product: product, section: section %}
+
+      <div class="ds-product__actions">
         <p
           class="ds-text ds-text--sm ds-text--muted ds-stock-indicator ds-stock-indicator--{{ stock_status }}"
           aria-live="polite"
@@ -191,35 +220,23 @@
           ></span>
           {{ stock_label }}
         </p>
-      </div>
 
-      {%- if section.settings.show_sku and current_variant.sku != blank -%}
-        <p class="ds-text ds-text--sm ds-product__sku">
-          <span class="ds-sr-only">SKU:</span>
-          SKU: {{ current_variant.sku }}
+        <p class="ds-text ds-text--sm ds-text--muted ds-product__trust-signals">
+          Free shipping over $50 · 30-day returns
         </p>
-      {%- endif -%}
-
-      {% render 'product-form', product: product, section: section %}
-
-      {%- if product.description != blank -%}
-        <div class="ds-product__description">
-          <h2 class="ds-sr-only">Description</h2>
-          <div class="ds-text ds-text--base">{{ product.description }}</div>
-        </div>
-      {%- endif -%}
+      </div>
 
       {%- if has_specs -%}
         <details class="ds-product__specs">
           <summary class="ds-product__specs-summary">
-            <span>Specifications</span>
+            <span class="ds-text ds-text--sm ds-text--medium">Specifications</span>
           </summary>
           <div class="ds-product__specs-body">
             <ul class="ds-product__specs-list">
               {%- for spec in specifications -%}
                 <li class="ds-product__specs-item">
-                  <span class="ds-product__specs-label">{{ spec.label | default: spec.name }}</span>
-                  <span class="ds-product__specs-value">{{ spec.value }}</span>
+                  <span class="ds-text ds-text--sm ds-text--muted ds-product__specs-label">{{ spec.label | default: spec.name }}</span>
+                  <span class="ds-text ds-text--sm ds-product__specs-value">{{ spec.value }}</span>
                 </li>
               {%- endfor -%}
             </ul>
