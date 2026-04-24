@@ -152,19 +152,11 @@
   max-width: 65ch;
 }
 
-.ds-footer__newsletter-heading {
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-foreground);
-  line-height: var(--line-height-tight);
-  margin: 0;
-}
-
+/* Typography for newsletter heading and body is driven by the
+   primitive classes (.ds-heading --xl, .ds-text --sm --muted);
+   these modifier selectors are namespace hooks only. */
+.ds-footer__newsletter-heading,
 .ds-footer__newsletter-body {
-  font-size: var(--font-size-sm);
-  color: var(--color-foreground-subtle);
-  line-height: var(--line-height-normal);
-  margin: 0;
   max-width: 65ch;
 }
 
