@@ -1,6 +1,7 @@
 import { forwardRef, useMemo } from 'react';
 import type { HTMLAttributes } from 'react';
 import { Button } from '../button';
+import { ChevronLeft, ChevronRight } from '../icon';
 import { Text } from '../typography';
 import './Pagination.css';
 
@@ -17,35 +18,6 @@ export interface PaginationProps extends Omit<HTMLAttributes<HTMLElement>, 'onCh
   siblingCount?: number;
   /** Size of the pagination controls */
   size?: 'sm' | 'md';
-}
-
-/** SVG chevron arrow for prev/next buttons */
-function ChevronLeft() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <path
-        d="M10 4l-4 4 4 4"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function ChevronRight() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <path
-        d="M6 4l4 4-4 4"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
 }
 
 /**
@@ -177,7 +149,7 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>(
               aria-label="Go to previous page"
             >
               <a href={getPageUrl(currentPage - 1)}>
-                <ChevronLeft />
+                <ChevronLeft size="sm" />
                 <span className="ds-pagination__prev-label">Previous</span>
               </a>
             </Button>
@@ -189,7 +161,7 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>(
               onClick={!isSSR ? () => onPageChange?.(currentPage - 1) : undefined}
               aria-label="Go to previous page"
             >
-              <ChevronLeft />
+              <ChevronLeft size="sm" />
               <span className="ds-pagination__prev-label">Previous</span>
             </Button>
           )}
@@ -255,7 +227,7 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>(
             >
               <a href={getPageUrl(currentPage + 1)}>
                 <span className="ds-pagination__next-label">Next</span>
-                <ChevronRight />
+                <ChevronRight size="sm" />
               </a>
             </Button>
           ) : (
@@ -267,7 +239,7 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>(
               aria-label="Go to next page"
             >
               <span className="ds-pagination__next-label">Next</span>
-              <ChevronRight />
+              <ChevronRight size="sm" />
             </Button>
           )}
         </div>
@@ -282,7 +254,7 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>(
               aria-label="Go to previous page"
             >
               <a href={getPageUrl(currentPage - 1)}>
-                <ChevronLeft />
+                <ChevronLeft size="sm" />
                 Previous
               </a>
             </Button>
@@ -294,7 +266,7 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>(
               onClick={!isSSR ? () => onPageChange?.(currentPage - 1) : undefined}
               aria-label="Go to previous page"
             >
-              <ChevronLeft />
+              <ChevronLeft size="sm" />
               Previous
             </Button>
           )}
@@ -312,7 +284,7 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>(
             >
               <a href={getPageUrl(currentPage + 1)}>
                 Next
-                <ChevronRight />
+                <ChevronRight size="sm" />
               </a>
             </Button>
           ) : (
@@ -324,7 +296,7 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>(
               aria-label="Go to next page"
             >
               Next
-              <ChevronRight />
+              <ChevronRight size="sm" />
             </Button>
           )}
         </div>

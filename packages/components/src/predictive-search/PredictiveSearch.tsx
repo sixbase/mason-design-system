@@ -1,5 +1,6 @@
 import { forwardRef, useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { HTMLAttributes } from 'react';
+import { Search, X } from '../icon';
 import { Skeleton } from '../skeleton/Skeleton';
 import { Text } from '../typography/Typography';
 import './PredictiveSearch.css';
@@ -104,25 +105,6 @@ function groupResults(
   }
 
   return { groups, flat };
-}
-
-// ─── Icons ──────────────────────────────────────────────────
-
-function SearchIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <circle cx="6.5" cy="6.5" r="4" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M10.5 10.5L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function ClearIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <path d="M4 4L12 12M12 4L4 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
 }
 
 // ─── Component ──────────────────────────────────────────────
@@ -377,7 +359,7 @@ export const PredictiveSearch = forwardRef<HTMLInputElement, PredictiveSearchPro
 
         <div className={wrapperClasses}>
           <span className="ds-predictive-search__icon" aria-hidden="true">
-            <SearchIcon />
+            <Search size="sm" />
           </span>
 
           <input
@@ -406,7 +388,7 @@ export const PredictiveSearch = forwardRef<HTMLInputElement, PredictiveSearchPro
               aria-label="Clear search"
               onClick={handleClear}
             >
-              <ClearIcon />
+              <X size="sm" />
             </button>
           )}
         </div>

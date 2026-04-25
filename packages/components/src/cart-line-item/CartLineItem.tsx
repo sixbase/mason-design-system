@@ -5,6 +5,7 @@ import { Button } from '../button/Button';
 import { QuantitySelector } from '../quantity-selector/QuantitySelector';
 import { PriceDisplay } from '../price-display/PriceDisplay';
 import { Badge } from '../badge/Badge';
+import { Image, X } from '../icon';
 import './CartLineItem.css';
 
 export interface CartLineItemOption {
@@ -113,11 +114,7 @@ export const CartLineItem = forwardRef<HTMLDivElement, CartLineItemProps>(
             />
           ) : (
             <div className="ds-cart-line-item__placeholder" aria-hidden="true">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <circle cx="8.5" cy="8.5" r="1.5" />
-                <path d="m21 15-5-5L5 21" />
-              </svg>
+              <Image size="lg" />
             </div>
           )}
         </div>
@@ -184,10 +181,7 @@ export const CartLineItem = forwardRef<HTMLDivElement, CartLineItemProps>(
             onClick={onRemove}
             aria-label={`Remove ${name} from cart`}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
+            <X size="sm" />
           </Button>
         </div>
       </div>

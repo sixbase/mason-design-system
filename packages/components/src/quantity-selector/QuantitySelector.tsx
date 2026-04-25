@@ -1,5 +1,6 @@
 import { forwardRef, useCallback } from 'react';
 import type { HTMLAttributes } from 'react';
+import { Minus, Plus } from '../icon';
 import './QuantitySelector.css';
 
 export interface QuantitySelectorProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onChange'> {
@@ -67,9 +68,7 @@ export const QuantitySelector = forwardRef<HTMLDivElement, QuantitySelectorProps
           onClick={decrement}
           disabled={disabled || value <= min}
         >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <path d="M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
+          <Minus size="sm" />
         </button>
         <output className="ds-quantity-selector__value">{value}</output>
         <button
@@ -79,9 +78,7 @@ export const QuantitySelector = forwardRef<HTMLDivElement, QuantitySelectorProps
           onClick={increment}
           disabled={disabled || value >= max}
         >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
+          <Plus size="sm" />
         </button>
       </div>
     );

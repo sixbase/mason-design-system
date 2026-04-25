@@ -1,6 +1,7 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { forwardRef } from 'react';
 import type { ReactNode } from 'react';
+import { X } from '../icon';
 import './Drawer.css';
 
 // ─── Types ────────────────────────────────────────────────
@@ -65,20 +66,7 @@ export const Drawer = forwardRef<HTMLDivElement, DrawerProps>(
             </Dialog.Description>
 
             <Dialog.Close className="ds-drawer__close" aria-label="Close">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="none"
-                aria-hidden="true"
-              >
-                <path
-                  d="M12 4L4 12M4 4l8 8"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-              </svg>
+              <X size="sm" />
             </Dialog.Close>
 
             <div className="ds-drawer__body">

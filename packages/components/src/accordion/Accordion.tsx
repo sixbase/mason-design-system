@@ -2,6 +2,7 @@ import * as AccordionPrimitive from '@radix-ui/react-accordion';
 import { forwardRef } from 'react';
 import type { ComponentPropsWithoutRef } from 'react';
 import { Checkbox } from '../checkbox/Checkbox';
+import { ChevronDown } from '../icon';
 import './Accordion.css';
 
 // ─── Types ────────────────────────────────────────────────
@@ -38,29 +39,6 @@ export interface AccordionContentProps
   extends ComponentPropsWithoutRef<typeof AccordionPrimitive.Content> {
   /** Size variant — controls padding */
   size?: AccordionSize;
-}
-
-// ─── Chevron Icon ────────────────────────────────────────
-
-function ChevronIcon() {
-  return (
-    <svg
-      className="ds-accordion__chevron"
-      width="16"
-      height="16"
-      viewBox="0 0 16 16"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M4 6l4 4 4-4"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
 }
 
 // ─── Root ─────────────────────────────────────────────────
@@ -121,7 +99,7 @@ export const AccordionTrigger = forwardRef<HTMLButtonElement, AccordionTriggerPr
     const trigger = (
       <AccordionPrimitive.Trigger ref={ref} className={classes} {...props}>
         <span className="ds-accordion__trigger-text">{children}</span>
-        <ChevronIcon />
+        <ChevronDown size="sm" className="ds-accordion__chevron" />
       </AccordionPrimitive.Trigger>
     );
 

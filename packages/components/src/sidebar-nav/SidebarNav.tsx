@@ -2,6 +2,7 @@ import * as AccordionPrimitive from '@radix-ui/react-accordion';
 import { forwardRef } from 'react';
 import type { HTMLAttributes, ReactNode } from 'react';
 import { Badge } from '../badge/Badge';
+import { ChevronDown } from '../icon';
 import './SidebarNav.css';
 
 // ─── Types ────────────────────────────────────────────────
@@ -37,29 +38,6 @@ export interface SidebarNavProps extends HTMLAttributes<HTMLElement> {
   groups: SidebarNavGroup[];
   /** Size variant */
   size?: 'sm' | 'md';
-}
-
-// ─── Chevron Icon ────────────────────────────────────────
-
-function ChevronIcon() {
-  return (
-    <svg
-      className="ds-sidebar-nav__chevron"
-      width="16"
-      height="16"
-      viewBox="0 0 16 16"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M4 6l4 4 4-4"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
 }
 
 // ─── Item List ───────────────────────────────────────────
@@ -160,7 +138,7 @@ function CollapsibleGroup({
         <AccordionPrimitive.Header className="ds-sidebar-nav__collapsible-header">
           <AccordionPrimitive.Trigger className="ds-sidebar-nav__collapsible-trigger">
             <span className="ds-sidebar-nav__heading">{group.heading}</span>
-            <ChevronIcon />
+            <ChevronDown size="sm" className="ds-sidebar-nav__chevron" />
           </AccordionPrimitive.Trigger>
         </AccordionPrimitive.Header>
         <AccordionPrimitive.Content className="ds-sidebar-nav__collapsible-content">

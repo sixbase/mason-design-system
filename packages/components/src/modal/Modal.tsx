@@ -1,6 +1,7 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { forwardRef } from 'react';
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
+import { X } from '../icon';
 import './Modal.css';
 
 // ─── Types ────────────────────────────────────────────────
@@ -88,20 +89,7 @@ export const ModalContent = forwardRef<HTMLDivElement, ModalContentProps>(
         <Dialog.Content ref={ref} className={classes} {...props}>
           {children}
           <Dialog.Close className="ds-modal__close" aria-label="Close">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              aria-hidden="true"
-            >
-              <path
-                d="M12 4L4 12M4 4l8 8"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
+            <X size="sm" />
           </Dialog.Close>
         </Dialog.Content>
       </Dialog.Portal>

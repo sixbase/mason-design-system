@@ -1,6 +1,7 @@
 import * as RadixSelect from '@radix-ui/react-select';
 import { forwardRef, useId } from 'react';
 import type { ComponentPropsWithoutRef } from 'react';
+import { Check, ChevronDown, ChevronUp } from '../icon';
 import './Select.css';
 
 // ─── Types ────────────────────────────────────────────────
@@ -79,14 +80,14 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
         >
           <RadixSelect.Value placeholder={placeholder} />
           <RadixSelect.Icon className="ds-select-icon" aria-hidden="true">
-            <ChevronDownIcon />
+            <ChevronDown size="sm" />
           </RadixSelect.Icon>
         </RadixSelect.Trigger>
 
         <RadixSelect.Portal>
           <RadixSelect.Content className="ds-select-content" position="popper" sideOffset={4}>
             <RadixSelect.ScrollUpButton className="ds-select-scroll-btn">
-              <ChevronUpIcon />
+              <ChevronUp size="sm" />
             </RadixSelect.ScrollUpButton>
 
             <RadixSelect.Viewport className="ds-select-viewport">
@@ -94,7 +95,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
             </RadixSelect.Viewport>
 
             <RadixSelect.ScrollDownButton className="ds-select-scroll-btn">
-              <ChevronDownIcon />
+              <ChevronDown size="sm" />
             </RadixSelect.ScrollDownButton>
           </RadixSelect.Content>
         </RadixSelect.Portal>
@@ -123,7 +124,7 @@ export const SelectItem = forwardRef<HTMLDivElement, SelectItemProps>(function S
     >
       <RadixSelect.ItemText>{children}</RadixSelect.ItemText>
       <RadixSelect.ItemIndicator className="ds-select-item-indicator">
-        <CheckIcon />
+        <Check size="sm" />
       </RadixSelect.ItemIndicator>
     </RadixSelect.Item>
   );
@@ -167,28 +168,3 @@ export const SelectSeparator = forwardRef<
 });
 SelectSeparator.displayName = 'SelectSeparator';
 
-// ─── Icons (inline SVG — no icon dep needed) ─────────────
-
-function ChevronDownIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-      <path d="M2 4L6 8L10 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function ChevronUpIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-      <path d="M2 8L6 4L10 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function CheckIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-      <path d="M2 6L5 9L10 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
