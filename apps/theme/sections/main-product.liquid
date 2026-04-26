@@ -5,6 +5,7 @@
 {{ 'add-to-cart-button.css' | asset_url | stylesheet_tag }}
 {{ 'star-rating.css' | asset_url | stylesheet_tag }}
 {{ 'quantity-selector.css' | asset_url | stylesheet_tag }}
+{{ 'accordion.css' | asset_url | stylesheet_tag }}
 
 {%- liquid
   assign current_variant = product.selected_or_first_available_variant
@@ -53,6 +54,19 @@
   if specifications
     assign has_specs = true
   endif
+
+  comment
+    Sale badge — only when compare_at_price is set and greater than price.
+    Percent saved is computed from the variant's prices and rounded to an
+    integer so the badge stays readable at sm size.
+  endcomment
+  assign is_on_sale = false
+  assign sale_percent = 0
+  if current_variant.compare_at_price and current_variant.compare_at_price > current_variant.price
+    assign is_on_sale = true
+    assign sale_diff = current_variant.compare_at_price | minus: current_variant.price
+    assign sale_percent = sale_diff | times: 100 | divided_by: current_variant.compare_at_price
+  endif
 -%}
 
 <section class="ds-page-container ds-product" aria-labelledby="ProductTitle-{{ section.id }}">
@@ -81,7 +95,8 @@
                     sizes: '(min-width: 1024px) 58vw, 100vw',
                     loading: 'eager',
                     fetchpriority: 'high',
-                    class: 'ds-image-gallery__img'
+                    class: 'ds-image-gallery__img',
+                    focal_point: image.presentation.focal_point
                   %}
                 {%- else -%}
                   {% render 'responsive-image',
@@ -89,7 +104,8 @@
                     alt: image.alt | default: product.title,
                     sizes: '(min-width: 1024px) 58vw, 100vw',
                     loading: 'lazy',
-                    class: 'ds-image-gallery__img'
+                    class: 'ds-image-gallery__img',
+                    focal_point: image.presentation.focal_point
                   %}
                 {%- endif -%}
               </figure>
@@ -188,6 +204,11 @@
           compare_at_price: current_variant.compare_at_price,
           size: 'md'
         %}
+        {%- if is_on_sale -%}
+          <span class="ds-badge ds-badge--destructive ds-badge--sm">
+            Save {{ sale_percent }}%
+          </span>
+        {%- endif -%}
       </div>
 
       {%- if product.description != blank -%}
@@ -224,23 +245,104 @@
         </p>
       </div>
 
-      {%- if has_specs -%}
-        <details class="ds-product__specs">
-          <summary class="ds-product__specs-summary">
-            <span class="ds-text ds-text--sm ds-text--medium">Specifications</span>
-          </summary>
-          <div class="ds-product__specs-body">
-            <ul class="ds-product__specs-list">
-              {%- for spec in specifications -%}
-                <li class="ds-product__specs-item">
-                  <span class="ds-text ds-text--sm ds-text--muted">{{ spec.label | default: spec.name }}</span>
-                  <span class="ds-text ds-text--sm">{{ spec.value }}</span>
-                </li>
-              {%- endfor -%}
-            </ul>
+      {%- comment -%} ── Accordion (Details / Shipping / Returns) ── {%- endcomment -%}
+      {%- liquid
+        assign shipping_text = section.settings.shipping_text
+        if shipping_text == blank
+          assign shipping_text = '<ul><li>Free standard shipping on orders over $50</li><li>Express delivery: 1–2 business days</li><li>Standard delivery: 3–5 business days</li></ul>'
+        endif
+
+        assign returns_text = section.settings.returns_text
+        if returns_text == blank
+          assign returns_text = '<ul><li>30-day free returns</li><li>1-year manufacturer warranty</li><li>Items must be unused and in original packaging</li></ul>'
+        endif
+      -%}
+
+      <div class="ds-accordion ds-accordion--sm" data-pdp-accordion>
+        {%- if has_specs -%}
+          <div class="ds-accordion__item">
+            <h3 class="ds-accordion__header">
+              <button
+                type="button"
+                class="ds-accordion__trigger"
+                aria-expanded="false"
+                aria-controls="acc-details-{{ section.id }}"
+                data-accordion-trigger
+              >
+                <span class="ds-accordion__trigger-text">Details</span>
+                {% render 'icon', name: 'chevron-down', size: 'sm', extra_class: 'ds-accordion__chevron' %}
+              </button>
+            </h3>
+            <div
+              id="acc-details-{{ section.id }}"
+              class="ds-accordion__content"
+              data-accordion-content
+              hidden
+            >
+              <div class="ds-accordion__content-inner">
+                <ul class="ds-product__specs-list">
+                  {%- for spec in specifications -%}
+                    <li class="ds-product__specs-item">
+                      <span class="ds-text ds-text--sm ds-text--muted">{{ spec.label | default: spec.name }}</span>
+                      <span class="ds-text ds-text--sm">{{ spec.value }}</span>
+                    </li>
+                  {%- endfor -%}
+                </ul>
+              </div>
+            </div>
           </div>
-        </details>
-      {%- endif -%}
+        {%- endif -%}
+
+        <div class="ds-accordion__item">
+          <h3 class="ds-accordion__header">
+            <button
+              type="button"
+              class="ds-accordion__trigger"
+              aria-expanded="false"
+              aria-controls="acc-shipping-{{ section.id }}"
+              data-accordion-trigger
+            >
+              <span class="ds-accordion__trigger-text">Shipping &amp; delivery</span>
+              {% render 'icon', name: 'chevron-down', size: 'sm', extra_class: 'ds-accordion__chevron' %}
+            </button>
+          </h3>
+          <div
+            id="acc-shipping-{{ section.id }}"
+            class="ds-accordion__content"
+            data-accordion-content
+            hidden
+          >
+            <div class="ds-accordion__content-inner ds-text ds-text--sm ds-text--muted">
+              {{ shipping_text }}
+            </div>
+          </div>
+        </div>
+
+        <div class="ds-accordion__item">
+          <h3 class="ds-accordion__header">
+            <button
+              type="button"
+              class="ds-accordion__trigger"
+              aria-expanded="false"
+              aria-controls="acc-returns-{{ section.id }}"
+              data-accordion-trigger
+            >
+              <span class="ds-accordion__trigger-text">Returns &amp; warranty</span>
+              {% render 'icon', name: 'chevron-down', size: 'sm', extra_class: 'ds-accordion__chevron' %}
+            </button>
+          </h3>
+          <div
+            id="acc-returns-{{ section.id }}"
+            class="ds-accordion__content"
+            data-accordion-content
+            hidden
+          >
+            <div class="ds-accordion__content-inner ds-text ds-text--sm ds-text--muted">
+              {{ returns_text }}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </article>
 </section>
@@ -301,6 +403,59 @@
         }
       });
     }
+  })();
+</script>
+
+{%- comment -%} ─── Accordion toggle (vanilla, multi-open) ─── {%- endcomment -%}
+<script>
+  (function () {
+    var roots = document.querySelectorAll('[data-pdp-accordion]');
+    if (!roots.length) return;
+
+    function close(content, trigger) {
+      /* Pin the current measured height before flipping state, so the
+         collapse keyframe has a real `from` value to animate from. */
+      content.style.setProperty('--accordion-content-height', content.scrollHeight + 'px');
+      void content.offsetHeight; /* force layout */
+      trigger.setAttribute('aria-expanded', 'false');
+      trigger.setAttribute('data-state', 'closed');
+      content.setAttribute('data-state', 'closed');
+
+      var onEnd = function () {
+        if (content.getAttribute('data-state') === 'closed') {
+          content.hidden = true;
+        }
+        content.removeEventListener('animationend', onEnd);
+      };
+      content.addEventListener('animationend', onEnd);
+      /* Reduced-motion fallback — animation may not fire */
+      setTimeout(function () {
+        if (content.getAttribute('data-state') === 'closed') content.hidden = true;
+      }, 400);
+    }
+
+    function open(content, trigger) {
+      content.hidden = false;
+      /* Measure once visible so scrollHeight is accurate */
+      content.style.setProperty('--accordion-content-height', content.scrollHeight + 'px');
+      trigger.setAttribute('aria-expanded', 'true');
+      trigger.setAttribute('data-state', 'open');
+      content.setAttribute('data-state', 'open');
+    }
+
+    roots.forEach(function (root) {
+      root.addEventListener('click', function (e) {
+        var trigger = e.target.closest && e.target.closest('[data-accordion-trigger]');
+        if (!trigger || !root.contains(trigger)) return;
+        var item = trigger.closest('.ds-accordion__item');
+        if (!item) return;
+        var content = item.querySelector('[data-accordion-content]');
+        if (!content) return;
+        var isOpen = trigger.getAttribute('aria-expanded') === 'true';
+        if (isOpen) close(content, trigger);
+        else open(content, trigger);
+      });
+    });
   })();
 </script>
 
@@ -386,6 +541,22 @@
       "id": "enable_zoom",
       "label": "Enable image zoom affordance",
       "default": false
+    },
+    {
+      "type": "header",
+      "content": "Accordion content"
+    },
+    {
+      "type": "richtext",
+      "id": "shipping_text",
+      "label": "Shipping & delivery",
+      "info": "Shown in the PDP accordion. Falls back to a sensible default if blank."
+    },
+    {
+      "type": "richtext",
+      "id": "returns_text",
+      "label": "Returns & warranty",
+      "info": "Shown in the PDP accordion. Falls back to a sensible default if blank."
     }
   ],
   "presets": [{ "name": "Product" }]

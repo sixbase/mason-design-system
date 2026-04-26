@@ -238,7 +238,8 @@ Each section that maps to a page type includes the relevant JSON-LD schema inlin
 | Home page sections | hero, featured-collection, feature-block — composed in `templates/index.json` | ✅ Complete |
 | SEO structured data | Per-page JSON-LD (Product, CollectionPage, BreadcrumbList) shipped by each stream. Site-wide `Organization` + `WebSite` in `theme.liquid`. OG tags + Twitter Card. | ✅ Complete |
 | Cart drawer | Port CartDrawer → global section `sections/cart-drawer.liquid` + `assets/drawer.css` + `assets/cart-drawer.css`. Header cart icon and product-form add-to-cart both open it via AJAX `/cart/add.js` + Section Rendering API. See 06-decisions-log → "Cart Drawer: Vanilla JS + Section Rendering API". | ✅ Complete |
-| Mega menu | Port MegaMenu for multi-level header navigation | Phase 2 |
+| PDP content blocks | Sale `Badge` next to price (computed % off); `Accordion` (Details / Shipping / Returns) replacing the bare `<details>` with vanilla JS toggle + `--accordion-content-height` height animation; `Carousel` "In the Wild" lifestyle section reading from `product.metafields.custom.lifestyle_images.value` with a graceful fallback to `product.images` (offset:1) so the section ships content out of the box; three `feature-block` sections wired into `templates/product.json` (global content, per-category variants are merchant-driven via alternate product templates). | ✅ Complete |
+| Mega menu | Port MegaMenu for multi-level header navigation | Phase 2 — DS component not yet built |
 | Predictive search | Port PredictiveSearch as a header-triggered overlay | Phase 2 |
 | QA pass | Real browser testing, mobile sanity, checkout flow verification | Pending |
 | Tokens sync automation | Resolve the PENDING DECISION — likely a Turborepo task | Pending |

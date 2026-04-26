@@ -3,7 +3,47 @@
     "main": {
       "type": "main-product",
       "settings": {}
+    },
+    "lifestyle": {
+      "type": "product-lifestyle",
+      "settings": {
+        "heading": "In the wild",
+        "subtitle": "See it in action"
+      }
+    },
+    "feature-materials": {
+      "type": "feature-block",
+      "settings": {
+        "title": "Built from what lasts",
+        "description": "Aramid fiber, full-grain leather, solid brass — every material is chosen for the way it ages, not the way it photographs. We pick what we'd carry ourselves and skip what we wouldn't.",
+        "placeholder": "materials",
+        "reverse": false
+      }
+    },
+    "feature-durability": {
+      "type": "feature-block",
+      "settings": {
+        "title": "Engineered for everyday",
+        "description": "Field-tested through commutes, weekend trips, and the small drops that add up. Tolerances are tight, the seams are the part you'd inspect last, and nothing is glued where it could be stitched.",
+        "placeholder": "durability",
+        "reverse": true
+      }
+    },
+    "feature-zero-waste": {
+      "type": "feature-block",
+      "settings": {
+        "title": "Made with less, by design",
+        "description": "Patterns are nested to leave the smallest offcut. Every component ships replaceable — buckles, straps, liners, hardware — so a single worn part doesn't end the life of the whole thing.",
+        "placeholder": "zero-waste",
+        "reverse": false
+      }
     }
   },
-  "order": ["main"]
+  "order": [
+    "main",
+    "lifestyle",
+    "feature-materials",
+    "feature-durability",
+    "feature-zero-waste"
+  ]
 }

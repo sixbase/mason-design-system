@@ -6,16 +6,20 @@
   and the correct `loading` attribute per above/below the fold.
 
   Accepts:
-    image       Shopify image object, required
-    alt         string — overrides image.alt if provided
-    sizes       CSS sizes attribute, default '(min-width: 1024px) 50vw, 100vw'
-    loading     'lazy' | 'eager' (default 'lazy')
+    image         Shopify image object, required
+    alt           string — overrides image.alt if provided
+    sizes         CSS sizes attribute, default '(min-width: 1024px) 50vw, 100vw'
+    loading       'lazy' | 'eager' (default 'lazy')
     fetchpriority 'high' | 'low' | 'auto' (default 'auto')
-    class       additional CSS class
+    class         additional CSS class
+    focal_point   image.presentation.focal_point hash {x, y} (0–1 fractions).
+                  Emitted as inline `object-position` so cover-cropped images
+                  keep the merchant-set focal area in view. Pair with
+                  `object-fit: cover` on the img.
 
   Usage:
     {% render 'responsive-image', image: product.featured_image, alt: product.title %}
-    {% render 'responsive-image', image: section.settings.image, loading: 'eager', fetchpriority: 'high' %}
+    {% render 'responsive-image', image: image, focal_point: image.presentation.focal_point %}
 {%- endcomment -%}
 
 {%- liquid
@@ -25,6 +29,13 @@
   assign img_priority = fetchpriority | default: 'auto'
   assign img_class = class | default: ''
   assign widths = '300,600,900,1200,1500,1800,2400'
+
+  assign focal_style = ''
+  if focal_point and focal_point.x and focal_point.y
+    assign fx = focal_point.x | times: 100
+    assign fy = focal_point.y | times: 100
+    assign focal_style = 'object-position: ' | append: fx | append: '% ' | append: fy | append: '%;'
+  endif
 -%}
 
 {%- if image -%}
@@ -44,5 +55,6 @@
     fetchpriority="{{ img_priority }}"
     decoding="async"
     {% if img_class != '' %}class="{{ img_class }}"{% endif %}
+    {% if focal_style != '' %}style="{{ focal_style }}"{% endif %}
   >
 {%- endif -%}

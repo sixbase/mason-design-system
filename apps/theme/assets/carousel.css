@@ -1,7 +1,8 @@
 /* ─── Carousel ──────────────────────────────────────────── */
-/* Only the variants emitted by theme templates are shipped:
-   .ds-carousel--gap-md (featured-collection) and
-   .ds-carousel__slide--sm (product-card slides). */
+/* Variants emitted by theme templates:
+   .ds-carousel--gap-md (featured-collection, product-lifestyle)
+   .ds-carousel__slide--sm (product-card slides on featured-collection)
+   .ds-carousel__slide--md (lifestyle images on product-lifestyle) */
 
 .ds-carousel {
   overflow: hidden;
@@ -38,5 +39,22 @@
 @media (min-width: 1024px) {
   .ds-carousel__slide--sm {
     flex-basis: 33.333%;
+  }
+}
+
+/* md: default slides — used for lifestyle imagery on PDP */
+.ds-carousel__slide--md {
+  flex-basis: 85%;
+}
+
+@media (min-width: 768px) {
+  .ds-carousel__slide--md {
+    flex-basis: 65%;
+  }
+}
+
+@media (min-width: 1024px) {
+  .ds-carousel__slide--md {
+    flex-basis: 50%;
   }
 }

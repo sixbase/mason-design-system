@@ -1,0 +1,21 @@
+/* ─── Product lifestyle ──────────────────────────────────── */
+/*
+ * Section header + image styling for the "In the Wild" carousel
+ * below the PDP. The carousel itself uses the shared .ds-carousel
+ * primitive — only section-specific layout lives here.
+ */
+.ds-product-lifestyle__header {
+  margin-bottom: var(--spacing-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.ds-product-lifestyle__img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  background-color: var(--color-background-subtle);
+  display: block;
+}

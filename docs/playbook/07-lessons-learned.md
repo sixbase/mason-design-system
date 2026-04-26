@@ -62,6 +62,8 @@ Every lesson produced a rule. This table collects them all so Claude can scan fo
 | Icon buttons in `justify-content: space-between` flex rows need `flex-shrink: 0` — otherwise they collapse to content width | [icon-button-flex-shrink](#icon-button-flex-shrink) |
 | Inline SVGs in Liquid/Astro need `.ds-icon ds-icon--{size}` classes OR explicit `width`/`height` attrs — no default dimensions = invisible or 300×150 | [inline-svg-sizing](#inline-svg-sizing) |
 | Icon audits must verify render, not just path correctness — agents that only check `d=""` miss sizing/layout bugs | [icon-audit-render-check](#icon-audit-render-check) |
+| `<figure>` has default `margin: 1em 40px` — reset to 0 when used as a positioned wrapper, otherwise content shifts and parent bg shows through | [figure-default-margin](#figure-default-margin) |
+| Pipe Shopify `image.presentation.focal_point` to `object-position` so cover-cropped images keep the merchant-set focal area visible | [shopify-focal-point](#shopify-focal-point) |
 
 ### Docs & Demo Rules
 
@@ -344,6 +346,11 @@ Component library: 100% compliance. Docs site: accumulated inline styles over ti
 **Bug:** Three subagents audited icon usage across components, docs, and theme. All three declared the theme toggle sun/moon ✅ correct because the SVG `d=""` paths drew valid sun and moon shapes. None caught that the moon was invisible in the Shopify theme (missing `.ds-icon` class) or that the docs toggle was squeezed to 16px (flex-shrink bug).
 **Rule:** Any icon/visual audit must include a render-verification step — open the dev server, inspect computed styles (`width`, `height`, `display`, `color`), and screenshot. Semantic path correctness ≠ visual correctness. When delegating to subagents, include "verify the icon actually renders visibly at the expected size" in the prompt.
 
+### Liquid `== empty` doesn't catch `nil` — use `== blank` {#liquid-empty-vs-blank}
+**Bug (2026-04-26):** Built `sections/product-lifestyle.liquid` to fall back to `product.images` when `product.metafields.custom.lifestyle_images.value` is unset. Wrote `if images_to_show == empty or images_to_show.size == 0` to detect "no metafield." Never fell through. The metafield was nil (not present on the product), and in Shopify Liquid `nil == empty` is `false` — `empty` only matches the `EmptyDrop` sentinel that arrays/strings collapse to when actually populated and then drained, not the `nil` value of an unset variable. Calling `.size` on `nil` returns `nil` (not `0`), so the size comparison also failed. The fallback never executed; the section silently rendered nothing.
+
+**Rule:** When a Liquid variable could be `nil`, an empty array, an empty string, or `false`, use `== blank` — not `== empty` and not `.size == 0`. `blank` matches all four; `empty` only matches the `EmptyDrop` sentinel. This applies double for metafield reads (`product.metafields.…value`) since unset metafields return `nil`. Inverse: prefer `!= blank` over `present?` for "has value" checks.
+
 ### Wrapping a Liquid `render` snippet in a sized `<span>` silently downgrades typography {#span-wrap-liquid-render}
 **Bug (2026-04-24):** Cart line-item's line total in the theme was rendered as `<span class="ds-text ds-text--sm ds-text--semibold">{% render 'price' %}</span>`. The price snippet outputs `<div class="ds-price-display">…</div>`, and `<span>` can't contain `<div>` — the HTML parser auto-closes the span, the div emerges as a sibling, and the visible text is rendered by the snippet's inner `<span class="ds-text--base ds-text--medium">` (16px / weight 500) instead of the intended sm / semibold (14px / 600). The outer span becomes an empty element with no effect. User perceived this as a font-size mismatch vs the DS drawer.
 
@@ -352,6 +359,18 @@ The React DS side doesn't hit this because `<Text size="sm" weight="semibold">` 
 **Rule:** When porting a React pattern that uses `<Text>` (or any sized typography primitive) to wrap a *plain scalar value*, emit a single `<p class="ds-text ds-text--{size} ds-text--{weight}">{value}</p>` in Liquid. Do NOT route through `{% render 'price' %}` (or any other component snippet) just to get the value formatted — call the formatter directly (`| money`, etc.). Reserve component snippets for cases where the component's own structure is wanted. A corollary: never put a Liquid component render inside a `<span>` — if the component's root is block-level (which most DS components are), the HTML is invalid and the cascading typography classes on the outer span get silently dropped.
 **Bug (2026-04-24):** Ported `QuantitySelector` from React to Liquid for the cart drawer. React uses `<output>` for the value display; the Liquid port uses `<input type="number">` so the value POSTs with the cart form for no-JS progressive enhancement. DS CSS sets `min-width: var(--size-control-sm)` on the value — sufficient for `<output>` (no intrinsic width). In the theme, `<input type="number">` has a default `size="20"` attribute that becomes its flex-basis, so the input rendered at ~120px wide inside the drawer's 384px panel, blowing out the cart-line-item grid. Mobile touch-target override (also theme-only, not in DS) compounded the drift at narrow widths.
 **Rule:** When a DS component uses `<output>` (or any element with no intrinsic width) and the Liquid port substitutes `<input>`, pin both `width` AND `min-width` in every size variant. Never preserve only `min-width` for an element whose intrinsic width is a character count. Also — do not add mobile touch-target overrides that exist only in the theme copy. If WCAG 2.5.5 needs a touch floor, either flag it as a DS-side gap and fix it in the DS (so it ports automatically), or solve it through component size props, never through a theme-only media query.
+
+---
+
+### `<figure>` default margin shifted PDP image, exposing wrapper bg {#figure-default-margin}
+**Bug:** PDP product image showed the wrapper's `--color-background-subtle` along the top and left edges. Looked like an aspect-ratio mismatch but `object-fit: cover` was already in place. Root cause: `.ds-image-gallery__slide` is rendered as `<figure>` in `main-product.liquid`, and browsers apply default `margin: 1em 40px` to figure. The non-active slides use `position: absolute` (margin ignored), but the `--active` variant flips to `position: relative`, where the margin re-applies, pushing the image down and right.
+**Fix:** Added `margin: 0` to `.ds-image-gallery__slide` in [apps/theme/assets/image-gallery.css](apps/theme/assets/image-gallery.css). Design system React component renders `<img>` directly (no figure), so it wasn't affected — but theme port introduced the figure wrapper without resetting margin.
+**Rule:** Whenever a `<figure>` is used as a positioned/sized container (slides, cards, media wrappers), always reset `margin: 0`. Browser default is `1em 40px` and silently breaks any layout that assumes the figure fills its parent.
+
+### Shopify focal point → CSS `object-position` for cover-cropped images {#shopify-focal-point}
+**Bug:** Same PDP image audit. Once `object-fit: cover` is in place, images crop to fill — but the crop defaults to centered, which can chop the subject (face, product) off-screen for portrait/landscape mismatches.
+**Fix:** Extended [responsive-image.liquid](apps/theme/snippets/responsive-image.liquid) with a `focal_point` param. When passed `image.presentation.focal_point` (Shopify's per-image focal point set in the media admin), it emits inline `style="object-position: {x}% {y}%"`. PDP now renders merchant-set focal points correctly. Cost: one inline style per image; benefit: merchants control crop without us building a focal picker.
+**Rule:** Any `<img>` rendered with `object-fit: cover` over a Shopify image should accept and apply `image.presentation.focal_point`. The data is free from Shopify's media admin — just pipe it through.
 
 ---
 
