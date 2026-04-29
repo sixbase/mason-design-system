@@ -54,7 +54,7 @@ If parallelization starts before foundations are done, every agent reinvents the
 
 | Stream | Scope | Files Touched | Test URL |
 |--------|-------|---------------|----------|
-| **A. Header + announcement** | `sections/header.liquid`, `sections/announcement-bar.liquid`, `assets/header.css` | sections A's own files | `/` |
+| **A. Header + announcement** | `sections/header.liquid`, `sections/announcement-bar.liquid`, `assets/header.css`, `assets/announcement-bar.css` | sections A's own files — announcement bar now sourced from DS `packages/components/src/announcement-bar/` | `/` |
 | **B. Footer** | `sections/footer.liquid`, `assets/footer.css` | sections B's own files | `/` |
 | **C. PDP (product template)** | `sections/main-product.liquid`, `snippets/product-form.liquid`, `snippets/product-gallery.liquid`, `assets/product.css`, `assets/product-gallery.css`, `assets/variant-selector.css`, `assets/stock-indicator.css`, `assets/star-rating.css`, `assets/add-to-cart-button.css` | C's own files | `/products/<handle>` |
 | **D. PLP (collection template)** | `sections/main-collection.liquid`, `sections/collection-filters.liquid`, `assets/collection.css`, `assets/product-card.css`, `assets/collection-filters.css`, `assets/pagination.css` | D's own files | `/collections/<handle>` |
