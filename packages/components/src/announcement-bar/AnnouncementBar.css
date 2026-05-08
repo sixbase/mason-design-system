@@ -12,10 +12,6 @@
   color: var(--announcement-bar-fg);
 }
 
-.ds-announcement-bar[hidden] {
-  display: none;
-}
-
 .ds-announcement-bar__inner {
   position: relative;
   max-width: var(--size-container-max);

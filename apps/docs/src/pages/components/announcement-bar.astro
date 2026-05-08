@@ -1,0 +1,60 @@
+---
+import ComponentPage from '../../layouts/ComponentPage.astro';
+import {
+  AnnouncementBarDefault,
+  AnnouncementBarWithLink,
+  AnnouncementBarDismissible,
+  AnnouncementBarDismissibleWithLink,
+} from '../../components/AnnouncementBarGallery';
+---
+
+<ComponentPage
+  title="Announcement Bar"
+  description="A thin, full-width banner above the site header for store-wide messages — shipping thresholds, promotions, or policy notices. Optionally dismissible and linkable."
+  installCode="import { AnnouncementBar } from '@ds/components';"
+  props={[
+    {
+      headers: ['Prop', 'Type', 'Default', 'Description'],
+      rows: [
+        ['<code>children</code>', '<code>ReactNode</code>', '—', 'Announcement message content'],
+        ['<code>href</code>', '<code>string</code>', '—', 'Optional link URL — wraps the message in an anchor'],
+        ['<code>dismissible</code>', '<code>boolean</code>', '<code>false</code>', 'Whether the bar can be dismissed'],
+        ['<code>onDismiss</code>', '<code>() =&gt; void</code>', '—', 'Called when the dismiss button is clicked'],
+      ],
+    },
+  ]}
+  accessibility={[
+    'Uses <code>&lt;aside role="region" aria-label="Store announcement"&gt;</code> for landmark identification',
+    'Dismiss button has <code>aria-label="Dismiss announcement"</code>',
+    'Uses <code>--color-primary</code> background with <code>--color-primary-foreground</code> text for WCAG AA contrast',
+    'Dismiss button meets WCAG 2.5.5 touch target size (44×44px hit area)',
+    'All interactive elements have visible focus indicators via <code>--focus-ring</code>',
+    'Transitions respect <code>prefers-reduced-motion: reduce</code>',
+  ]}
+>
+  <h2>Default</h2>
+  <p>Plain text announcement with no link or dismiss.</p>
+  <AnnouncementBarDefault client:load />
+  <pre><code>{`<AnnouncementBar>Free shipping on orders over $50.</AnnouncementBar>`}</code></pre>
+
+  <h2>With link</h2>
+  <p>Pass <code>href</code> to wrap the message in an anchor. The entire message area becomes clickable.</p>
+  <AnnouncementBarWithLink client:load />
+  <pre><code>{`<AnnouncementBar href="/collections/sale">
+  Summer sale — 20% off everything. Shop now.
+</AnnouncementBar>`}</code></pre>
+
+  <h2>Dismissible</h2>
+  <p>Pass <code>dismissible</code> and <code>onDismiss</code> to show a close button. The component unmounts itself on dismiss — persist the dismissed state via cookie or local storage in your application.</p>
+  <AnnouncementBarDismissible client:load />
+  <pre><code>{`<AnnouncementBar dismissible onDismiss={() => setVisible(false)}>
+  Free returns within 30 days of purchase.
+</AnnouncementBar>`}</code></pre>
+
+  <h2>Dismissible with link</h2>
+  <p>Link and dismiss combined. The dismiss button sits outside the link hit area.</p>
+  <AnnouncementBarDismissibleWithLink client:load />
+  <pre><code>{`<AnnouncementBar href="/collections/new-arrivals" dismissible onDismiss={() => setVisible(false)}>
+  New arrivals just dropped — explore the collection.
+</AnnouncementBar>`}</code></pre>
+</ComponentPage>

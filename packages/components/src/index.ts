@@ -52,6 +52,7 @@ export * from './progress-bar';
 export * from './pagination';
 
 // Page-level
+export * from './announcement-bar';
 export * from './header';
 export * from './footer';
 export * from './breadcrumb';
