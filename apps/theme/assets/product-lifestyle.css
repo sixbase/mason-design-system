@@ -1,21 +1,27 @@
 /* ─── Product lifestyle ──────────────────────────────────── */
 /*
  * Section header + image styling for the "In the Wild" carousel
- * below the PDP. The carousel itself uses the shared .ds-carousel
- * primitive — only section-specific layout lives here.
+ * below the PDP. Matches the DS PDPDemo lifestyle section:
+ *   • Header is centered (heading + subtitle stacked, text-align center)
+ *   • Header margin-bottom uses the φ-13 token (26px) for section rhythm
+ *   • Image is landscape 5:4 with --radius-lg corners
+ * The carousel itself uses the shared .ds-carousel primitive — only
+ * section-specific layout lives here.
  */
 .ds-product-lifestyle__header {
-  margin-bottom: var(--spacing-6);
+  margin-bottom: var(--spacing-phi-13);
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-1);
+  align-items: center;
+  gap: var(--spacing-2);
+  text-align: center;
 }
 
 .ds-product-lifestyle__img {
   width: 100%;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 5 / 4;
   object-fit: cover;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   background-color: var(--color-background-subtle);
   display: block;
 }

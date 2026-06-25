@@ -2,11 +2,11 @@
 {{ 'product-card.css' | asset_url | stylesheet_tag }}
 {{ 'collection-filters.css' | asset_url | stylesheet_tag }}
 {{ 'pagination.css' | asset_url | stylesheet_tag }}
+{{ 'select.css' | asset_url | stylesheet_tag }}
 
 {%- liquid
   assign products_per_page = section.settings.products_per_page | default: 24
   assign columns_desktop = section.settings.columns_desktop | default: 3
-  assign show_vendor = section.settings.show_vendor
   assign enable_filters = section.settings.enable_filters
   assign enable_sort = section.settings.enable_sort
 -%}
@@ -18,79 +18,89 @@
   {%- comment -%} Breadcrumb (handles its own BreadcrumbList JSON-LD) {%- endcomment -%}
   {% render 'breadcrumb' %}
 
-  <header class="ds-collection__header">
-    <h1 class="ds-heading ds-heading--3xl ds-collection__title">
-      {{ collection.title | escape }}
-    </h1>
-    {%- if collection.description != blank -%}
-      <div class="ds-text ds-text--base ds-collection__description">
-        {{ collection.description }}
-      </div>
-    {%- endif -%}
-  </header>
-
   {%- paginate collection.products by products_per_page -%}
-    <div class="ds-collection__toolbar" role="region" aria-label="Collection controls">
-      <span class="ds-collection__results-count">
-        {{ collection.products_count }}
-        {%- if collection.products_count == 1 %} product{% else %} products{% endif -%}
-      </span>
+    {%- assign has_filters = false -%}
+    {%- if enable_filters and collection.filters.size > 0 -%}
+      {%- assign has_filters = true -%}
+    {%- endif -%}
 
-      {%- if enable_filters and collection.filters.size > 0 -%}
-        <div class="ds-collection__mobile-only">
-          {% render 'collection-filters', context: 'mobile' %}
+    <div class="ds-results-header">
+      <div class="ds-results-header__row">
+        <div>
+          <h1 class="ds-heading ds-heading--2xl ds-collection__title">
+            {{ collection.title | escape }}
+          </h1>
+          <p class="ds-text ds-text--sm ds-text--muted ds-collection__count">
+            {{ collection.products_count }}
+            {%- if collection.products_count == 1 %} product{% else %} products{% endif -%}
+          </p>
+          {%- if collection.description != blank -%}
+            <div class="ds-text ds-text--base ds-collection__description">
+              {{ collection.description }}
+            </div>
+          {%- endif -%}
         </div>
-      {%- endif -%}
 
-      {%- if enable_sort -%}
-        <form method="get" class="ds-collection__sort">
-          <label for="SortBy" class="ds-collection__sort-label">Sort by</label>
-          <select
-            id="SortBy"
-            name="sort_by"
-            class="ds-collection__sort-select"
-            data-auto-submit
-          >
-            {%- for option in collection.sort_options -%}
-              <option
-                value="{{ option.value }}"
-                {% if option.value == collection.sort_by or option.value == collection.default_sort_by %}selected{% endif %}
-              >
-                {{ option.name | escape }}
-              </option>
-            {%- endfor -%}
-          </select>
-          {%- comment -%} Preserve active filters when sort changes {%- endcomment -%}
-          {%- for filter in collection.filters -%}
-            {%- for value in filter.active_values -%}
-              <input type="hidden" name="{{ value.param_name }}" value="{{ value.value }}">
-            {%- endfor -%}
-            {%- if filter.type == 'price_range' -%}
-              {%- if filter.min_value.value != blank -%}
-                <input type="hidden" name="{{ filter.min_value.param_name }}" value="{{ filter.min_value.value }}">
-              {%- endif -%}
-              {%- if filter.max_value.value != blank -%}
-                <input type="hidden" name="{{ filter.max_value.param_name }}" value="{{ filter.max_value.value }}">
-              {%- endif -%}
-            {%- endif -%}
-          {%- endfor -%}
-          <noscript>
-            <button type="submit" class="ds-button ds-button--secondary ds-button--sm">Apply</button>
-          </noscript>
-        </form>
-      {%- endif -%}
+        {%- if enable_sort -%}
+          <div class="ds-results-header__sort">
+            <form method="get" class="ds-collection__sort-form">
+              <label for="SortBy" class="ds-sr-only">Sort by</label>
+              <div class="ds-select-trigger ds-select-trigger--sm">
+                <select
+                  id="SortBy"
+                  name="sort_by"
+                  class="ds-select-trigger__native"
+                  data-auto-submit
+                >
+                  {%- for option in collection.sort_options -%}
+                    <option
+                      value="{{ option.value }}"
+                      {% if option.value == collection.sort_by or option.value == collection.default_sort_by %}selected{% endif %}
+                    >
+                      {{ option.name | escape }}
+                    </option>
+                  {%- endfor -%}
+                </select>
+                <span class="ds-select-icon" aria-hidden="true">
+                  {% render 'icon', name: 'chevron-down', size: 'sm' %}
+                </span>
+              </div>
+              {%- comment -%} Preserve active filters when sort changes {%- endcomment -%}
+              {%- for filter in collection.filters -%}
+                {%- for value in filter.active_values -%}
+                  <input type="hidden" name="{{ value.param_name }}" value="{{ value.value }}">
+                {%- endfor -%}
+                {%- if filter.type == 'price_range' -%}
+                  {%- if filter.min_value.value != blank -%}
+                    <input type="hidden" name="{{ filter.min_value.param_name }}" value="{{ filter.min_value.value }}">
+                  {%- endif -%}
+                  {%- if filter.max_value.value != blank -%}
+                    <input type="hidden" name="{{ filter.max_value.param_name }}" value="{{ filter.max_value.value }}">
+                  {%- endif -%}
+                {%- endif -%}
+              {%- endfor -%}
+              <noscript>
+                <button type="submit" class="ds-button ds-button--secondary ds-button--sm">Apply</button>
+              </noscript>
+            </form>
+          </div>
+        {%- endif -%}
+      </div>
     </div>
 
-    <div
-      class="ds-collection__body{% if enable_filters and collection.filters.size > 0 %} ds-collection__body--with-filters{% endif %}"
-    >
-      {%- if enable_filters and collection.filters.size > 0 -%}
-        <aside class="ds-collection__sidebar" aria-label="Filters">
-          {% render 'collection-filters', context: 'desktop' %}
+    <div class="ds-collection-layout{% if has_filters %} ds-collection-layout--with-filters{% endif %}">
+      {%- if has_filters -%}
+        <aside class="ds-collection-layout__sidebar" aria-label="Filters">
+          {%- comment -%}
+            Single render — collection-filters internally handles
+            desktop sidebar vs mobile trigger via CSS visibility.
+            Mirrors the React <CollectionFilters> component's pattern.
+          {%- endcomment -%}
+          {% render 'collection-filters' %}
         </aside>
       {%- endif -%}
 
-      <div class="ds-collection__main" id="MainContent">
+      <div class="ds-collection-layout__main" id="MainContent">
         {%- if collection.products.size > 0 -%}
           <div class="ds-collection__grid" role="list">
             {%- for product in collection.products -%}
@@ -101,7 +111,6 @@
               <div role="listitem">
                 {% render 'product-card',
                   product: product,
-                  show_vendor: show_vendor,
                   loading: card_loading
                 %}
               </div>
@@ -310,12 +319,6 @@
       "step": 1,
       "label": "Columns on desktop",
       "default": 3
-    },
-    {
-      "type": "checkbox",
-      "id": "show_vendor",
-      "label": "Show product vendor",
-      "default": false
     },
     {
       "type": "checkbox",

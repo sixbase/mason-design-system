@@ -7,16 +7,14 @@
 
   Accepts:
     product      Shopify product object, required
-    show_vendor  boolean — optional, defaults to false
     loading      'lazy' | 'eager' (default 'lazy')
     sizes        CSS sizes attribute for responsive-image
 
   Usage:
-    {% render 'product-card', product: product, show_vendor: true %}
+    {% render 'product-card', product: product %}
 {%- endcomment -%}
 
 {%- liquid
-  assign show_vendor = show_vendor | default: false
   assign img_loading = loading | default: 'lazy'
   assign img_sizes = sizes | default: '(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw'
   assign primary_image = product.featured_image
@@ -105,23 +103,19 @@
     </div>
 
     <div class="ds-card-body">
-      {%- if show_vendor and product.vendor != blank -%}
-        <span class="ds-text ds-text--sm ds-product-card__vendor">{{ product.vendor | escape }}</span>
-      {%- endif -%}
+      <p class="ds-text ds-text--sm ds-product-card__name">{{ product.title | escape }}</p>
 
-      <span class="ds-text ds-text--sm ds-product-card__name">{{ product.title | escape }}</span>
-
-      <div class="ds-product-card__price">
-        {%- if is_on_sale -%}
+      {%- if is_on_sale -%}
+        <div class="ds-product-card__price">
           {% render 'price',
             price: product.price,
             compare_at_price: product.compare_at_price,
             size: 'sm'
           %}
-        {%- else -%}
-          {% render 'price', price: product.price, size: 'sm' %}
-        {%- endif -%}
-      </div>
+        </div>
+      {%- else -%}
+        <p class="ds-text ds-text--sm ds-text--muted ds-product-card__price">{{ product.price | money }}</p>
+      {%- endif -%}
     </div>
   </a>
 </div>

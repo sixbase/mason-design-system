@@ -64,6 +64,13 @@ Every lesson produced a rule. This table collects them all so Claude can scan fo
 | Icon audits must verify render, not just path correctness — agents that only check `d=""` miss sizing/layout bugs | [icon-audit-render-check](#icon-audit-render-check) |
 | `<figure>` has default `margin: 1em 40px` — reset to 0 when used as a positioned wrapper, otherwise content shifts and parent bg shows through | [figure-default-margin](#figure-default-margin) |
 | Pipe Shopify `image.presentation.focal_point` to `object-position` so cover-cropped images keep the merchant-set focal area visible | [shopify-focal-point](#shopify-focal-point) |
+| Liquid theme ports must mirror DS markup AND text styling — same element (`<p>` not `<span>`), same Text size + muted state, no invented hover affordances | [theme-port-text-drift](#theme-port-text-drift) |
+| `.ds-price-display--sm` renders price at `--font-size-base` (16px) — not `--font-size-sm`. Don't confuse it with `<Text size="sm">` (14px) | [price-display-size-naming](#price-display-size-naming) — superseded by [price-display-collapse](#price-display-collapse) |
+| PriceDisplay sale state (when `comparePrice` is present) renders the current price in `--color-destructive` via `:has()` so it visually echoes the Sale badge | [price-display-collapse](#price-display-collapse) |
+| When the React DS source changes a primitive (PriceDisplay, Card, etc.), `git log -- packages/components/src/{component}/` is the audit trail — diff the theme's CSS/Liquid against the latest commit and port | [theme-port-audit-trail](#theme-port-audit-trail) |
+| Page-level patterns belong in a docs example demo (e.g. CollectionDemo.tsx) BEFORE they're ported to the theme. Components in isolation aren't enough — the page-level composition is the DS contract | [page-level-demo-pattern](#page-level-demo-pattern) |
+| `<Heading level={N}>` is NOT a valid prop — the API is `<Heading as="hN">`. Pass `level={1}` and you silently get `<h2>` (the default). Grep all demos when seen | [heading-level-prop-bug](#heading-level-prop-bug) |
+| `<CollectionFilters>` is self-contained — render it ONCE per page, not separately for desktop and mobile. CSS visibility inside the component handles the responsive split | [collection-filters-single-render](#collection-filters-single-render) |
 
 ### Docs & Demo Rules
 
@@ -371,6 +378,58 @@ The React DS side doesn't hit this because `<Text size="sm" weight="semibold">` 
 **Bug:** Same PDP image audit. Once `object-fit: cover` is in place, images crop to fill — but the crop defaults to centered, which can chop the subject (face, product) off-screen for portrait/landscape mismatches.
 **Fix:** Extended [responsive-image.liquid](apps/theme/snippets/responsive-image.liquid) with a `focal_point` param. When passed `image.presentation.focal_point` (Shopify's per-image focal point set in the media admin), it emits inline `style="object-position: {x}% {y}%"`. PDP now renders merchant-set focal points correctly. Cost: one inline style per image; benefit: merchants control crop without us building a focal picker.
 **Rule:** Any `<img>` rendered with `object-fit: cover` over a Shopify image should accept and apply `image.presentation.focal_point`. The data is free from Shopify's media admin — just pipe it through.
+
+---
+
+### ProductCard text drift between React and Liquid {#theme-port-text-drift}
+**Bug:** Audit of [product-card.liquid](apps/theme/snippets/product-card.liquid) vs [ProductCard.tsx](packages/components/src/product-card/ProductCard.tsx) found 5 divergences:
+1. Name rendered as `<span>` instead of `<p>` (DS Text default).
+2. Vendor row added in theme — does not exist in DS.
+3. Hover-underline on name added in theme — DS only escalates via image zoom.
+4. Price always rendered through `{% render 'price' %}` (PriceDisplay → 16px, default color), but DS default is `<Text size="sm" muted>` (14px, muted).
+5. Badge wrapper had dead `flex; flex-direction: column; gap; align-items` for stacked badges, but the if/elseif logic only ever emits one badge.
+**Fix:** Aligned theme to DS — switched name to `<p>`, removed vendor + schema setting + CSS rule, dropped hover underline, made the muted-Text price the default and only rendered PriceDisplay when `compare_at_price` exists, simplified badge to absolutely-positioned single child.
+**Rule:** Every Liquid theme snippet that ports a React component must match the React markup *and* the Text/Heading wrapper choices (size, muted, weight). When auditing, diff three things: tag name, class list, and which Typography primitive wraps the content. Visual sameness is not parity if the underlying tokens diverge.
+
+### `.ds-price-display--sm` renders at base, not sm {#price-display-size-naming}
+**Trap:** [price-display.css](packages/components/src/price-display/PriceDisplay.css) maps the size variants asymmetrically — `--sm` → `--font-size-base` (16px), `--md` → `--font-size-lg` (18px), `--lg` → `--font-size-2xl`. This is intentional (price needs visual prominence; PriceDisplay has its own size curve, not the global Text scale). But it's confusing because `<Text size="sm">` is 14px — different scale entirely.
+**Rule:** `.ds-price-display--{size}` and `<Text size="{size}">` use *different* type scales. Never assume they match. When porting, check the actual rendered font-size in [PriceDisplay.css](packages/components/src/price-display/PriceDisplay.css), not the size label.
+
+---
+
+### PriceDisplay collapse: matched sizes + sale-red {#price-display-collapse}
+**Change:** Commit `6c2812d` rewrote [PriceDisplay.css](packages/components/src/price-display/PriceDisplay.css). Two shifts:
+1. **Size scale collapsed** — both price and compare now share one size per variant (`sm` = 14px, `md` = 16px, `lg` = 18px). Previously the strikeout was always one tier smaller than the price, which read as visually disconnected. Selector switched from `.ds-price-display__price` / `.ds-price-display__compare` to `.ds-text` so any Text child inside the wrapper inherits the size.
+2. **Sale state colors the price red** — `.ds-price-display:has(.ds-price-display__compare) .ds-price-display__price { color: var(--color-destructive); }`. The `:has()` parent selector means the rule only fires when a compare element is present, so non-sale prices keep the default foreground. Visually echoes the destructive Sale badge.
+**Theme port:** [apps/theme/assets/price-display.css](apps/theme/assets/price-display.css) replicated exactly. [apps/theme/snippets/price.liquid](apps/theme/snippets/price.liquid) had hardcoded `.ds-text--base` on both spans — removed, since the new variant rules target `.ds-text` and the markup must mirror the React `<Text as="span">` (no size class) for the cascade to win.
+**Rule:** When PriceDisplay (or any DS component using `.ds-text` size targeting) changes, theme markup must NOT pre-set a `.ds-text--{size}` class on Text children — let the parent variant rule own size. Pre-setting forces a specificity tie that the variant rule may lose.
+
+### Theme-port audit trail = `git log -- packages/components/src/{component}/` {#theme-port-audit-trail}
+**Pattern:** When the user says "I've made edits to the design system, port them," the audit is mechanical:
+1. `git status packages/` — uncommitted DS edits
+2. `git log --oneline -10 -- packages/components/src/{component-of-interest}/` — recent commits
+3. `git show {sha} -- {file}` — diff for each
+4. `diff apps/theme/assets/{component}.css packages/components/src/{component}/{Component}.css` — current divergence
+5. Apply the diff to theme; remove any markup that pre-sets classes that should now be inherited.
+**Rule:** Don't re-audit the whole component from scratch when a targeted DS edit is the source. Use git as the diff trail and port surgically.
+
+---
+
+### Page-level demos define the page contract, not isolated components {#page-level-demo-pattern}
+**Bug:** Tried to port the Shopify collection page's filter integration "to match the design system." Discovered that while `<CollectionFilters>` exists as a DS component, the [docs collection example](apps/docs/src/pages/examples/collection.astro) didn't actually compose it — it rendered an unfiltered grid + sort. There was no DS source-of-truth for **what a collection page with filters looks like**, only for the filter component in isolation. Theme had improvised the integration (toolbar, sidebar layout, mobile filter trigger placement) without a DS reference, so audits couldn't tell which side was correct.
+**Fix:** Extended [CollectionDemo.tsx](apps/docs/src/components/CollectionDemo.tsx) to compose `<CollectionFilters>` in a sidebar with stateful filter logic (categories, price range, on-sale boolean). Added [.ds-collection-layout](apps/docs/src/components/CollectionDemo.css) as the page-level grid pattern. Then ported that pattern verbatim to [main-collection.liquid](apps/theme/sections/main-collection.liquid) + [collection.css](apps/theme/assets/collection.css).
+**Rule:** When a theme port asks "what does the DS say?", the answer must be a runnable demo at `apps/docs/src/pages/examples/{page}.astro` that composes the relevant components in their real-world context. Component-only stories aren't enough — the page-level pattern (header structure, layout grid, mobile/desktop split, state shape) is itself part of the DS contract. If the demo doesn't exist, build it BEFORE porting. Reverses the dependency from theme-improvised → DS-defined.
+
+### `<Heading level={N}>` silently renders `<h2>` {#heading-level-prop-bug}
+**Bug:** `<Heading level={1} size="2xl">` rendered as `<h2>`, not `<h1>`. Discovered while inspecting the docs collection page — `document.querySelector('h1')` returned null. Root cause: the [Heading component API](packages/components/src/typography/Typography.tsx) uses `as="h1"`, not `level={1}`. The unknown `level` prop falls through to `...props` (spread onto the heading element as an attribute) and `as` defaults to `'h2'`.
+**Affected files:** Grep found 11 occurrences across CollectionDemo, CollectionFiltersGallery, HomepageDemo, CartDemo, DrawerGallery — every demo using `level={...}` has the wrong heading tag, breaking the SEO "one h1 per page" rule and the h1→h2→h3 hierarchy.
+**Fix scoped to this task:** Only CollectionDemo. Other 10 are flagged for separate cleanup.
+**Rule:** Heading prop is `as`, not `level`. Add a TypeScript exact-prop check or a lint rule (no-extraneous-jsx-props on Heading) so this fails at build time, not at runtime.
+
+### `<CollectionFilters>` renders both views — render once {#collection-filters-single-render}
+**Bug:** Theme had `{% render 'collection-filters', context: 'mobile' %}` in the toolbar AND `{% render 'collection-filters', context: 'desktop' %}` in the sidebar. Caused duplicate SR-only live regions, duplicate active pills DOM, and duplicate filter state inputs. Diverged from the React component which renders both views inside a single instance, with `.ds-collection-filters__desktop` / `__mobile` controlling visibility via CSS at the 768px breakpoint.
+**Fix:** Single `{% render 'collection-filters' %}` (default context), placed inside the sidebar slot of `.ds-collection-layout`. On mobile the sidebar slot collapses to full width and the component shows its mobile trigger button.
+**Rule:** Self-contained components that handle responsive splits internally (CollectionFilters, Drawer, etc.) must be rendered ONCE per page. If the Liquid port supports a `context` parameter, default it to render-everything and only specialize when there's a documented reason.
 
 ---
 

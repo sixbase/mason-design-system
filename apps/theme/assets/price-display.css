@@ -7,31 +7,21 @@
 
 /* Price and compare use <Text> primitive — only layout-specific styles here */
 
+/* Sale price (the non-strikethrough one when a comparePrice is present) */
+.ds-price-display:has(.ds-price-display__compare) .ds-price-display__price {
+  color: var(--color-destructive);
+}
+
 .ds-price-display__compare {
   text-decoration: line-through;
 }
 
 /* ─── Sizes ──────────────────────────────────────────── */
-.ds-price-display--sm .ds-price-display__price {
-  font-size: var(--font-size-base);
-}
-.ds-price-display--sm .ds-price-display__compare {
-  font-size: var(--font-size-xs);
-}
-
-.ds-price-display--md .ds-price-display__price {
-  font-size: var(--font-size-lg);
-}
-.ds-price-display--md .ds-price-display__compare {
-  font-size: var(--font-size-sm);
-}
-
-.ds-price-display--lg .ds-price-display__price {
-  font-size: var(--font-size-2xl);
-}
-.ds-price-display--lg .ds-price-display__compare {
-  font-size: var(--font-size-base);
-}
+/* One rule per variant — both price and compare share the same size,
+   so the strikeout always matches the price. */
+.ds-price-display--sm .ds-text { font-size: var(--font-size-sm); }
+.ds-price-display--md .ds-text { font-size: var(--font-size-base); }
+.ds-price-display--lg .ds-text { font-size: var(--font-size-lg); }
 
 /* ─── Screen-reader only ─────────────────────────────── */
 .ds-sr-only {

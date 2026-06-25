@@ -1,2 +1,46 @@
 /* ─── Collection Layout ──────────────────────────────────── */
-/* Header-row pattern uses shared .ds-results-header from demo-utilities.css */
+/*
+ * Page-level pattern that composes <CollectionFilters> with the product
+ * grid. Header-row pattern uses shared .ds-results-header from
+ * demo-utilities.css; the sidebar/main split below is collection-specific.
+ *
+ * The CollectionFilters component handles its own desktop/mobile split
+ * internally — on mobile, the sidebar slot still renders, but the
+ * component shows only its mobile trigger button (sidebar content is
+ * display: none below 768px).
+ */
+
+.ds-collection-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-8);
+}
+
+/* @breakpoint-md = 768px */
+@media (min-width: 768px) {
+  .ds-collection-layout--with-filters {
+    grid-template-columns: 4fr 8fr;
+  }
+}
+
+.ds-collection-layout__sidebar {
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  .ds-collection-layout__sidebar {
+    position: sticky;
+    top: var(--spacing-6);
+    align-self: start;
+  }
+}
+
+.ds-collection-layout__main {
+  min-width: 0;
+}
+
+.ds-collection-layout__empty {
+  padding-block: var(--spacing-12);
+  text-align: center;
+  color: var(--color-foreground-muted);
+}
