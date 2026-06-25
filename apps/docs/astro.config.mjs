@@ -4,7 +4,7 @@ import { defineConfig } from 'astro/config';
 
 export default defineConfig({
   site: 'https://sixbase.github.io',
-  base: '/claude-design-system',
+  base: '/mason-design-system',
   integrations: [react(), mdx()],
   output: 'static',
   server: { host: true },
