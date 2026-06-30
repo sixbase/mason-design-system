@@ -72,8 +72,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: var(--size-touch-target-lg);
-  height: var(--size-touch-target-lg);
+  width: var(--size-touch-target);
+  height: var(--size-touch-target);
   border: none;
   background: none;
   color: var(--announcement-bar-fg);
