@@ -31,12 +31,69 @@
   margin-bottom: var(--spacing-phi-13);
 }
 
-/* ─── Feature blocks ──────────────────────────────────────── */
+/* ─── Highlights ──────────────────────────────────────────── */
+/*
+ * Row of cards (default 3). Each = a 4:5 image on a light surface with
+ * 34px (--radius-3xl) corners, plus an inline title + description below.
+ * Mobile-first: 1 column, 2 from 640px, 3 from 1024px. Mirrors the
+ * storefront highlights section.
+ */
 
-.ds-homepage__features {
+.ds-homepage__highlights {
+  display: grid;
+  grid-template-columns: 1fr;
+  column-gap: var(--spacing-4);           /* 16px */
+  row-gap: var(--spacing-phi-21);         /* 42px when stacked */
+}
+
+@media (min-width: 640px) {
+  .ds-homepage__highlights {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .ds-homepage__highlights {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.ds-homepage__highlight {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-phi-21);
+}
+
+.ds-homepage__highlight-media {
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: var(--radius-3xl);       /* 34px */
+  background-color: var(--color-background-subtle);
+}
+
+.ds-homepage__highlight-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ds-homepage__highlight-text {
+  margin: var(--spacing-phi-13) var(--spacing-phi-8) 0;
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-normal);
+}
+
+.ds-homepage__highlight-title {
+  font-weight: var(--font-weight-medium);
+}
+
+.ds-homepage__highlight-title::after {
+  content: ".";
+}
+
+.ds-homepage__highlight-desc {
+  font-weight: var(--font-weight-light);
+  color: var(--color-foreground-muted);
 }
 
 /* ─── Newsletter ──────────────────────────────────────────── */

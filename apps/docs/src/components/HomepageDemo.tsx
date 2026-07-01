@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  Button, Carousel, CarouselSlide, FeatureBlock,
+  Button, Carousel, CarouselSlide,
   Heading, Input, ProductCard, Text,
 } from '@ds/components';
 import { PRODUCTS } from '../data/products';
@@ -43,7 +43,7 @@ export function HomepageDemo({ basePath = '' }: { basePath?: string }) {
       <section className="ds-homepage__hero ds-section">
         <div className="ds-homepage__hero-content">
           <Heading level={1} size="4xl">
-            Everyday Essentials,{'\u00A0'}Thoughtfully Made
+            Everyday Essentials, Thoughtfully Made
           </Heading>
           <Text size="lg" muted>
             Sustainably crafted goods designed to stand the test of time. From canvas totes to ceramic mugs — fewer things, made better.
@@ -84,23 +84,25 @@ export function HomepageDemo({ basePath = '' }: { basePath?: string }) {
         </Carousel>
       </section>
 
-      {/* ── Feature Blocks ───────────────────────────────── */}
-      <section className="ds-homepage__features ds-section">
-        {FEATURES.map((feature, i) => (
-          <FeatureBlock
-            key={feature.title}
-            title={feature.title}
-            description={feature.description}
-            reverse={i % 2 === 1}
-            image={
-              <img
-                src={feature.image}
-                alt={feature.title}
-                className="ds-demo-cover-image"
-              />
-            }
-          />
-        ))}
+      {/* ── Highlights ───────────────────────────────────── */}
+      <section className="ds-section">
+        <div className="ds-homepage__highlights">
+          {FEATURES.map((feature) => (
+            <div key={feature.title} className="ds-homepage__highlight">
+              <div className="ds-homepage__highlight-media">
+                <img
+                  src={feature.image}
+                  alt=""
+                  className="ds-homepage__highlight-img"
+                />
+              </div>
+              <p className="ds-homepage__highlight-text">
+                <span className="ds-homepage__highlight-title">{feature.title}</span>{' '}
+                <span className="ds-homepage__highlight-desc">{feature.description}</span>
+              </p>
+            </div>
+          ))}
+        </div>
       </section>
 
       {/* ── Newsletter ───────────────────────────────────── */}
