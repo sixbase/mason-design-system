@@ -46,7 +46,7 @@
   font-family: var(--font-family-body);
   font-size: var(--cf-pill-font-size);
   font-weight: var(--font-weight-medium);
-  line-height: var(--font-line-height-tight);
+  line-height: var(--line-height-tight);
   cursor: pointer;
   transition: background-color var(--transition-fast),
     border-color var(--transition-fast);

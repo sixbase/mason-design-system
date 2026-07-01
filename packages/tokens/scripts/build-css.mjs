@@ -33,6 +33,8 @@ const css = lines(
   ...Object.entries(p.size).map(([k, v]) => `  --size-${k}: ${v};`),
   // radius
   ...Object.entries(p.radius).map(([k, v]) => `  --radius-${k}: ${v};`),
+  // border width
+  ...Object.entries(p.borderWidth).map(([k, v]) => `  --border-width-${k}: ${v};`),
   // font family
   ...Object.entries(p.font.family).map(([k, v]) => `  --font-family-${k}: ${v};`),
   // font size
