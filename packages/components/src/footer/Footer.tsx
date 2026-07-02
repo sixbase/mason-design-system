@@ -1,4 +1,5 @@
 import { forwardRef } from 'react';
+import { Heading, Text } from '../typography';
 import './Footer.css';
 
 export interface FooterColumn {
@@ -48,12 +49,14 @@ export const Footer = forwardRef<HTMLElement, FooterProps>(
               <a href={logoHref} className="ds-footer__logo" aria-label={logoAlt}>
                 <img src={logoSrc} alt={logoAlt} className="ds-footer__logo-img" />
               </a>
-              {tagline && <p className="ds-footer__tagline">{tagline}</p>}
+              {tagline && <Text className="ds-footer__tagline">{tagline}</Text>}
             </div>
 
             {columns.map((col) => (
               <div key={col.heading} className="ds-footer__column">
-                <h3 className="ds-footer__heading">{col.heading}</h3>
+                <Heading as="h3" className="ds-footer__heading">
+                  {col.heading}
+                </Heading>
                 <ul className="ds-footer__links">
                   {col.links.map((link) => (
                     <li key={link.href + link.label}>
@@ -67,7 +70,7 @@ export const Footer = forwardRef<HTMLElement, FooterProps>(
 
           {(copyright || legalLinks.length > 0) && (
             <div className="ds-footer__bottom">
-              {copyright && <p className="ds-footer__copyright">{copyright}</p>}
+              {copyright && <Text className="ds-footer__copyright">{copyright}</Text>}
               {legalLinks.length > 0 && (
                 <div className="ds-footer__legal">
                   {legalLinks.map((link) => (

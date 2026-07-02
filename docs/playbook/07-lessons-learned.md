@@ -431,6 +431,16 @@ The React DS side doesn't hit this because `<Text size="sm" weight="semibold">` 
 **Fix:** Single `{% render 'collection-filters' %}` (default context), placed inside the sidebar slot of `.ds-collection-layout`. On mobile the sidebar slot collapses to full width and the component shows its mobile trigger button.
 **Rule:** Self-contained components that handle responsive splits internally (CollectionFilters, Drawer, etc.) must be rendered ONCE per page. If the Liquid port supports a `context` parameter, default it to render-everything and only specialize when there's a documented reason.
 
+### Node 22+ ships a broken global `localStorage` that shadows jsdom's in vitest {#node-localstorage-stub}
+**Bug:** Every Header test failed with `localStorage.setItem is not a function` (Node 25, vitest + jsdom). Node 22+ exposes a global `localStorage` whose storage backend is only wired up when `--localstorage-file` is passed — without it the global is a dead `{}`. Because the key already exists on `globalThis`, vitest's jsdom environment doesn't install jsdom's working Storage over it, and `window === globalThis` in vitest means `window.localStorage` hits the same stub.
+**Fix:** [vitest.setup.ts](../../packages/components/vitest.setup.ts) replaces the global with an in-memory Map-backed `Storage` implementation. All suites now get a functional `localStorage`.
+**Rule:** Components may use bare `localStorage` (browser-correct); the test shim lives in vitest.setup.ts, not in individual test files. If a future component needs `sessionStorage`, add the same shim.
+
+### 4-file-rule backfill caught raw `<h3>`/`<p>` in Footer {#footer-raw-tags}
+**Bug:** Footer and Header predated the 4-file rule (no tests, no stories). Writing the missing tests surfaced that Footer still rendered raw `<h3>` column headings and raw `<p>` tagline/copyright — violating the "always `<Heading>`/`<Text>`" convention.
+**Fix:** Footer now renders `<Heading as="h3">` and `<Text>` with the existing BEM classes. Footer.css tagline/copyright selectors were bumped to `.ds-footer .ds-footer__x` (matching the pre-existing heading selector) so they win the specificity tie against `.ds-text--base`.
+**Rule:** When backfilling tests for older components, also diff them against current conventions — missing tests and stale patterns travel together.
+
 ---
 
 ## Recommendations for Next Build
