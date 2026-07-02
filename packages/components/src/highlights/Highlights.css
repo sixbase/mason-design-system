@@ -67,8 +67,8 @@
 
 .ds-highlights__desc {
   /* Lighter than the body default (400) and muted, deepening the contrast
-     with the medium-weight title. Source Serif 4 is variable (200–900), so
-     300 is a real weight, not synthesized. */
+     with the medium-weight title. IBM Plex Sans ships a real Light (300)
+     weight, so this is a genuine weight, not synthesized. */
   font-weight: var(--font-weight-light);
   color: var(--color-foreground-secondary);
 }

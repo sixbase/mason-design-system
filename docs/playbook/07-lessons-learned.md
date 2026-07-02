@@ -465,6 +465,16 @@ The React DS side doesn't hit this because `<Text size="sm" weight="semibold">` 
 
 ---
 
+### Safari scrollbars: you get colored OR auto-hiding, never both — so don't style them {#safari-scrollbars}
+**Context:** The custom stone scrollbar worked in Chrome but not Safari. Chasing parity, we added `::-webkit-scrollbar` styling — which made Safari show a permanent, always-visible bar. The real requirement turned out to be auto-hide ("only visible while scrolling"), and that exposed a hard platform limit.
+**The limit:** Safari cannot render a scrollbar that is *both* custom-colored *and* auto-hiding.
+- Standard `scrollbar-width`/`scrollbar-color` (the props that give Chromium 121+/Firefox a colored *overlay* bar) are **ignored by stable WebKit** — don't trust "Safari supports it" claims without testing.
+- The only way to color a scrollbar in Safari is the legacy `::-webkit-scrollbar` pseudo-elements, but styling them forces a **classic, always-visible** bar (loses the auto-hide overlay).
+- Bonus gotcha if you ever do use `::-webkit-scrollbar`: **`var()` does not resolve inside those pseudo-elements in Safari** — a `background-color: var(--…)` is invalid and Safari draws its default bar. You'd have to inject concrete values at build time.
+**Rule:** Keep only the standard `* { scrollbar-width: thin; scrollbar-color: … }` — it gives Chromium/Firefox a colored bar that still auto-hides, and Safari ignores it and keeps its **native auto-hiding** bar (uncolored). Do **not** add `::-webkit-scrollbar` visible-bar styling to "fix" Safari; auto-hide is the better UX and the color isn't worth a permanent gutter bar. (`::-webkit-scrollbar { display: none }` to *hide* a bar is fine — it doesn't paint.) Two more notes: an always-visible bar in Safari may just be the user's macOS *Show scroll bars: Always* setting (not CSS); and Safari scrollbar behavior **can't be verified from the Chromium-based local preview** — check a real Safari window.
+
+---
+
 ## Recommendations for Next Build
 
 1. **Define token palette LAST.** Build a rough prototype first to understand brand direction. Lock token names before writing components — renaming causes ripple effects.

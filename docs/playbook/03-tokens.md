@@ -309,7 +309,7 @@ Use this table to determine which scale applies in a given context. When in doub
 ### Typography
 
 ```
-Font families:   body (Source Serif 4), code (JetBrains Mono), numeric (JetBrains Mono)
+Font families:   body (IBM Plex Sans), code (JetBrains Mono), numeric (JetBrains Mono)
                  Named by role, not classification — see 06-decisions-log.md
                  numeric = numerals/amounts (prices, quantities, page numbers, %),
                  monospace for tabular alignment. Applied via --font-family-numeric.

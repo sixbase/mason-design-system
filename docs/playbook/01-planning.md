@@ -24,7 +24,7 @@ This is the aesthetic DNA of the entire system. Every visual decision should tra
 | Dimension | Direction | Specifics |
 |-----------|-----------|-----------|
 | **Color** | Warm earth tones | Primary palette is `stone` (warm off-white through near-black). Supporting palettes: `brick` (error), `sage` (success), `amber` (warning), `slate` (info). All muted and earthy. |
-| **Typography** | Literary serif | Ancizar Serif. Scholarly authority with everyday readability. Thoughtful and considered, not tech-forward. |
+| **Typography** | Humanist sans | IBM Plex Sans. Clear, engineered, and modern — precise without being cold. Reads as considered product design. |
 | **Shape** | Restrained radius | Fibonacci-derived. Not pill buttons, not sharp corners — a refined middle ground. |
 | **Proportion** | Golden ratio (φ) | Every scale decision — type, spacing, radius, shadows, opacity, timing, layout splits — is derived from φ (1.618), its inverse (0.618), and Fibonacci sequences. |
 
@@ -44,10 +44,11 @@ See `03-tokens.md` for the complete mathematical reference. See `06-decisions-lo
 |-----------|------|-------------|
 | Default | Inter | Too generic, no personality |
 | v2 | EB Garamond | Too ornate and heavy at small UI sizes |
-| v3 | Source Serif 4 | Warm and readable, but replaced for more character |
-| **Final** | **Ancizar Serif** | Scholarly authority with everyday readability, 9 weights including light (300) |
+| v3 | Ancizar Serif | Scholarly serif, but reverted for readability |
+| v4 | Source Serif 4 | Warm literary serif — replaced in the move to sans |
+| **Final** | **IBM Plex Sans** | Humanist sans — clearer at UI sizes, modern product character |
 
-Ancizar Serif is loaded from Google Fonts. Designed by Universidad Nacional de Colombia — open-source scholarly serif (SIL OFL) with 9 weights from Thin to Black. We load: Light (300), Regular (400), Medium (500), Semibold (600), Bold (700) + italic variants.
+IBM Plex Sans is loaded from Google Fonts. Designed by IBM (Bold Monday) — open-source humanist sans (SIL OFL). We load: Light (300), Regular (400), Medium (500), Semibold (600), Bold (700) + italic variants.
 
 **Do not change the font without a decisions log entry and a full audit of every component for visual regressions.**
 

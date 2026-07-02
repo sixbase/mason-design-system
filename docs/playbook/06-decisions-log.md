@@ -51,7 +51,7 @@ Use this to find decisions by topic without scrolling 1300+ lines.
 | Decision | Status |
 |----------|--------|
 | Color Palette: Named palettes (`stone`, `brick`, etc.) | Active |
-| Font: Source Serif 4 (after Inter → EB Garamond → Source Serif 4 → Ancizar Serif → back) | Active |
+| Font: IBM Plex Sans (Inter → EB Garamond → Source Serif 4 → Ancizar → Source Serif 4 → **IBM Plex Sans**) | Active |
 | Font-Family Token Rename: `serif`/`mono` → `body`/`code` | Active |
 | Golden Ratio: φ governs all proportions | Active |
 | Semantic Color Pairs: `primary` + `primary-foreground` | Active |
@@ -1875,6 +1875,18 @@ Also replaced Footer.css hardcoded `1280px` with `var(--size-content-xl)`.
 **Context:** Commit `84bd7cb` (2026-06-30) switched the body/heading serif from Ancizar Serif back to Source Serif 4 in the token and the docs font loads, but the playbook, `CLAUDE.md`, and `README.md` still claimed Ancizar Serif — the docs contradicted the code.
 **Decision:** Source Serif 4 is the active typeface. Updated every stale reference (`CLAUDE.md`, `README.md`, `03-tokens.md`, the summary table above, and the original Ancizar entry's status). Recorded this entry retroactively so the log matches the commit history.
 **Rationale:** The code is the source of truth for what shipped; the log's job is to reflect it. Note: the `0.05em` `@supports not (text-box-trim)` fallback nudge was tuned for Ancizar — worth re-checking optically against Source Serif 4 in Firefox.
+**Status:** Superseded — replaced by IBM Plex Sans on 2026-07-02; see "Font: IBM Plex Sans (serif → sans pivot)" below.
+
+---
+
+### Font: IBM Plex Sans (serif → sans pivot)
+
+**Date/Phase:** 2026-07-02
+**Context:** The system had used a serif body/heading typeface since the earliest planning (EB Garamond → Source Serif 4 → Ancizar → Source Serif 4). The user decided to move the primary font to IBM Plex Sans — the first switch away from serif entirely.
+**Options considered:** Keep Source Serif 4, switch to IBM Plex Sans, another sans (Inter, system stack).
+**Decision:** IBM Plex Sans via Google Fonts. Token value: `'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif`. We load weights 300/400/500/600/700 + italics (IBM Plex Sans is a static family on Google Fonts — no `opsz` variable axis, so the `opsz` range was dropped from the font URL). Storybook previously loaded no webfont at all (fell back to system); added `.storybook/preview-head.html` so components render in the real face there too.
+**Rationale:** IBM Plex Sans is a humanist sans — clearer at small UI sizes than a serif, modern and precise, open-source (SIL OFL). The change is isolated to one token (`--font-family-body`); every component consumes `var(--font-family-body)`, so no component CSS changed. This is a brand-direction shift: the original brief positioned serif as a luxury/editorial signal (see "Design Language: High-End Ecommerce" above), so downstream copy/positioning that leans on "literary serif" should be revisited.
+**Follow-ups (not yet done):** (1) The `0.05em` `@supports not (text-box-trim)` fallback nudge was tuned for a serif — re-check optically in Firefox. (2) Heading `letter-spacing` is `normal` (a deliberate serif accommodation); a sans at display sizes may take slight negative tracking — evaluate. (3) Mirror the font swap in the storefront theme repo. (4) Full component visual-regression pass (Chromatic).
 **Status:** Active
 
 ---
@@ -1960,6 +1972,30 @@ Also replaced Footer.css hardcoded `1280px` with `var(--size-content-xl)`.
 **Options considered:** (a) `::-webkit-scrollbar` pseudo-elements (full control, but Chrome ignores them once standard properties are set, and they're legacy-Safari-only at that point); (b) standard `scrollbar-width: thin` + `scrollbar-color` (Chrome 121+, Firefox, Safari 18.2+); (c) both.
 **Decision:** Option (b), applied globally in the tokens.css global layer: `* { scrollbar-width: thin; scrollbar-color: var(--color-border-strong) transparent; }`. No hover states, no tracks — the scrollbar recedes. Dark mode swaps automatically via the semantic token. Older engines get native scrollbars (macOS overlay scrollbars are already minimal).
 **Rationale:** Same progressive-enhancement bar as `text-box-trim` (Safari 18.2+). One rule, token-driven, zero per-component work; the existing `.ds-scroll-hidden` utility still wins on specificity. Synced to the storefront's tokens.css.
+**Status:** Active — but the "Safari 18.2+" claim was wrong. Safari ignores these props and keeps its native auto-hiding scrollbar (uncolored). We tried a WebKit fallback to color it and then reverted; see "Scrollbar Treatment: Safari Keeps Native Auto-Hiding Bars (WebKit fallback reverted)" below.
+
+---
+
+### Scrollbar Treatment: Safari Keeps Native Auto-Hiding Bars (WebKit fallback reverted)
+
+**Date/Phase:** 2026-07-02
+**Context:** The custom stone-colored scrollbar rendered in Chrome but not Safari — Safari showed native macOS scrollbars. Attempts to fix it in Safari with `::-webkit-scrollbar` produced an **always-visible** bar, and the user's actual requirement surfaced: the scrollbar should **auto-hide (only visible while scrolling)**, matching Chrome's overlay behavior.
+**The hard platform constraint:** In Safari there is no way to get a scrollbar that is *both* custom-colored *and* auto-hiding. The native overlay scrollbar auto-hides but cannot be recolored (Safari doesn't support the standard `scrollbar-width`/`scrollbar-color` props — the "Safari 18.2+" claim in the entry above was wrong). The only way to color a scrollbar in Safari is `::-webkit-scrollbar`, but styling it opts the element into a **classic, always-visible** bar. So it's strictly one or the other. Chrome escapes the dilemma only because it supports `scrollbar-color` on its *overlay* (auto-hiding) scrollbar — Safari has no equivalent.
+**Dead ends tried (both reverted):** (1) `::-webkit-scrollbar` with `var()` colors — Safari doesn't resolve custom properties inside these pseudo-elements, so it fell back to the default thick light bar. (2) Same block with concrete token values injected at build time (light default + `.dark`/`[data-theme]` overrides) — colored correctly but was **always visible**, which is exactly what the user did not want. Confirmed via a real-Safari screenshot from the user.
+**Decision:** Do **not** style scrollbars for Safari at all. Keep only the standard `* { scrollbar-width: thin; scrollbar-color: … }` for Chromium/Firefox (custom color *and* auto-hide there). Safari falls through to its native auto-hiding overlay scrollbar — uncolored, but it hides when idle. Auto-hide beats color when forced to choose. The `.ds-scroll-hidden::-webkit-scrollbar { display: none }` hide-utility stays (it hides, doesn't paint).
+**Rationale:** The original goal ("make Safari match Chrome") is literally unachievable — no CSS delivers colored + auto-hiding in Safari. Given the choice, an unobtrusive native bar that respects the OS "show scrollbars while scrolling" setting is a better UX than a permanent stone bar taking up gutter space. Note: if a user's macOS is set to *Show scroll bars: Always* (System Settings → Appearance), even native bars stay visible — that's an OS setting, not our CSS.
+**Verification note:** Chrome path re-confirmed unchanged in the local preview. Safari path can't be driven from the Chromium preview — validated by user screenshot that the always-visible bar was unwanted; needs a final real-Safari eyeball after the revert to confirm it now auto-hides.
+**Status:** Active
+
+---
+
+### Alert Redesign: Neutral Card + Colored Icon Chip
+
+**Date/Phase:** 2026-07-02
+**Context:** The Alert used a tinted background + a colored `border-left` accent with `border-radius: md`. Two problems: the rounded corners fought the single-sided left border (the bar cut across the rounded corner — violates our own "no rounded corners on single-sided borders" rule), and the full-bleed semantic tint went muddy in dark mode (`*-subtle` is a 12% color-mix over the dark surface).
+**Options considered:** Mocked six directions for the user (left-bar+tint, soft tint no-bar, solid fill, white card + round tint chip, white card + solid icon badge, top accent line). User picked the **round tint chip** on a neutral card.
+**Decision:** Neutral card (`background-surface`, 1px `border`, `radius-lg`) with a top-aligned round icon chip (`spacing-8`, `radius-full`) that carries the only semantic color: chip background = `*-subtle`, icon = the solid accent. Title = `foreground`, description = `foreground-secondary` — both neutral. Variants now set only `--alert-chip-bg` + `--alert-icon`; the card is identical across all four.
+**Rationale:** Moving color into a small chip keeps the surface calm and legible in both themes (no more muddy tint), and drops the rounded-corner-vs-left-border conflict entirely. Icon is `align-items: flex-start` so the chip pins to the top line, not vertically centered. All token-driven; 18 tests incl. axe still pass; API unchanged.
 **Status:** Active
 
 ---
