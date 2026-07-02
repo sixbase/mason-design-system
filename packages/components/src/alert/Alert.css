@@ -1,14 +1,17 @@
 /* ─── Component tokens ──────────────────────────────────── */
 
 .ds-alert {
-  --alert-radius: var(--radius-md);
+  --alert-radius: var(--radius-lg);
   --alert-padding-block: var(--spacing-4);
-  --alert-padding-inline: var(--spacing-5);
+  --alert-padding-inline: var(--spacing-4);
   --alert-gap: var(--spacing-3);
-  --alert-border-width: var(--border-width-xl);
   --alert-bg: var(--color-background-surface);
-  --alert-fg: var(--color-foreground);
-  --alert-accent: var(--color-border);
+  --alert-border: var(--color-border);
+  --alert-title: var(--color-foreground);
+  --alert-desc: var(--color-foreground-secondary);
+  --alert-chip-size: var(--spacing-8);
+  --alert-chip-bg: var(--color-info-subtle);
+  --alert-icon: var(--color-info);
 }
 
 /* ─── Base styles ───────────────────────────────────────── */
@@ -19,47 +22,47 @@
   gap: var(--alert-gap);
   padding: var(--alert-padding-block) var(--alert-padding-inline);
   border-radius: var(--alert-radius);
-  border-left: var(--alert-border-width) solid var(--alert-accent);
+  border: var(--border-width-sm) solid var(--alert-border);
   background-color: var(--alert-bg);
-  color: var(--alert-fg);
   font-family: var(--font-family-body);
   position: relative;
 }
 
 /* ─── Variants ──────────────────────────────────────────── */
+/* Only the icon chip carries the semantic color — the card stays neutral. */
 
 .ds-alert--info {
-  --alert-bg: var(--color-info-subtle);
-  --alert-fg: var(--color-info-foreground);
-  --alert-accent: var(--color-info);
+  --alert-chip-bg: var(--color-info-subtle);
+  --alert-icon: var(--color-info);
 }
 
 .ds-alert--success {
-  --alert-bg: var(--color-success-subtle);
-  --alert-fg: var(--color-success-foreground);
-  --alert-accent: var(--color-success);
+  --alert-chip-bg: var(--color-success-subtle);
+  --alert-icon: var(--color-success);
 }
 
 .ds-alert--warning {
-  --alert-bg: var(--color-warning-subtle);
-  --alert-fg: var(--color-warning-foreground);
-  --alert-accent: var(--color-warning);
+  --alert-chip-bg: var(--color-warning-subtle);
+  --alert-icon: var(--color-warning);
 }
 
 .ds-alert--destructive {
-  --alert-bg: var(--color-destructive-subtle);
-  --alert-fg: var(--color-destructive-foreground);
-  --alert-accent: var(--color-destructive);
+  --alert-chip-bg: var(--color-destructive-subtle);
+  --alert-icon: var(--color-destructive);
 }
 
 /* ─── Child elements ────────────────────────────────────── */
 
 .ds-alert__icon {
   flex-shrink: 0;
+  width: var(--alert-chip-size);
+  height: var(--alert-chip-size);
+  border-radius: var(--radius-full);
+  background-color: var(--alert-chip-bg);
+  color: var(--alert-icon);
   display: flex;
   align-items: center;
-  color: var(--alert-accent);
-  padding-top: var(--spacing-1);
+  justify-content: center;
 }
 
 .ds-alert__content {
@@ -71,17 +74,19 @@
 }
 
 .ds-alert__title {
+  color: var(--alert-title);
   font-weight: var(--font-weight-semibold);
 }
 
 .ds-alert__description {
+  color: var(--alert-desc);
   max-width: 65ch;
 }
 
 .ds-alert__dismiss {
   flex-shrink: 0;
   margin-left: auto;
-  color: var(--alert-fg);
+  color: var(--color-foreground-secondary);
 }
 
 /* ─── Reduced motion ────────────────────────────────────── */

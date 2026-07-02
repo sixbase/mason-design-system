@@ -101,7 +101,7 @@ Two spacing scales exist for different scopes. Never mix them within the same co
 
 ## Typography Conventions
 
-- **Font:** Source Serif 4 (Google Fonts, variable optical size). Light (300), Regular (400), Medium (500), Semibold (600), Bold (700) + italics.
+- **Font:** IBM Plex Sans (Google Fonts). Light (300), Regular (400), Medium (500), Semibold (600), Bold (700) + italics.
 - **Reading width:** All body/paragraph text constrained to `max-width: 65ch`. Headings exempt. Use `ch` units, never `px`.
 - **Optical centering:** Use `text-box-trim: both` + `text-box-edge: cap alphabetic` on fixed-height containers (buttons, badges, tags, pills, labels, table cells, nav items, inputs). Not on body text. Include `@supports not` fallback with `translateY` nudge.
 - **Always use `<Heading>` and `<Text>` components.** Never raw `<h1>`–`<h6>` or `<p>` tags — not in components, not in demo pages, not anywhere.
