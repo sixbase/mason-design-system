@@ -57,6 +57,9 @@ export const ProgressBar = forwardRef<HTMLDivElement, ProgressBarProps>(
 
     // Display text: custom valueText, or percentage if showValue
     const displayText = valueText ?? (showValue ? `${Math.round(percentage)}%` : undefined);
+    // Only the auto percentage is a pure numeral — custom valueText may be a
+    // full sentence, so it keeps the body font.
+    const isNumericValue = valueText == null && showValue;
 
     return (
       <div ref={ref} className={classes} {...props}>
@@ -76,7 +79,16 @@ export const ProgressBar = forwardRef<HTMLDivElement, ProgressBarProps>(
           aria-valuetext={valueText}
         />
         {displayText && (
-          <Text as="span" size="sm" className="ds-progress-bar__value-text">
+          <Text
+            as="span"
+            size="sm"
+            className={[
+              'ds-progress-bar__value-text',
+              isNumericValue && 'ds-progress-bar__value-text--numeric',
+            ]
+              .filter(Boolean)
+              .join(' ')}
+          >
             {displayText}
           </Text>
         )}

@@ -26,6 +26,13 @@
   color: var(--color-foreground-secondary);
 }
 
+/* Auto percentage ("45%") renders in the numeric family; custom valueText
+   sentences keep the body font. Two-class specificity beats base .ds-text. */
+.ds-progress-bar .ds-progress-bar__value-text--numeric {
+  font-family: var(--font-family-numeric);
+  font-variant-numeric: tabular-nums;
+}
+
 /* ==========================================================================
    Track — native <progress> element, custom styled
    ========================================================================== */

@@ -19,8 +19,8 @@ const { font } = tokens.primitive;
       {Object.entries(font.family).map(([name, value]) => (
         <div class="token-row">
           <span class="token-name"><code>--font-family-{name}</code></span>
-          <span class="token-preview" style={`font-family: ${value}; font-size: 1rem;`}>
-            The quick brown fox
+          <span class="token-preview" style={`font-family: ${value}; font-size: 1rem; font-variant-numeric: tabular-nums;`}>
+            {name === 'numeric' ? '$1,234.56  0123456789' : 'The quick brown fox'}
           </span>
           <span class="token-value">{value}</span>
         </div>

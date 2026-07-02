@@ -61,6 +61,8 @@
 
 /* ─── Price — uses <Text> primitive, card-specific layout only ── */
 .ds-product-card .ds-product-card__price {
+  font-family: var(--font-family-numeric);
+  font-variant-numeric: tabular-nums;
   line-height: var(--line-height-snug);
   font-weight: var(--font-weight-medium);
 }

@@ -3,6 +3,7 @@
   /* Structural */
   --button-radius: var(--radius-md);
   --button-font-weight: var(--font-weight-medium);
+  --button-font-family: var(--font-family-body);
   --button-transition: color var(--transition-fast),
     background-color var(--transition-fast),
     border-color var(--transition-fast),
@@ -16,7 +17,7 @@
   justify-content: center;
   gap: var(--spacing-2);
   white-space: nowrap;
-  font-family: var(--font-family-body);
+  font-family: var(--button-font-family);
   font-weight: var(--button-font-weight);
   border-radius: var(--button-radius);
   border: 1px solid transparent;

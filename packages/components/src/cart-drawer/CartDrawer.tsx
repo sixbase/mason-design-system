@@ -160,7 +160,11 @@ export const CartDrawer = forwardRef<HTMLDivElement, CartDrawerProps>(
                   <Text size="base" weight="medium">
                     Subtotal
                   </Text>
-                  <Text size="base" weight="semibold">
+                  <Text
+                    size="base"
+                    weight="semibold"
+                    className="ds-cart-drawer__subtotal-value"
+                  >
                     {formatPrice(subtotal, currency)}
                   </Text>
                 </div>

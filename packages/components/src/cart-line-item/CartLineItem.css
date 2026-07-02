@@ -102,6 +102,12 @@
   min-width: var(--spacing-16);
 }
 
+/* Line total renders in the numeric family (0-2-0 beats base .ds-text). */
+.ds-cart-line-item__price .ds-text {
+  font-family: var(--font-family-numeric);
+  font-variant-numeric: tabular-nums;
+}
+
 /* ─── Remove ─────────────────────────────────────────────── */
 .ds-cart-line-item__remove {
   display: flex;

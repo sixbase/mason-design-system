@@ -309,8 +309,10 @@ Use this table to determine which scale applies in a given context. When in doub
 ### Typography
 
 ```
-Font families:   body (Source Serif 4), code (JetBrains Mono)
+Font families:   body (Source Serif 4), code (JetBrains Mono), numeric (JetBrains Mono)
                  Named by role, not classification — see 06-decisions-log.md
+                 numeric = numerals/amounts (prices, quantities, page numbers, %),
+                 monospace for tabular alignment. Applied via --font-family-numeric.
 Font weights:    normal (400) → medium (500) → semibold (600) → bold (700)
 Line heights:    none (1) → tight (1.15) → snug (1.382) → normal (1.5) → relaxed (1.618=φ) → loose (2)
                  φ derivations: tight=1.15 (visual override, see decisions log)

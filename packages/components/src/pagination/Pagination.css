@@ -21,12 +21,20 @@
   gap: var(--pagination-gap);
 }
 
+/* Page-number buttons render numerals in the numeric family. Overrides the
+   Button's own font-family token rather than its font-family property. */
+.ds-pagination__pages .ds-button {
+  --button-font-family: var(--font-family-numeric);
+  font-variant-numeric: tabular-nums;
+}
+
 /* ─── Current page indicator ─────────────────────────────── */
 .ds-pagination__page {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-family-body);
+  font-family: var(--font-family-numeric);
+  font-variant-numeric: tabular-nums;
   font-weight: var(--pagination-font-weight);
   border-radius: var(--pagination-radius);
   user-select: none;
@@ -70,7 +78,10 @@
 }
 
 /* ─── Page info text (mobile) ────────────────────────────── */
-.ds-pagination__info {
+/* "Page X of Y" — numeric family, two-class specificity beats .ds-text. */
+.ds-pagination .ds-pagination__info {
+  font-family: var(--font-family-numeric);
+  font-variant-numeric: tabular-nums;
   color: var(--color-foreground-secondary);
   white-space: nowrap;
   text-align: center;

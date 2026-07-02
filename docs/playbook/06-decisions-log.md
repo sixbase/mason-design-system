@@ -1846,6 +1846,17 @@ Also replaced Footer.css hardcoded `1280px` with `var(--size-content-xl)`.
 
 ---
 
+### Dedicated `numeric` Font Family (JetBrains Mono) for Numerals
+
+**Date/Phase:** 2026-07-01 — Phase 4 (Design System Integrity)
+**Context:** Numerals (prices, quantities, page numbers, ratings, percentages) rendered in the body serif (Source Serif 4), where digits are proportionally spaced and don't align in columns. QuantitySelector had already reached for `--font-family-code` (JetBrains Mono) as a one-off to get tabular digits, signalling a missing semantic token. Request: use a distinct font for anything number-related, system-wide, and mirror it in the storefront.
+**Options considered:** (a) Reuse `--font-family-code` everywhere numerals appear — no new token, but conflates "code/monospace UI" with "numerals" and can't diverge later; (b) Add a `numeric` semantic font-family token pointing at JetBrains Mono, apply it to numeric surfaces, migrate the QuantitySelector one-off onto it; (c) Add `font-variant-numeric: tabular-nums` only, keeping the serif — improves alignment but doesn't change the typeface (the actual request).
+**Decision:** Option (b). Added `primitive.font.family.numeric` → `--font-family-numeric` (same stack as `code` today, but semantically independent). Applied to: PriceDisplay, QuantitySelector (migrated off `--font-family-code`), ProductCard price, CartLineItem line total, CartDrawer subtotal, Pagination page numbers + mobile "Page X of Y", StarRating review count, and ProgressBar's auto percentage. Paired with `font-variant-numeric: tabular-nums` for column alignment.
+**Rationale:** A role-named semantic token (numeric ≠ code) keeps the two intents free to diverge — e.g. a future switch to a proportional-numeral display face for code samples wouldn't drag prices along. Two-class specificity (`.ds-component .ds-text`) is used to win over the base `.ds-text` font-family without `!important`. For Pagination, page numbers render inside `<Button>`, which sets its own `font-family`; rather than override the property (a violation), Button gained a `--button-font-family` component token (default `--font-family-body`) that Pagination overrides to `--font-family-numeric` on page cells only — Prev/Next keep the body font. Deliberately **excluded**: StockIndicator (renders status sentences, not counts), generic Badge (labels like "Sale"/"New"), Table cells (arbitrary content), and ProgressBar's custom `valueText` (may be a sentence like "$12 away from free shipping" — only the auto `NN%` gets the numeric font, via a `--numeric` modifier).
+**Status:** Active
+
+---
+
 ### Headings Balance Their Own Wrapping (`text-wrap: balance`)
 
 **Date/Phase:** 2026-06-30 — Phase 4 (Mobile / responsive polish)

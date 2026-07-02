@@ -42,6 +42,12 @@
   align-items: center;
 }
 
+/* Subtotal amount renders in the numeric family (0-2-0 beats base .ds-text). */
+.ds-cart-drawer .ds-cart-drawer__subtotal-value {
+  font-family: var(--font-family-numeric);
+  font-variant-numeric: tabular-nums;
+}
+
 /* ─── Empty state ─────────────────────────────────────── */
 .ds-cart-drawer__empty {
   display: flex;

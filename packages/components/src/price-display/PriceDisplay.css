@@ -7,6 +7,13 @@
 
 /* Price and compare use <Text> primitive — only layout-specific styles here */
 
+/* Numerals render in the numeric (monospace) family for tabular alignment.
+   Two-class specificity (0-2-0) beats the base .ds-text font-family (0-1-0). */
+.ds-price-display .ds-text {
+  font-family: var(--font-family-numeric);
+  font-variant-numeric: tabular-nums;
+}
+
 /* Sale price (the non-strikethrough one when a comparePrice is present) */
 .ds-price-display:has(.ds-price-display__compare) .ds-price-display__price {
   color: var(--color-destructive);
