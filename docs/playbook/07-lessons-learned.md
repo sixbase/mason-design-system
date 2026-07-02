@@ -71,6 +71,7 @@ Every lesson produced a rule. This table collects them all so Claude can scan fo
 | Page-level patterns belong in a docs example demo (e.g. CollectionDemo.tsx) BEFORE they're ported to the theme. Components in isolation aren't enough — the page-level composition is the DS contract | [page-level-demo-pattern](#page-level-demo-pattern) |
 | `<Heading level={N}>` is NOT a valid prop — the API is `<Heading as="hN">`. Pass `level={1}` and you silently get `<h2>` (the default). Grep all demos when seen | [heading-level-prop-bug](#heading-level-prop-bug) |
 | `<CollectionFilters>` is self-contained — render it ONCE per page, not separately for desktop and mobile. CSS visibility inside the component handles the responsive split | [collection-filters-single-render](#collection-filters-single-render) |
+| Components use `<Heading>`/`<Text>` internally too — never raw `<p>`/`<h1>`–`<h6>`. BEM selectors styling a Typography child need `.ds-block .ds-block__el` specificity to beat the `.ds-text`/`.ds-heading` class tie | [raw-html-in-components](#raw-html-in-components) |
 
 ### Docs & Demo Rules
 
@@ -246,6 +247,11 @@ Modal overlay used `40%` — unnamed magic number. System had `--opacity-medium:
 CookieConsent `max-height: 260px` forced scrollbar.
 **Fix:** Content-driven sizing. Mobile: `max-height: 50vh`. Desktop: no cap.
 **Rule:** If adding `overflow-y: auto`, ask: would the user prefer scrolling or a taller container?
+
+### Raw HTML tags leaked into shipped components, not just demos {#raw-html-in-components}
+Footer rendered its tagline, column headings, and copyright as raw `<p>`/`<h3>` instead of `<Text>`/`<Heading>` (Header was clean). The [raw-html-in-demos](#raw-html-in-demos) sweep only covered gallery/demo code — component sources were never audited for the same rule.
+**Fix:** `<Heading as="h3">` / `<Text size="sm">` with the BEM class kept via `className`. Footer.css selectors bumped to `.ds-footer .ds-footer__tagline` / `.ds-footer .ds-footer__copyright` (matching the pre-existing `.ds-footer .ds-footer__heading`) so the component's styling deterministically beats the Typography base classes.
+**Rule:** The no-raw-tags rule applies to component sources, not just demos. And when a component styles a Typography child through its own BEM class, the selector needs `.ds-block .ds-block__el` specificity — a bare `.ds-block__el` ties with `.ds-text`/`.ds-text--{size}`/`.ds-heading--{size}` (all 0,1,0), and the winner silently depends on CSS import order. Same failure mode as the PriceDisplay size-tie lesson ([theme-port-text-drift](#theme-port-text-drift)).
 
 ---
 
