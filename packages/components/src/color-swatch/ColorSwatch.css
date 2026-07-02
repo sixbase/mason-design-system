@@ -27,5 +27,5 @@
 .ds-color-swatch__value {
   font-family: var(--font-family-code);
   font-size: var(--font-size-xs);
-  color: var(--color-foreground-subtle);
+  color: var(--color-foreground-secondary);
 }

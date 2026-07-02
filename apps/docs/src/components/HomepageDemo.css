@@ -70,7 +70,7 @@
     align-items: flex-start;
   }
 
-  .ds-homepage__newsletter-form .ds-input-root {
+  .ds-homepage__newsletter-field {
     flex: 1;
   }
 }

@@ -139,10 +139,17 @@
   cursor: not-allowed;
 }
 
+/* Optical centering fallback for browsers without text-box-trim */
+@supports not (text-box-trim: both) {
+  .ds-checkbox-label {
+    transform: translateY(0.05em);
+  }
+}
+
 /* ─── Hint / error ───────────────────────────────────────── */
 .ds-checkbox-hint {
   font-size: var(--font-size-xs);
-  color: var(--color-foreground-subtle);
+  color: var(--color-foreground-secondary);
   line-height: var(--line-height-normal);
   padding-left: calc(var(--size-checkbox-md) + var(--spacing-2));
 }

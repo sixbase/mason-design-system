@@ -1,12 +1,12 @@
-import { Divider } from '@ds/components';
+import { Divider, Text } from '@ds/components';
 import { Preview } from './Preview';
 
 export function DividerDefault() {
   return (
     <Preview stack>
-      <p>Content above the divider</p>
+      <Text>Content above the divider</Text>
       <Divider />
-      <p>Content below the divider</p>
+      <Text>Content below the divider</Text>
     </Preview>
   );
 }
@@ -14,11 +14,11 @@ export function DividerDefault() {
 export function DividerVariants() {
   return (
     <Preview stack>
-      <p>Default variant</p>
+      <Text>Default variant</Text>
       <Divider />
-      <p>Subtle variant</p>
+      <Text>Subtle variant</Text>
       <Divider variant="subtle" />
-      <p>End</p>
+      <Text>End</Text>
     </Preview>
   );
 }
@@ -26,15 +26,15 @@ export function DividerVariants() {
 export function DividerSpacings() {
   return (
     <Preview stack>
-      <p>No spacing</p>
+      <Text>No spacing</Text>
       <Divider spacing="none" />
-      <p>Small spacing</p>
+      <Text>Small spacing</Text>
       <Divider spacing="sm" />
-      <p>Medium spacing (default)</p>
+      <Text>Medium spacing (default)</Text>
       <Divider spacing="md" />
-      <p>Large spacing</p>
+      <Text>Large spacing</Text>
       <Divider spacing="lg" />
-      <p>End</p>
+      <Text>End</Text>
     </Preview>
   );
 }

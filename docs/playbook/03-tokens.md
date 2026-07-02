@@ -133,6 +133,8 @@ Raw values named by **scale**, not intent.
 
 **Why named palettes instead of `gray`?** Personality (stone = warm, gray = nothing), avoids Tailwind naming collisions, easier to find the right value.
 
+**Ramp structure (2026-07-01):** All five palettes carry the identical 12-step index set: `0, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950`. The accent ramps' original 6 anchors (50, 100, 400, 500, 600, 700) are the brand values and are unchanged; the other 6 steps per accent were derived in OKLCH against stone's lightness curve as the tonal spine, so any accent step sits at the same perceived depth as the same stone step. Hue is held constant within each ramp; chroma tapers toward both ends so ramps converge on the stone backgrounds — step 0 is a barely-tinted wash one breath off white, and the 900/950 steps are quiet tinted near-blacks that sit beside `stone.950` in dark mode. Generation script preserved at the decisions log entry "Accent Ramps Extended to 12 Steps". Guaranteed properties: monotonic lightness per ramp; `600` on white ≥ 4.5:1; `300` on `stone.950` ≥ 9:1 (dark-mode text headroom).
+
 ### Tier 2: Semantic Tokens
 
 Map primitives to **purpose**. Components use this layer. Dark mode swaps this layer without touching components.
@@ -151,20 +153,29 @@ Map primitives to **purpose**. Components use this layer. Dark mode swaps this l
 
 Both sides of the contrast pair are defined together — illegible text is impossible if you follow this pattern.
 
-**Complete semantic color set:**
+**Complete semantic color set** (defined per mode in `tokens.json` under `semantic.color.light` / `semantic.color.dark` — 32 tokens each, parity enforced by the build):
 ```
---color-background           --color-background-subtle
---color-foreground           --color-foreground-subtle      --color-foreground-muted
+--color-background           --color-background-subtle      --color-background-surface
+--color-foreground           --color-foreground-secondary   --color-foreground-subtle    --color-foreground-muted
 --color-border               --color-border-strong
---color-primary              --color-primary-hover          --color-primary-foreground
---color-secondary            --color-secondary-hover        --color-secondary-foreground
---color-destructive          --color-destructive-hover      --color-destructive-foreground
---color-success
---color-warning
---color-info
+--color-primary              --color-primary-hover          --color-primary-active       --color-primary-foreground
+--color-secondary            --color-secondary-hover        --color-secondary-active     --color-secondary-foreground
+--color-destructive          --color-destructive-hover      --color-destructive-active   --color-destructive-foreground   --color-destructive-subtle
+--color-success              --color-success-subtle         --color-success-foreground
+--color-warning              --color-warning-subtle         --color-warning-foreground
+--color-info                 --color-info-subtle            --color-info-foreground
 --color-focus-ring
 --color-overlay              (composite: color-mix with φ-derived 38.2% opacity)
 ```
+
+**Text tone roles — the contrast contract (light mode, on stone.50):**
+
+| Token | Value | Contrast | Permitted use |
+|-------|-------|----------|---------------|
+| `--color-foreground` | stone.950 | 17.9:1 | Primary text |
+| `--color-foreground-secondary` | stone.600 | 5.96:1 | **The floor for any normal-size readable text** — hints, captions, placeholders, meta, supporting copy |
+| `--color-foreground-subtle` | stone.500 | 3.87:1 | Large text (≥24px, or ≥18.7px bold) and non-text UI glyphs (chevrons, separators) only — passes 3:1, fails 4.5:1 |
+| `--color-foreground-muted` | stone.400 | 2.52:1 | Disabled and decorative elements only (WCAG-exempt) — never readable text, never state-bearing glyphs |
 
 ### Tier 3: Component Tokens
 
@@ -187,14 +198,14 @@ Scoped to the component's root class. Lets consumers override without touching g
 
 ## Known Semantic Token Gaps
 
-These gaps were discovered during accessibility audits. They require primitive references with manual dark-mode overrides until the semantic layer is extended.
+Both previously-listed gaps are **resolved** (2026-07-01 audit):
 
-| Gap | Problem | Current Workaround | Proposed Fix |
-|-----|---------|-------------------|-------------|
-| No "moderate foreground" | Gap between `foreground-subtle` (stone.500, fails AA) and `foreground` (stone.950) | `var(--color-stone-600)` + dark override | Add `--color-foreground-moderate`: stone.600 light / stone.400 dark |
-| No variant-specific `*-foreground` | Warning badge text needs amber.700 (primitive) because `--color-warning` (amber.600) fails 4.5:1 | `var(--color-amber-700)` + dark override | Add `--color-warning-foreground`, `--color-success-foreground`, etc. |
+| Former gap | Resolution |
+|-----------|-----------|
+| No "moderate foreground" | `--color-foreground-secondary` (stone.600 light / stone.300 dark) fills this role — see the text tone roles table above |
+| No variant-specific `*-foreground` | `--color-{success,warning,info,destructive}-foreground` and `*-subtle` all exist in both modes, defined in `tokens.json` |
 
-**Rule:** When you find a new gap, add it here AND add a decisions log entry. Don't silently use a primitive — document why the semantic layer doesn't cover it.
+No known gaps remain. **Rule:** When you find a new gap, add it here AND add a decisions log entry. Don't silently use a primitive — document why the semantic layer doesn't cover it.
 
 ---
 
@@ -298,7 +309,7 @@ Use this table to determine which scale applies in a given context. When in doub
 ### Typography
 
 ```
-Font families:   body (Ancizar Serif), code (JetBrains Mono)
+Font families:   body (Source Serif 4), code (JetBrains Mono)
                  Named by role, not classification — see 06-decisions-log.md
 Font weights:    normal (400) → medium (500) → semibold (600) → bold (700)
 Line heights:    none (1) → tight (1.15) → snug (1.382) → normal (1.5) → relaxed (1.618=φ) → loose (2)
@@ -390,6 +401,13 @@ full = 1.0    high = 0.618    medium = 0.382    low = 0.236    subtle = 0.146   
 --transition-slow:   262ms cubic-bezier(0.4, 0, 0.2, 1)    ← 162 × φ
 ```
 
+Two further duration steps exist for animation loops (no shorthand — pair with an easing explicitly):
+```
+--transition-duration-slower:  424ms    ← 262 × φ
+--transition-duration-slowest: 686ms    ← 424 × φ  (e.g. Button spinner rotation)
+```
+Ambient rhythms slower than this scale (e.g. StockIndicator's 2s pulse) are declared as component tokens with an inline rationale — they are status breathing, not interaction feedback.
+
 ```css
 /* ✅ Do this */
 transition: background-color var(--transition-fast);
@@ -423,9 +441,13 @@ Note: 34→42→55 approximates √φ step ratio (42/34=1.235, 55/42=1.310, avg�
 | `--size-content-sm` | 640px | Constrained dialogs, cookie consent, narrow overlays |
 | `--size-content-md` | 768px | Medium content areas, form containers, settings panels |
 | `--size-content-lg` | 960px | Wide content areas, feature sections |
-| `--size-content-xl` | 1280px | Full-width shell elements (Header, Footer, Container component) |
+| `--size-content-xl` | 1280px | Container component `xl` size |
+| `--size-container` | 1200px | THE page container in the DS/docs — `.ds-page-container`, Header/Footer inner width |
+| `--size-container-wide` | 1396px | Wide-screen page frame: the STOREFRONT's page container, header, footer, and announcement bar (1300px visible + 48px padding each side); also the docs-site AnnouncementBar |
 
-**⚠️ Page content max-width: always use `.ds-page-container` (1200px), never `--size-content-xl`.** The `--size-content-xl` token (1280px) is for full-width shell elements (Header, Footer) that may extend slightly wider than page content. The 1200px page container was chosen separately for cleaner 12-column grid math (see `09-layout-grid.md`). These are intentionally different values.
+**⚠️ Page content max-width: always use `.ds-page-container` (which references `--size-container`, 1200px).** The 1200px value was chosen for cleaner 12-column grid math (see `09-layout-grid.md`). As of the 2026-07-01 audit, Header, Footer, and the layout grid all reference `--size-container` — the value is defined exactly once.
+
+**Storefront exception:** the Shopify storefront runs its whole page frame at `--size-container-wide` (1300px visible) on wide screens — a deliberate storefront-side decision that must NOT be ported back into the DS. See `09-layout-grid.md` → "Storefront divergence" and the decisions log.
 
 ### Aspect Ratios
 

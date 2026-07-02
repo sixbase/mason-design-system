@@ -127,7 +127,7 @@ The build strategy was **primitives-first**: establish the token system and foun
 | Skeleton | ✅ Complete | Loading placeholder. Configurable width/height, circle variant, pulse animation with `prefers-reduced-motion`. |
 | Toast | ✅ Complete | Provider + `useToast()` hook. 4 variants (default, success, warning, destructive), auto-dismiss with hover-pause, stacking, portal-based, slide animation with reduced-motion fallback. |
 | PredictiveSearch | ✅ Complete | WAI-ARIA combobox pattern. `onSearch` + `results`/`loading` props (consumer handles data fetching). Debounced input, keyboard nav via `aria-activedescendant`, recent searches, Skeleton loading state. |
-| SidebarNav | ✅ Complete | Docs site navigation component. Grouped links with active state, collapsible sections. |
+| SidebarNav | ❌ Deleted (2026-07-01) | Draft was never completed — single .tsx importing a CSS file that didn't exist, never exported. Removed in the system audit; see decisions log. Docs sidebar is implemented in the docs app layout instead. |
 | EmptyState | ✅ Complete | Pattern: centered flex column composing Heading + Text + Button. Icon slot, primary/secondary actions (asChild links), compact variant for constrained contexts (Cart Drawer). |
 | ProgressBar | ✅ Complete | Primitive: native `<progress>` element, custom-styled. 2 sizes (sm/md), success variant (green at 100%). `valueText` for custom screen reader text (e.g., "$12 away from free shipping"). Composes Text for label/value display. |
 

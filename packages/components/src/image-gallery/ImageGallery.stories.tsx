@@ -4,6 +4,7 @@ import { ImageGallery } from './ImageGallery';
 const meta: Meta<typeof ImageGallery> = {
   title: 'Components/ImageGallery',
   component: ImageGallery,
+  tags: ['autodocs'],
 };
 export default meta;
 

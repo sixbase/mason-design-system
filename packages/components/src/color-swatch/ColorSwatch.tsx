@@ -1,3 +1,4 @@
+import { forwardRef } from 'react';
 import type { HTMLAttributes } from 'react';
 import './ColorSwatch.css';
 
@@ -15,9 +16,12 @@ export interface ColorSwatchProps extends HTMLAttributes<HTMLDivElement> {
  *
  * Displays a color token visually — used in the docs token page.
  */
-export function ColorSwatch({ color, name, value, className, ...props }: ColorSwatchProps) {
+export const ColorSwatch = forwardRef<HTMLDivElement, ColorSwatchProps>(function ColorSwatch(
+  { color, name, value, className, ...props },
+  ref,
+) {
   return (
-    <div className={['ds-color-swatch', className].filter(Boolean).join(' ')} {...props}>
+    <div ref={ref} className={['ds-color-swatch', className].filter(Boolean).join(' ')} {...props}>
       <div className="ds-color-swatch__sample" style={{ backgroundColor: color }} />
       <div className="ds-color-swatch__info">
         <span className="ds-color-swatch__name">{name}</span>
@@ -25,6 +29,6 @@ export function ColorSwatch({ color, name, value, className, ...props }: ColorSw
       </div>
     </div>
   );
-}
+});
 
 ColorSwatch.displayName = 'ColorSwatch';

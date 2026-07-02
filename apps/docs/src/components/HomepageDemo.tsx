@@ -115,13 +115,15 @@ export function HomepageDemo({ basePath = '' }: { basePath?: string }) {
             setEmail('');
           }}
         >
-          <Input
-            type="email"
-            placeholder="your@email.com"
-            size="md"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+          <div className="ds-homepage__newsletter-field">
+            <Input
+              type="email"
+              placeholder="your@email.com"
+              size="md"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
           <Button variant="primary" size="md" type="submit">
             Subscribe
           </Button>

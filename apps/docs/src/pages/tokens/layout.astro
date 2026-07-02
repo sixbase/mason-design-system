@@ -17,7 +17,7 @@ import '../../styles/token-docs.css';
     <h2>Breakpoints</h2>
     <p class="section-desc">
       Four breakpoints, mobile-first. All components use <code>min-width</code> media queries at these values.
-      <code>xl</code> is not a media query — it's the max-width for page containers.
+      <code>xl</code> is not a media query — it doubles as the Container component's widest size.
     </p>
 
     <table class="layout-table">
@@ -47,7 +47,7 @@ import '../../styles/token-docs.css';
         <tr>
           <td><code>xl</code></td>
           <td>1280px</td>
-          <td>Max content width (Container default). Not a media query.</td>
+          <td>Container component's <code>xl</code> size — not a media query (page frames: see "Page frame widths" below)</td>
         </tr>
       </tbody>
     </table>
@@ -121,10 +121,42 @@ import '../../styles/token-docs.css';
         <tr>
           <td><code>xl</code> <span class="scale-badge scale-badge--primary">default</span></td>
           <td>1280px</td>
-          <td>Full-width page container</td>
+          <td>Widest Container size — not the page frame (see below)</td>
         </tr>
       </tbody>
     </table>
+
+    <h3>Page frame widths</h3>
+    <p>
+      Two page frames exist, one per surface. The 12-column grid inside them is identical —
+      only the frame width differs.
+    </p>
+    <table class="layout-table">
+      <thead>
+        <tr>
+          <th>Token</th>
+          <th>Value</th>
+          <th>Used by</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>--size-container</code></td>
+          <td>1200px</td>
+          <td>Design system &amp; docs — <code>.ds-page-container</code>, Header, Footer</td>
+        </tr>
+        <tr>
+          <td><code>--size-container-wide</code></td>
+          <td>1396px</td>
+          <td>Shopify storefront — its whole page frame. <strong>1300px visible</strong> after the 48px desktop padding</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      The storefront runs the wide frame on purpose — product grids and imagery use the room,
+      documentation prose doesn't. Don't port either value to the other surface.
+      (The Container component's <code>xl</code> size, 1280px, is a content width — not a page frame.)
+    </p>
 
     <pre><code>{`import { Container } from '@ds/components';
 
@@ -436,7 +468,15 @@ import '../../styles/token-docs.css';
     font-size: var(--font-size-xs);
     text-transform: uppercase;
     letter-spacing: var(--letter-spacing-wider);
-    color: var(--color-foreground-subtle);
+    color: var(--color-foreground-secondary);
+  }
+
+  /* @breakpoint-sm = 640px — table scrolls within itself on phones */
+  @media (max-width: 639px) {
+    .layout-table {
+      display: block;
+      overflow-x: auto;
+    }
   }
 
   .layout-table td {

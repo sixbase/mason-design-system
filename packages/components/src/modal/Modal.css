@@ -37,6 +37,7 @@
 
   width: calc(100% - var(--spacing-8));
   max-height: calc(100vh - var(--spacing-16));
+  max-height: calc(100dvh - var(--spacing-16)); /* iOS Safari: track the dynamic toolbar */
   overflow-y: auto;
 
   animation: ds-modal-content-in var(--transition-normal) forwards;
@@ -145,7 +146,7 @@
 .ds-modal__description {
   font-size: var(--font-size-sm);
   line-height: var(--line-height-normal);
-  color: var(--color-foreground-subtle);
+  color: var(--color-foreground-secondary);
   margin: var(--spacing-1) 0 0;
 }
 

@@ -30,8 +30,9 @@
 
 /* ─── Headings ──────────────────────────────────────────── */
 
-/* h2 section titles — spacing to following body text */
-.ds-legal-content section > .ds-heading:first-child {
+/* h2 section titles — spacing to following body text.
+   Structural: the first child of every section is its heading. */
+.ds-legal-content section > :first-child {
   margin-bottom: var(--spacing-4);
 }
 
@@ -49,12 +50,15 @@
 
 /* ─── Body Text ─────────────────────────────────────────── */
 
-.ds-legal-content .ds-text {
+/* body paragraphs — <Text> renders a native <p>; style the
+   element like the h3/ul/a prose rules below, never the
+   component's .ds-text class */
+.ds-legal-content p {
   line-height: var(--line-height-relaxed);
   margin-bottom: var(--spacing-4);
 }
 
-.ds-legal-content .ds-text:last-child {
+.ds-legal-content p:last-child {
   margin-bottom: 0;
 }
 

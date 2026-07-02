@@ -431,6 +431,22 @@ The React DS side doesn't hit this because `<Text size="sm" weight="semibold">` 
 **Fix:** Single `{% render 'collection-filters' %}` (default context), placed inside the sidebar slot of `.ds-collection-layout`. On mobile the sidebar slot collapses to full width and the component shows its mobile trigger button.
 **Rule:** Self-contained components that handle responsive splits internally (CollectionFilters, Drawer, etc.) must be rendered ONCE per page. If the Liquid port supports a `context` parameter, default it to render-everything and only specialize when there's a documented reason.
 
+### Headings get `text-wrap: balance` — never hand-tune wraps with `&nbsp;` {#heading-text-wrap-balance}
+**Bug:** The example homepage hero heading (`Everyday Essentials, Thoughtfully Made`) wrapped badly at every width. A non-breaking space had been hand-placed between "Essentials," and "Thoughtfully" to "control" the wrap. It did the opposite: it glued together the two words that *should* break and let the rest split freely. Result — an orphaned "Made" on its own line on wide screens (640px content box with empty horizontal space), and on mobile (~343px box) the glued chunk was wider than the container, so the glyphs clipped past the rounded hero edges.
+**Fix:** Two altitudes. (1) Removed the `{' '}` from the demo content so words break on natural boundaries. (2) Added `text-wrap: balance` to `.ds-heading` in `Typography.css` — the browser now evens out line lengths for *all* headings, eliminating orphans without any manual hinting.
+**Rule:** Never encode line breaks into heading *content* with `&nbsp;`/` ` or `<br>`. Wrapping is a styling concern and lives on the component. `.ds-heading` carries `text-wrap: balance`; trust it. A non-breaking space is only legitimate for keeping genuinely-atomic tokens together (e.g. "10 kg", "Mason & Co"), never for aesthetic line shaping.
+**Gotcha:** The docs site consumes the **built** `@ds/components` package (`dist/index.css`), not `src`. A CSS edit to a component is invisible in the docs preview until `pnpm --filter @ds/components build` runs. Verify the *computed* property in the browser (`getComputedStyle(el).getPropertyValue('text-wrap-style')`) — a screenshot alone can falsely look fixed when greedy wrapping happens to land well.
+
+### Token build scripts must fail loudly — JS `undefined` becomes valid-looking CSS {#token-build-fails-silently}
+**Bug:** `build-css.mjs` interpolated `${p.color.slate[300]}` into the dark-mode CSS — but `slate.300` doesn't exist, so JavaScript happily produced `--color-info-foreground: undefined;`. CSS never errors on this: the variable just resolves to nothing and every dark-mode consumer silently falls back. The bug shipped and sat unnoticed because nothing red ever appeared in any console.
+**Root cause (deeper):** The build script hardcoded its own semantic mappings instead of reading the `semantic` tier from `tokens.json` — two sources of truth, so the JSON couldn't catch the dangling reference either.
+**Fix:** Semantic tokens (light + dark) now live in `tokens.json` and the build script resolves `{primitive.*}` references, **throwing** on any that don't exist. A bad reference now kills the build instead of shipping `undefined`.
+**Rule:** Any generator that turns data into CSS custom properties must validate every reference at build time. Template-string interpolation of object paths is banned in token tooling — resolve through a lookup that throws.
+
+### Two audit false alarms worth remembering — check the global layer before sweeping components {#global-css-safety-nets}
+**Context:** A component-by-component audit flagged "12 components missing `prefers-reduced-motion`" and "8 components missing `:focus-visible`". Both were wrong: `tokens.css` ships a global reduced-motion kill switch (`* { animation-duration: 0.01ms !important }` — the one sanctioned `!important`) and a global `*:focus-visible` outline safety net. Every component that suppresses `outline: none` was verified to provide a replacement ring (`:focus-visible` box-shadow or `:focus-within`).
+**Rule:** Before adding per-component handling for a cross-cutting concern (motion, focus, form font inheritance), check the global layer in `packages/tokens/dist/tokens.css` — it may already own the concern. Per-component blocks are only for *opting back in* with an alternative treatment (e.g. Button's spinner switching to a static dimmed state).
+
 ---
 
 ## Recommendations for Next Build

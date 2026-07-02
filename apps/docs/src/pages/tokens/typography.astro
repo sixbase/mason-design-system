@@ -313,7 +313,7 @@ const { font } = tokens.primitive;
   .token-row--header span {
     font-size: var(--font-size-xs);
     font-weight: var(--font-weight-medium);
-    color: var(--color-foreground-subtle);
+    color: var(--color-foreground-secondary);
     text-transform: uppercase;
     letter-spacing: var(--letter-spacing-wider);
     background: none;
@@ -333,7 +333,7 @@ const { font } = tokens.primitive;
   .token-px {
     display: block;
     font-size: var(--font-size-xs);
-    color: var(--color-foreground-muted);
+    color: var(--color-foreground-secondary);
     margin-top: 2px;
   }
 
@@ -348,6 +348,14 @@ const { font } = tokens.primitive;
     border-radius: var(--radius-lg);
     overflow: hidden;
   }
+  /* @breakpoint-sm = 640px — table scrolls within itself on phones */
+  @media (max-width: 639px) {
+    .mapping-table {
+      display: block;
+      overflow-x: auto;
+    }
+  }
+
   .mapping-table th {
     text-align: left;
     padding: var(--spacing-2) var(--spacing-3);
@@ -359,7 +367,7 @@ const { font } = tokens.primitive;
   .mapping-table td {
     padding: var(--spacing-2) var(--spacing-3);
     border-bottom: 1px solid var(--color-border);
-    color: var(--color-foreground-subtle);
+    color: var(--color-foreground-secondary);
   }
   .mapping-table tr:last-child td {
     border-bottom: none;

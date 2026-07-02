@@ -60,6 +60,15 @@ export const Check = createIcon(
   <polyline points="20 6 9 17 4 12" />,
 );
 
+export const Menu = createIcon(
+  'MenuIcon',
+  <>
+    <line x1="4" y1="6" x2="20" y2="6" />
+    <line x1="4" y1="12" x2="20" y2="12" />
+    <line x1="4" y1="18" x2="20" y2="18" />
+  </>,
+);
+
 export const ChevronDown = createIcon(
   'ChevronDownIcon',
   <polyline points="6 9 12 15 18 9" />,

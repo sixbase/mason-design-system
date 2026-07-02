@@ -44,7 +44,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-foreground-muted);
+  color: var(--color-foreground-subtle);
 }
 
 /* ─── Info ────────────────────────────────────────────────── */

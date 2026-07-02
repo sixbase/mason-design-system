@@ -25,7 +25,7 @@
 }
 
 .ds-star-rating__count {
-  color: var(--color-foreground-subtle);
+  color: var(--color-foreground-secondary);
 }
 
 /* ─── Size: sm ──────────────────────────────────────────── */

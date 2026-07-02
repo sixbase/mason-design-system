@@ -25,7 +25,9 @@
     linear-gradient(to left, var(--color-border), transparent);
   background-position: left center, right center, left center, right center;
   background-repeat: no-repeat;
-  background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
+  background-size:
+    var(--spacing-10) 100%, var(--spacing-10) 100%,
+    var(--spacing-3) 100%, var(--spacing-3) 100%;
   background-attachment: local, local, scroll, scroll;
 }
 
@@ -38,8 +40,13 @@
 /* ─── Base Table ──────────────────────────────────────────── */
 
 .ds-table {
+  /* Readability floor: below this, columns crush together and the
+     wrapper scrolls instead. Between content-sm (640) and modal-sm
+     (400) on the size scale — a deliberate in-between, kept local. */
+  --table-min-width: 480px;
+
   width: 100%;
-  min-width: 480px;
+  min-width: var(--table-min-width);
   border-collapse: collapse;
   font-family: var(--font-family-body);
   color: var(--color-foreground);

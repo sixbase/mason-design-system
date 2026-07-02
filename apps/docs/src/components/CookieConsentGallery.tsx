@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CookieConsent, Button } from '@ds/components';
+import { CookieConsent, Button, Text } from '@ds/components';
 import type { CookieCategory } from '@ds/components';
 import { Preview } from './Preview';
 
@@ -83,9 +83,9 @@ export function CookieConsentControlled() {
     <Preview stack>
       <div className="ds-gallery-stack">
         <Button size="sm" onClick={() => setOpen(true)}>Show Cookie Banner</Button>
-        <p className="ds-gallery-label">
+        <Text size="sm" className="ds-gallery-label">
           Banner is {open ? 'visible' : 'hidden'}
-        </p>
+        </Text>
       </div>
       <BannerContainer tall>
         <CookieConsent

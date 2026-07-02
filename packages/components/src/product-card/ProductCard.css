@@ -2,9 +2,14 @@
 .ds-product-card {
   --card-radius: var(--radius-md);
   --card-padding: var(--spacing-3);
+  /* Standalone default (carousels, side-by-side rows). In page grids,
+     always use --fluid so the parent grid owns the width — the fixed
+     width has no breakpoints of its own. max-width below keeps a
+     standalone card from ever overflowing a narrow viewport. */
   --product-card-width: 220px;
 
   width: var(--product-card-width);
+  max-width: 100%;
   border: none;
   box-shadow: none;
   background-color: transparent;

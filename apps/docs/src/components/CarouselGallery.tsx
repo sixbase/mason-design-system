@@ -1,4 +1,4 @@
-import { Carousel, CarouselSlide } from '@ds/components';
+import { Carousel, CarouselSlide, Text } from '@ds/components';
 import { Preview } from './Preview';
 import { makePlaceholder } from '../lib/placeholder';
 
@@ -22,7 +22,7 @@ export function CarouselSizes() {
   return (
     <div className="ds-gallery-stack--lg">
       <div>
-        <p className="ds-demo-section-label">Small</p>
+        <Text size="sm" className="ds-demo-section-label">Small</Text>
         <Carousel>
           <CarouselSlide size="sm">
             <img src={makePlaceholder('Sm 1', '#D6D0C7', '#6B6359')} alt="Small slide 1" className="ds-demo-slide-image" />
@@ -36,7 +36,7 @@ export function CarouselSizes() {
         </Carousel>
       </div>
       <div>
-        <p className="ds-demo-section-label">Large</p>
+        <Text size="sm" className="ds-demo-section-label">Large</Text>
         <Carousel>
           <CarouselSlide size="lg">
             <img src={makePlaceholder('Lg 1', '#D6D0C7', '#6B6359')} alt="Large slide 1" className="ds-demo-slide-image" />

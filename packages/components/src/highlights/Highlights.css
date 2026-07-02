@@ -70,5 +70,5 @@
      with the medium-weight title. Source Serif 4 is variable (200–900), so
      300 is a real weight, not synthesized. */
   font-weight: var(--font-weight-light);
-  color: var(--color-foreground-muted);
+  color: var(--color-foreground-secondary);
 }

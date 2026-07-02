@@ -51,7 +51,7 @@ Use this to find decisions by topic without scrolling 1300+ lines.
 | Decision | Status |
 |----------|--------|
 | Color Palette: Named palettes (`stone`, `brick`, etc.) | Active |
-| Font: Ancizar Serif (after Inter → EB Garamond → Source Serif 4) | Active |
+| Font: Source Serif 4 (after Inter → EB Garamond → Source Serif 4 → Ancizar Serif → back) | Active |
 | Font-Family Token Rename: `serif`/`mono` → `body`/`code` | Active |
 | Golden Ratio: φ governs all proportions | Active |
 | Semantic Color Pairs: `primary` + `primary-foreground` | Active |
@@ -577,7 +577,7 @@ All three duration values are now φ-derived. Shorthand tokens `--transition-fas
 **Options considered:** Keep Source Serif 4, switch to Ancizar Serif, switch to another serif
 **Decision:** Ancizar Serif via Google Fonts (`'Ancizar Serif', ui-serif, Georgia, serif`). Added `light` (300) font weight alongside existing normal (400), medium (500), semibold (600), bold (700). Italic variants loaded for 300, 400, 500.
 **Rationale:** Ancizar Serif (designed by Universidad Nacional de Colombia) is an open-source scholarly serif with 9 weights. It balances academic authority with everyday readability. Available on Google Fonts with SIL Open Font License. The light weight (300) adds a new option for decorative or large display text.
-**Status:** Active
+**Status:** Changed — reverted to Source Serif 4 on 2026-06-30 (commit `84bd7cb`); see "Font: Back to Source Serif 4" below
 
 ---
 
@@ -1479,7 +1479,7 @@ Also replaced Footer.css hardcoded `1280px` with `var(--size-content-xl)`.
 2. Keep both values and document the distinction clearly
 **Decision:** Option 2. `--size-content-xl` stays at 1280px for full-width shell elements (Header, Footer). `.ds-page-container` (1200px) is the only correct way to constrain page content. Added explicit warnings in `03-tokens.md` and `09-layout-grid.md`: "For page content max-width, always use `.ds-page-container` (1200px), never `--size-content-xl`."
 **Rationale:** These serve different purposes. The page container at 1200px gives cleaner 12-column grid math. The shell elements at 1280px provide slightly wider containment to frame the narrower content area. Collapsing them to one value would either break the grid math or unnecessarily narrow the header/footer.
-**Status:** Active
+**Status:** Changed (2026-07-01) — Header/Footer now align with the page container at `--size-container` (1200px); `--size-content-xl` (1280px) remains only as the Container component's `xl` size. The wide-screen page frame question is settled separately: the storefront runs 1300px visible via `--size-container-wide` (see "Storefront Page Frame: 1300px Visible on Wide Screens")
 
 ---
 
@@ -1842,4 +1842,145 @@ Also replaced Footer.css hardcoded `1280px` with `var(--size-content-xl)`.
 **Options considered:** (a) Leave as-is — theme-only, accept the gap; (b) Backfill the React component and align the theme CSS to match.
 **Decision:** Option (b). Created `packages/components/src/announcement-bar/` with the full 4-file rule (tsx, css, test, stories, index). Updated `apps/theme/assets/announcement-bar.css` to use component tokens (`--announcement-bar-bg`, `--announcement-bar-fg`) on the root class instead of hardcoding `var(--color-primary-foreground)` in three places. The Liquid section retains one Liquid-specific addition: `.ds-announcement-bar[hidden] { display: none }` because the vanilla JS dismiss uses the HTML `hidden` attribute, while the React component unmounts via state.
 **Rationale:** Every component in the storefront must source from the design system. Without a React counterpart, the announcement bar's styles and behavior lived only in the theme — invisible to the docs site, untested by the component test suite, and excluded from token evolution. Backfilling restores the architecture: DS defines, theme ports.
+**Status:** Active
+
+---
+
+### Headings Balance Their Own Wrapping (`text-wrap: balance`)
+
+**Date/Phase:** 2026-06-30 — Phase 4 (Mobile / responsive polish)
+**Context:** The example homepage hero heading wrapped poorly at multiple widths. On mobile (~343px hero box) the heading clipped past the rounded edges; on wide screens (640px content box) it left "Made" orphaned on its own line. Root cause: a non-breaking space had been hand-placed in the demo content (`Everyday Essentials,{' '}Thoughtfully Made`) to "control" the wrap — it glued the wrong words together and forced an unbreakable chunk wider than the mobile container.
+**Options considered:** (a) Hand-tune the `&nbsp;` placement per heading — brittle, has to be re-done for every copy change and every breakpoint; (b) Add a mobile-only `font-size` reduction for `4xl` — addresses overflow but not the orphan, and is a separate concern; (c) Remove the manual hint and let `text-wrap: balance` on `.ds-heading` handle line distribution for all headings.
+**Decision:** Option (c). Removed the non-breaking space from `HomepageDemo.tsx`, and added `text-wrap: balance` to `.ds-heading` in `packages/components/src/typography/Typography.css`. Line distribution is now a styling concern owned by the component, applied uniformly to every heading.
+**Rationale:** Wrapping is presentation, not content — encoding it with `&nbsp;`/`<br>` in copy is an override that doesn't scale and breaks on the next edit. `text-wrap: balance` evens line lengths natively, eliminating orphans without per-heading tuning, and degrades gracefully on older browsers (falls back to normal wrapping). `.ds-heading--truncate` is unaffected because its `white-space: nowrap` wins the `text-wrap-mode` cascade. A non-breaking space remains legitimate only for genuinely atomic tokens (units, names), never for aesthetic line shaping.
+**Verification gotcha:** The docs site consumes the built `@ds/components` CSS (`dist/index.css`), so the change required `pnpm --filter @ds/components build` before it appeared in the preview. Confirmed live via `getComputedStyle(el).getPropertyValue('text-wrap-style') === 'balance'` and zero `scrollWidth` overflow at 375px and 1280px.
+**Status:** Active
+
+---
+
+### Font: Back to Source Serif 4 (documentation reconciliation)
+
+**Date/Phase:** 2026-07-01 — System audit
+**Context:** Commit `84bd7cb` (2026-06-30) switched the body/heading serif from Ancizar Serif back to Source Serif 4 in the token and the docs font loads, but the playbook, `CLAUDE.md`, and `README.md` still claimed Ancizar Serif — the docs contradicted the code.
+**Decision:** Source Serif 4 is the active typeface. Updated every stale reference (`CLAUDE.md`, `README.md`, `03-tokens.md`, the summary table above, and the original Ancizar entry's status). Recorded this entry retroactively so the log matches the commit history.
+**Rationale:** The code is the source of truth for what shipped; the log's job is to reflect it. Note: the `0.05em` `@supports not (text-box-trim)` fallback nudge was tuned for Ancizar — worth re-checking optically against Source Serif 4 in Firefox.
+**Status:** Active
+
+---
+
+### Semantic Tokens: tokens.json Is the Single Source, Build Fails on Bad References
+
+**Date/Phase:** 2026-07-01 — System audit
+**Context:** `build-css.mjs` ignored the `semantic` section of `tokens.json` entirely and hardcoded its own semantic mappings in template strings. The two sources had drifted: `info-subtle`/`info-foreground` existed only in the script, and the dark-mode `--color-info-foreground` referenced `slate.300` — a primitive that doesn't exist — so the emitted CSS contained the literal value `undefined` (a silent runtime failure, since CSS variables don't error).
+**Options considered:** (a) Patch the script's bad reference; (b) move the full semantic tier — light AND dark — into `tokens.json` and make the script resolve `{primitive.*}` references, throwing on any unresolved reference.
+**Decision:** Option (b). `tokens.json` now has `semantic.color.light` and `semantic.color.dark` (32 tokens each, enforced parity), including the previously script-only `info-subtle`/`info-foreground`. Dark `color-mix()` values live in the JSON as literal `$value` strings. The build throws on unresolved references. Also fixed the dark `info` pair to match its status siblings: `info` = slate.500, `info-foreground` = slate.400 (success/warning/destructive all follow base=`.500`, foreground=`.400` in dark mode; info had been shifted one step).
+**Rationale:** A token file that the build ignores is worse than no token file — it documents a lie. Failing the build on a dangling reference converts the silent `undefined` class of bug into a loud one.
+**Status:** Active
+
+---
+
+### Text Tone Roles: Contrast Floor for Readable Text Is `foreground-secondary`
+
+**Date/Phase:** 2026-07-01 — System audit
+**Context:** Computed WCAG ratios on the light background (stone.50): `foreground-muted` (stone.400) = 2.52:1, `foreground-subtle` (stone.500) = 3.87:1, `foreground-secondary` (stone.600) = 5.96:1. Muted and subtle were widely used for hints, placeholders, captions, and meta text — all normal-size readable text, all failing WCAG AA (4.5:1). Muted even fails the 3:1 non-text bar.
+**Options considered:** (a) Darken the stone primitives (changes the brand ramp everywhere); (b) remap the semantic values (collapses three tones into one); (c) keep the tones but define strict roles and move failing usages up.
+**Decision:** Option (c). Roles are now: `foreground` = primary text; `foreground-secondary` = the FLOOR for any normal-size readable text (5.96:1 ✓); `foreground-subtle` = large text (≥24px / ≥18.7px bold) and non-text UI glyphs only (3.87:1 passes 3:1); `foreground-muted` = disabled and decorative elements only (WCAG-exempt). Swept all component CSS usages to comply.
+**Rationale:** The palette isn't broken — the roles were. Keeping three tones preserves the visual range for legitimate uses while making "readable text passes AA" structurally true. Badge's documented subtle border (4.07:1 non-text) unchanged.
+**Status:** Active
+
+---
+
+### Deleted: `mega-menu/` (empty) and `sidebar-nav/` (dead, broken import)
+
+**Date/Phase:** 2026-07-01 — System audit
+**Context:** `mega-menu/` was an empty directory (created 2026-03, never built). `sidebar-nav/` contained a single `SidebarNav.tsx` that imported `./SidebarNav.css` — a file that doesn't exist — and was never exported from the package index nor referenced by docs or theme. It would fail the build the moment anyone exported it.
+**Options considered:** Complete them to the 4-file rule now, or delete and rebuild when actually needed.
+**Decision:** Deleted both. Git history preserves the SidebarNav draft if a future navigation epic wants it.
+**Rationale:** A component that ships broken imports is a landmine, not an asset. The 4-file rule exists precisely so the library never contains half-components.
+**Status:** Active
+
+---
+
+### Tokenized the Page Container Width (`--size-container`, 1200px)
+
+**Date/Phase:** 2026-07-01 — System audit
+**Context:** `1200px` was hardcoded in three places (`layout-grid.css`, `Header.css`, `Footer.css`) with no token, while `--size-container-wide` (1396px, the docs-shell width) and `--size-content-xl` (1280px) already existed — three container widths, only two of them named.
+**Decision:** Added primitive `size.container: 1200px` → `--size-container`; all three files now reference it. Width taxonomy: `--size-container` (1200) = page content container / 12-col grid; `--size-content-xl` (1280) = shell elements; `--size-container-wide` (1396) = full shell incl. padding (announcement bar, docs shell).
+**Rationale:** After renaming/adding tokens the playbook rule applies: grep for stragglers — done, zero remaining hardcoded `1200px` in component CSS.
+**Status:** Active
+
+---
+
+### Extended φ Duration Chain; Retired the Last Raw Durations and Opacities in Components
+
+**Date/Phase:** 2026-07-01 — System audit
+**Context:** Button's spinner hardcoded `0.65s`; reduced-motion fallbacks and the stock pulse hardcoded `opacity: 0.5`/`0.4`. The duration scale stopped at `slow` (262ms), leaving no token for longer animation loops.
+**Decision:** Extended the φ chain with `slower` (424ms ≈ 262×φ) and `slowest` (686ms ≈ 424×φ). Button spinner now uses `--transition-duration-slowest` (686ms ≈ the old 650ms). Raw opacities replaced with `--opacity-high`/`--opacity-medium`/`--opacity-full`. StockIndicator's 2s ambient pulse stays as a documented component token (`--stock-indicator-pulse-duration`) — ambient status rhythm is deliberately outside the interaction-duration scale.
+**Rationale:** Same ratio at every scale level; exceptions are named and explained where they live.
+**Status:** Active
+
+---
+
+### Rename: `--size-container-max` → `--size-container-wide`
+
+**Date/Phase:** 2026-07-01 — Owner asked "is this documentation best practice? seems complicated"
+**Context:** The width documentation read as complicated because the naming was: `container` (1200) vs `container-max` (1396) implies a min/max of one concept, when they are actually two page frames owned by different surfaces (design system vs storefront). Every doc page needed a paragraph of disambiguation to fight the name.
+**Decision:** Renamed the token to `--size-container-wide` — same concept (a page frame), explicitly the wide variant. Applied across tokens.json, component CSS (AnnouncementBar), docs pages, playbook current-fact docs, CLAUDE.md, and all four storefront CSS files + its re-synced tokens.css. No compatibility alias: both repos are fully in-hand and were grepped to zero stragglers (per the token-rename rule in Build & Dev Reference). Historical decisions-log entries keep the old name for accuracy; this entry is the bridge.
+**Rationale:** When documentation needs a paragraph to explain a name, fix the name, not the paragraph. `container` / `container-wide` reads as what it is: the standard frame and the wide frame.
+**Status:** Active
+
+---
+
+### Storefront Page Frame: 1300px Visible on Wide Screens — Documented Divergence, Not Ported Back
+
+**Date/Phase:** 2026-07-01 — Owner direction (Alvin)
+**Context:** The storefront repo (`sixbase/mason-storefront`) runs its entire page frame — `.ds-page-container` (layout.css), header inner, footer inner, announcement bar — at `max-width: var(--size-container-wide)` (1396px), which with 48px desktop padding gives **1300px visible content** on wide screens. The design system's own container is `--size-container` (1200px). The storefront's file comments still claimed 1200px, contradicting its own code, and neither playbook documented the split.
+**Options considered:** (a) Port 1300 back into the DS so both match; (b) keep the DS at 1200 and record the storefront's 1300 as a deliberate divergence.
+**Decision:** Option (b), per owner direction: the storefront's wide-screen frame is storefront-side and stays there. Documented in `09-layout-grid.md` ("Storefront divergence" section) and the `03-tokens.md` width taxonomy; corrected the storefront's stale comments (`layout.css` header block, `customer.css`) to match its code; noted in `CLAUDE.md` so future sessions don't "fix" the storefront back to 1200.
+**Rationale:** An ecommerce page earns a wider frame — product grids and lifestyle imagery use the room; documentation prose doesn't. Both values are tokens (`--size-container`, `--size-container-wide`) defined once in tokens.json, so this is two named widths with owners, not drift. The grid inside the frame (12 columns, 24px gutters, 64px rhythm) is identical on both sides.
+**Status:** Active
+
+---
+
+### Global Scrollbar Treatment: Thin, Token-Colored, Standard Properties Only
+
+**Date/Phase:** 2026-07-01 — Responsive/polish pass
+**Context:** Scrollbars were browser-default everywhere — visually loud against the stone palette, and inconsistent between the docs, Storybook, and the storefront.
+**Options considered:** (a) `::-webkit-scrollbar` pseudo-elements (full control, but Chrome ignores them once standard properties are set, and they're legacy-Safari-only at that point); (b) standard `scrollbar-width: thin` + `scrollbar-color` (Chrome 121+, Firefox, Safari 18.2+); (c) both.
+**Decision:** Option (b), applied globally in the tokens.css global layer: `* { scrollbar-width: thin; scrollbar-color: var(--color-border-strong) transparent; }`. No hover states, no tracks — the scrollbar recedes. Dark mode swaps automatically via the semantic token. Older engines get native scrollbars (macOS overlay scrollbars are already minimal).
+**Rationale:** Same progressive-enhancement bar as `text-box-trim` (Safari 18.2+). One rule, token-driven, zero per-component work; the existing `.ds-scroll-hidden` utility still wins on specificity. Synced to the storefront's tokens.css.
+**Status:** Active
+
+---
+
+### Docs Shell: Off-Canvas Mobile Navigation Below 1024px
+
+**Date/Phase:** 2026-07-01 — Responsive pass
+**Context:** The docs shell was a fixed `240px + 1fr` grid at every viewport — at 375px the sticky sidebar consumed 64% of the screen, leaving ~135px of content and horizontal page scroll. No mobile navigation pattern existed at all.
+**Options considered:** (a) Hide the sidebar below a breakpoint with no replacement (dead-ends navigation); (b) collapse to a top nav bar with inline links (46 component links don't fit); (c) off-canvas drawer: mobile topbar (hamburger + logo) + the existing sidebar sliding in from the left over a backdrop.
+**Decision:** Option (c). Below 1024px the layout is single-column with a sticky topbar; the sidebar becomes a fixed off-canvas panel (`min(280px, 85vw)`) toggled by a hamburger (`aria-expanded`/`aria-controls`, Escape closes and returns focus, backdrop click closes, link click closes, page scroll frozen while open). A `Menu` icon was added to the icon registry (and its explicit barrel export — see gotcha below). Also: `100vh` → `100dvh` fallbacks on the shell and Modal (iOS dynamic toolbar), content padding steps down below 768px, multi-column docs tables become their own scroll containers below 640px (`display: block; overflow-x: auto` — no wrapper markup needed), and the three gallery demos with fixed inline widths got `maxWidth: '100%'`.
+**Gotchas captured:** (1) The backdrop div initially participated in the desktop grid as a child of `.layout`, silently shifting the columns — structural elements that exist for one breakpoint must be `display: none` outside it. (2) The icon registry's barrel (`icon/index.ts`) is an explicit export list — a new icon in `icons.tsx` is invisible to consumers until added there. (3) After rebuilding `@ds/components`, the docs dev server serves stale Vite-optimized deps — restart it, don't debug phantom hydration errors.
+**Verification:** 0px horizontal overflow at 375/768/1280 on the colors, layout, homepage-example, and add-to-cart pages; drawer interaction verified in-browser; 638 tests green.
+**Status:** Active
+
+---
+
+### Accent Ramps Extended to 12 Steps, Harmonized on the Stone Spine
+
+**Date/Phase:** 2026-07-01 — System audit (follow-up color pass)
+**Context:** Stone had 12 steps but the four accent ramps (brick, sage, amber, slate) had only 6 (50, 100, 400, 500, 600, 700). No tinted washes lighter than 50, nothing between the pastel 100 and the vivid 400, and no dark steps at all — so dark-mode surface tints leaned on `color-mix()` and any future dark accent use would have invented values.
+**Options considered:** (a) Hand-pick the missing steps per ramp; (b) adopt an off-the-shelf palette (Radix/Tailwind) — discards the brand anchors; (c) derive the missing steps programmatically in OKLCH using stone's lightness curve as the shared tonal spine, preserving all 24 existing anchor hexes byte-identical.
+**Decision:** Option (c). Every ramp now carries the identical step set `0–950` (12 steps). New steps per accent: `0` (faintest wash, ~45% of the 50-tint's chroma), `200`/`300` (OKLCH interpolation between the 100 and 400 anchors, lightness riding the stone spine plus the ramp's interpolated offset), `800`/`900`/`950` (descent from 700 with lightness offset and chroma tapering by powers of 1/φ, converging on the stone dark ground). Hue held constant below 700; sRGB gamut enforced by chroma reduction.
+**Rationale:** Harmony with the stone backgrounds in both themes falls out of the construction: accent steps match stone's perceived depth step-for-step, and both ends of every ramp converge toward the backgrounds they'll sit on. φ-power tapering keeps the derivation on the system's proportional foundation. Verified: monotonic lightness in all ramps; all pre-existing contrast pairs unchanged (anchors untouched); new dark-text options clear WCAG with room (`300` on `stone.950` ≥ 9:1 in all four ramps). Generation script: OKLCH conversion + interpolation, archived in the session scratchpad and reproducible from this entry's parameters.
+**Synced downstream:** `assets/tokens.css` in `sixbase/mason-storefront` re-generated from this build. The theme's two local value patches were retired: dark `--color-info-foreground` (hand-patched `#A9B8D4` over the old `undefined` bug) is now the canonical slate.400, and light `--color-foreground-subtle` (`#6E675E` AA workaround) returned to canonical `#847D73` with the theme's *usages* swept to `foreground-secondary` instead — same role contract as the DS. The theme's per-component reduced-motion strategy (its documented replacement for the global block) was preserved in the synced file.
+**Status:** Active
+
+---
+
+### Layout Grid: `!important` Removed via `:where()` Specificity Flattening
+
+**Date/Phase:** 2026-07-01 — System audit
+**Context:** The mobile stack rule (`.ds-layout > * { grid-column: 1 / -1 }`) needed `!important` to beat positional variant selectors like `.ds-layout--golden > :first-child` (0,2,0).
+**Decision:** Wrapped the positional pseudo-classes in `:where()` so every variant rule sits at (0,1,0); the mobile rule, last in the file, now wins by cascade order alone. `!important` deleted — the codebase is back to zero.
+**Rationale:** `:where()` is the purpose-built tool for keeping utility-tier CSS flat. Cascade order is the design; `!important` was the workaround.
 **Status:** Active

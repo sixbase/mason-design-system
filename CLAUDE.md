@@ -39,7 +39,7 @@ Every visual value comes from `packages/tokens/src/tokens.json`. Three tiers:
 
 ### 3. The layout grid is the structural law
 
-- 1200px max-width container, centered
+- 1200px max-width container (`--size-container`), centered. Exception: the Shopify storefront repo deliberately runs its page frame at `--size-container-wide` (1300px visible) on wide screens — do NOT "fix" it back to 1200; see `docs/playbook/09-layout-grid.md` → "Storefront divergence".
 - 12-column CSS Grid, `--spacing-6` (24px) gutters
 - Section rhythm: `--spacing-16` (64px) between all major sections
 - Column splits: golden (7+5), reverse golden (5+7), halves (6+6), thirds (4+4+4), quarters (3+3+3+3), wide+narrow (8+4), full (12)
@@ -65,10 +65,10 @@ All scales derive from φ (1.618), its inverse (0.618), fractional powers, and F
 | Type (default) | √φ ≈ 1.272 | Product UI: body text, headings |
 | Type (display) | φ ≈ 1.618 | Editorial: hero text, campaign headlines |
 | Spacing | Fibonacci × 2px | 2, 4, 6, 10, 16, 26, 42, 68, 110, 178px |
-| Radius | Fibonacci | 0, 2, 5, 8, 13, 21px |
+| Radius | Fibonacci | 0, 1, 2, 5, 8, 13, 21, 34px |
 | Shadows | Fibonacci blur/offset | 2, 5, 13, 21, 34px blur |
 | Opacity | Powers of 1/φ | 1.0, 0.618, 0.382, 0.236, 0.146, 0.09 |
-| Transitions | ×φ per step | 100ms, 162ms, 262ms |
+| Transitions | ×φ per step | 100ms, 162ms, 262ms, 424ms, 686ms |
 | Control heights | Fibonacci | 34px (sm), 42px (md), 55px (lg) |
 
 **Fractal coherence:** The same ratio should appear at every scale level. Inner padding × φ ≈ outer margin. Component gap × φ ≈ section gap.
@@ -101,7 +101,7 @@ Two spacing scales exist for different scopes. Never mix them within the same co
 
 ## Typography Conventions
 
-- **Font:** Ancizar Serif (Google Fonts). Light (300), Regular (400), Medium (500), Semibold (600), Bold (700) + italics.
+- **Font:** Source Serif 4 (Google Fonts, variable optical size). Light (300), Regular (400), Medium (500), Semibold (600), Bold (700) + italics.
 - **Reading width:** All body/paragraph text constrained to `max-width: 65ch`. Headings exempt. Use `ch` units, never `px`.
 - **Optical centering:** Use `text-box-trim: both` + `text-box-edge: cap alphabetic` on fixed-height containers (buttons, badges, tags, pills, labels, table cells, nav items, inputs). Not on body text. Include `@supports not` fallback with `translateY` nudge.
 - **Always use `<Heading>` and `<Text>` components.** Never raw `<h1>`–`<h6>` or `<p>` tags — not in components, not in demo pages, not anywhere.

@@ -5,6 +5,10 @@
   --tabs-border-color: var(--color-border);
   --tabs-indicator-color: var(--color-primary);
   --tabs-content-padding: var(--spacing-6);
+  /* Truncation limit for long labels — a typographic measure
+     (~22 characters at the trigger font size), not a layout size,
+     so it has no home on the size scale. */
+  --tabs-trigger-max-width: 22ch;
 }
 
 /* 2. Base styles */
@@ -63,7 +67,7 @@
   font-family: var(--font-family-body);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  color: var(--color-foreground-muted);
+  color: var(--color-foreground-secondary);
   cursor: pointer;
   white-space: nowrap;
   transition: color var(--transition-fast), border-color var(--transition-normal);
@@ -99,7 +103,7 @@
 
 /* Long labels: truncate with ellipsis */
 .ds-tabs__trigger {
-  max-width: 200px;
+  max-width: var(--tabs-trigger-max-width);
   overflow: hidden;
   text-overflow: ellipsis;
 }

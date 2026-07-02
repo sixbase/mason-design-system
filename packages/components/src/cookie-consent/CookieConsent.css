@@ -66,7 +66,7 @@
 }
 
 .ds-cookie-consent__link:hover {
-  color: var(--color-foreground-subtle);
+  color: var(--color-foreground-secondary);
 }
 
 /* ─── Preferences panel ───────────────────────────────────── */

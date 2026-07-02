@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import { axe } from 'jest-axe';
 import { describe, expect, it } from 'vitest';
 import { Input } from './Input';
 
@@ -83,6 +84,20 @@ describe('Input', () => {
     it('renders trailing adornment', () => {
       render(<Input trailingAdornment={<span data-testid="icon" />} />);
       expect(screen.getByTestId('icon')).toBeInTheDocument();
+    });
+  });
+
+  describe('accessibility', () => {
+    it('has no accessibility violations', async () => {
+      const { container } = render(
+        <div>
+          <Input label="Email" hint="We never share your email" />
+          <Input label="Name" required />
+          <Input label="Postal code" error="Required field" />
+          <Input label="Company" disabled />
+        </div>,
+      );
+      expect(await axe(container)).toHaveNoViolations();
     });
   });
 });

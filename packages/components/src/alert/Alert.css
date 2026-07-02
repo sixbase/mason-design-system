@@ -5,7 +5,7 @@
   --alert-padding-block: var(--spacing-4);
   --alert-padding-inline: var(--spacing-5);
   --alert-gap: var(--spacing-3);
-  --alert-border-width: 3px;
+  --alert-border-width: var(--border-width-xl);
   --alert-bg: var(--color-background-surface);
   --alert-fg: var(--color-foreground);
   --alert-accent: var(--color-border);

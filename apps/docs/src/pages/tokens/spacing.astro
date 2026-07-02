@@ -48,7 +48,7 @@ const contentWidthUsage: Record<string, string> = {
   'content-sm': 'Constrained dialogs, cookie consent banners, narrow overlays',
   'content-md': 'Medium content areas, form containers, settings panels',
   'content-lg': 'Wide content areas, page-level containers, feature sections',
-  'content-xl': 'Full-width page container — header, footer, main content area',
+  'content-xl': 'Container component xl size — page frames use --size-container (1200px DS) / --size-container-wide (1300px visible, storefront)',
 };
 
 // Usage annotations for radius tokens
@@ -193,12 +193,12 @@ const radiusUsage: Record<string, string> = {
   .radius-value {
     font-family: var(--font-family-code);
     font-size: var(--font-size-xs);
-    color: var(--color-foreground-subtle);
+    color: var(--color-foreground-secondary);
   }
 
   .radius-usage {
     font-size: var(--font-size-xs);
-    color: var(--color-foreground-subtle);
+    color: var(--color-foreground-secondary);
     line-height: var(--line-height-relaxed);
   }
 </style>

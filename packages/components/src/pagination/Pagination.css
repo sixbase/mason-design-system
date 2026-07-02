@@ -60,7 +60,7 @@
   justify-content: center;
   width: var(--size-control-md);
   height: var(--size-control-md);
-  color: var(--color-foreground-muted);
+  color: var(--color-foreground-subtle);
   user-select: none;
 }
 
@@ -71,7 +71,7 @@
 
 /* ─── Page info text (mobile) ────────────────────────────── */
 .ds-pagination__info {
-  color: var(--color-foreground-subtle);
+  color: var(--color-foreground-secondary);
   white-space: nowrap;
   text-align: center;
   flex: 1;

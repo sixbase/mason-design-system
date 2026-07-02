@@ -18,6 +18,7 @@ body {
   display: grid;
   grid-template-columns: 240px 1fr;
   min-height: 100vh;
+  min-height: 100dvh; /* iOS Safari: track the dynamic toolbar */
 }
 
 /* ─── Sidebar ─────────────────────────────────────────────── */
@@ -25,10 +26,115 @@ body {
   position: sticky;
   top: 0;
   height: 100vh;
+  height: 100dvh; /* iOS Safari: track the dynamic toolbar */
   overflow-y: auto;
   padding: var(--spacing-6);
   border-right: 1px solid var(--color-border);
   background-color: var(--color-background-subtle);
+}
+
+/* ─── Mobile topbar (hidden on desktop) ───────────────────── */
+.mobile-topbar {
+  display: none;
+}
+
+/* Backdrop exists only for the mobile nav drawer — keep it out
+   of the desktop grid entirely. */
+.sidebar-backdrop {
+  display: none;
+}
+
+/* ─── Mobile shell: off-canvas sidebar below 1024px ───────── */
+/* @breakpoint-lg = 1024px */
+@media (max-width: 1023px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .mobile-topbar {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3);
+    position: sticky;
+    top: 0;
+    z-index: var(--z-index-sticky);
+    padding: var(--spacing-2) var(--spacing-4);
+    background-color: var(--color-background);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .mobile-topbar__logo-img {
+    display: block;
+    width: 132px;
+    height: auto;
+    color: var(--color-foreground);
+  }
+
+  .dark .mobile-topbar__logo-img {
+    filter: invert(1);
+  }
+
+  .mobile-topbar__menu {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--size-touch-target-lg);
+    height: var(--size-touch-target-lg);
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--color-foreground);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+  }
+
+  .mobile-topbar__menu:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+
+  .sidebar {
+    position: fixed;
+    inset-block: 0;
+    left: 0;
+    width: min(280px, 85vw);
+    z-index: var(--z-index-overlay);
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition:
+      transform var(--transition-normal),
+      visibility 0s var(--transition-duration-normal);
+  }
+
+  .nav-open .sidebar {
+    transform: translateX(0);
+    visibility: visible;
+    transition: transform var(--transition-normal);
+    box-shadow: var(--shadow-2xl);
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: calc(var(--z-index-overlay) - 1);
+    background-color: var(--color-overlay);
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity var(--transition-normal),
+      visibility 0s var(--transition-duration-normal);
+  }
+
+  .nav-open .sidebar-backdrop {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity var(--transition-normal);
+  }
+
+  .nav-open {
+    overflow: hidden; /* freeze page scroll while the nav drawer is open */
+  }
 }
 
 .sidebar__header {
@@ -94,7 +200,7 @@ body {
   font-weight: var(--font-weight-semibold);
   letter-spacing: var(--letter-spacing-wider);
   text-transform: uppercase;
-  color: var(--color-foreground-muted);
+  color: var(--color-foreground-secondary);
   margin: 0 0 var(--spacing-2);
 }
 
@@ -102,7 +208,7 @@ body {
   display: block;
   padding: var(--spacing-1) var(--spacing-2);
   font-size: var(--font-size-sm);
-  color: var(--color-foreground-subtle);
+  color: var(--color-foreground-secondary);
   text-decoration: none;
   border-radius: var(--radius-md);
   margin-bottom: var(--spacing-0);
@@ -118,19 +224,27 @@ body {
 .content {
   max-width: var(--size-content-md);
   padding: var(--spacing-12) var(--spacing-10);
+  min-width: 0; /* let grid children shrink instead of overflowing */
+}
+
+/* @breakpoint-md = 768px */
+@media (max-width: 767px) {
+  .content {
+    padding: var(--spacing-6) var(--spacing-4);
+  }
 }
 
 /* ─── Prose (MDX content) ─────────────────────────────────── */
 .prose > h1 { font-size: var(--font-size-4xl); font-weight: var(--font-weight-semibold); margin: 0 0 var(--spacing-4); }
 .prose > h2 { font-size: var(--font-size-2xl); font-weight: var(--font-weight-semibold); margin: var(--spacing-10) 0 var(--spacing-4); padding-top: var(--spacing-6); border-top: 1px solid var(--color-border); }
 .prose > h3 { font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); margin: var(--spacing-6) 0 var(--spacing-3); }
-.prose > p  { font-size: var(--font-size-base); line-height: var(--line-height-relaxed); color: var(--color-foreground-subtle); margin: 0 0 var(--spacing-4); }
+.prose > p  { font-size: var(--font-size-base); line-height: var(--line-height-relaxed); color: var(--color-foreground-secondary); margin: 0 0 var(--spacing-4); }
 .prose code { font-family: var(--font-family-code); font-size: 0.875em; background: var(--color-background-subtle); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 0.1em 0.35em; }
 .prose pre  { background: var(--color-background-subtle); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--spacing-5); overflow-x: auto; margin: var(--spacing-6) 0; }
-.prose pre code { background: none; border: none; padding: 0; font-size: var(--font-size-sm); color: var(--color-foreground-subtle); }
+.prose pre code { background: none; border: none; padding: 0; font-size: var(--font-size-sm); color: var(--color-foreground-secondary); }
 .prose table { width: 100%; border-collapse: collapse; background-color: var(--color-background-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; margin: var(--spacing-6) 0; }
-.prose th { text-align: left; font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); letter-spacing: var(--letter-spacing-wide); text-transform: uppercase; color: var(--color-foreground-muted); padding: var(--spacing-3) var(--spacing-4); border-bottom: 1px solid var(--color-border); }
-.prose td { font-size: var(--font-size-sm); color: var(--color-foreground-subtle); padding: var(--spacing-3) var(--spacing-4); border-bottom: 1px solid var(--color-border); }
+.prose th { text-align: left; font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); letter-spacing: var(--letter-spacing-wide); text-transform: uppercase; color: var(--color-foreground-secondary); padding: var(--spacing-3) var(--spacing-4); border-bottom: 1px solid var(--color-border); }
+.prose td { font-size: var(--font-size-sm); color: var(--color-foreground-secondary); padding: var(--spacing-3) var(--spacing-4); border-bottom: 1px solid var(--color-border); }
 .prose tr:last-child td { border-bottom: none; }
 
 /* ─── Component preview box ───────────────────────────────── */
@@ -170,8 +284,20 @@ body {
 .props-table td {
   padding: var(--spacing-2) var(--spacing-3);
   border-bottom: 1px solid var(--color-border);
-  color: var(--color-foreground-subtle);
+  color: var(--color-foreground-secondary);
   vertical-align: top;
+}
+
+/* Narrow screens: multi-column tables scroll within themselves
+   instead of stretching the page. display:block turns the table
+   into its own scroll container — no wrapper markup needed. */
+/* @breakpoint-sm = 640px */
+@media (max-width: 639px) {
+  .props-table,
+  .prose table {
+    display: block;
+    overflow-x: auto;
+  }
 }
 
 kbd {

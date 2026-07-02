@@ -6,7 +6,7 @@
   --progress-bar-track-color: var(--color-background-subtle);
   --progress-bar-fill-color: var(--color-primary);
   --progress-bar-radius: var(--radius-full);
-  --progress-bar-height: 8px;
+  --progress-bar-height: var(--spacing-2);
 
   display: flex;
   flex-direction: column;
@@ -23,7 +23,7 @@
 }
 
 .ds-progress-bar__value-text {
-  color: var(--color-foreground-subtle);
+  color: var(--color-foreground-secondary);
 }
 
 /* ==========================================================================
@@ -74,11 +74,11 @@
    ========================================================================== */
 
 .ds-progress-bar--sm {
-  --progress-bar-height: 4px;
+  --progress-bar-height: var(--spacing-1);
 }
 
 .ds-progress-bar--md {
-  --progress-bar-height: 8px;
+  --progress-bar-height: var(--spacing-2);
 }
 
 /* ==========================================================================
