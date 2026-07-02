@@ -52,7 +52,7 @@
   filter: invert(1);
 }
 
-.ds-footer__tagline {
+.ds-footer .ds-footer__tagline {
   font-size: var(--font-size-sm);
   color: var(--color-foreground-secondary);
   margin-top: var(--spacing-2);
@@ -106,7 +106,7 @@
   }
 }
 
-.ds-footer__copyright {
+.ds-footer .ds-footer__copyright {
   font-size: var(--font-size-xs);
   color: var(--color-foreground-secondary);
   margin: 0;

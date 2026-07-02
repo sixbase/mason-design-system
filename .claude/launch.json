@@ -5,7 +5,8 @@
       "name": "docs",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "@ds/docs", "dev"],
-      "port": 4321
+      "port": 4321,
+      "autoPort": true
     },
     {
       "name": "storybook",
