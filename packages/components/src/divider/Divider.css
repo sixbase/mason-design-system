@@ -1,7 +1,7 @@
 /* ─── Divider component tokens ──────────────────────────── */
 .ds-divider {
   --divider-color: var(--color-border);
-  --divider-thickness: 1px;
+  --divider-thickness: var(--border-width-sm);
 
   border: none;
   margin: 0;

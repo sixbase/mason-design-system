@@ -5,6 +5,7 @@ import { QuantitySelector } from './QuantitySelector';
 const meta: Meta<typeof QuantitySelector> = {
   title: 'Components/QuantitySelector',
   component: QuantitySelector,
+  tags: ['autodocs'],
 };
 export default meta;
 

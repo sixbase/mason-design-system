@@ -20,7 +20,8 @@
   padding: 0;
   margin: -1px;
   overflow: hidden;
-  clip: rect(0, 0, 0, 0);
+  clip: rect(0, 0, 0, 0); /* legacy fallback */
+  clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
 }
@@ -71,7 +72,7 @@
 
 .ds-collection-filters__pill-icon {
   flex-shrink: 0;
-  color: var(--color-foreground-muted);
+  color: var(--color-foreground-subtle);
 }
 
 /* ─── Panel ───────────────────────────────────────────── */
@@ -95,7 +96,7 @@
 }
 
 .ds-collection-filters__active-label {
-  color: var(--color-foreground-subtle);
+  color: var(--color-foreground-secondary);
 }
 
 /* ─── Filter value list ───────────────────────────────── */
@@ -113,7 +114,7 @@
 }
 
 .ds-collection-filters__value-count {
-  color: var(--color-foreground-muted);
+  color: var(--color-foreground-secondary);
   flex-shrink: 0;
 }
 
@@ -144,7 +145,7 @@
   display: flex;
   align-items: center;
   height: var(--size-control-sm);
-  color: var(--color-foreground-muted);
+  color: var(--color-foreground-subtle);
   font-size: var(--font-size-sm);
   flex-shrink: 0;
 }

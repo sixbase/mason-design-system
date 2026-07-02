@@ -1,4 +1,4 @@
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@ds/components';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent, Text } from '@ds/components';
 import { useState } from 'react';
 import { Preview } from './Preview';
 
@@ -69,7 +69,7 @@ export function AccordionSizes() {
   return (
     <Preview stack>
       <div className="ds-gallery-full">
-        <p className="ds-gallery-label">Small</p>
+        <Text size="sm" className="ds-gallery-label">Small</Text>
         <Accordion type="single" collapsible size="sm">
           <AccordionItem value="item-1">
             <AccordionTrigger>Small accordion item</AccordionTrigger>
@@ -78,7 +78,7 @@ export function AccordionSizes() {
         </Accordion>
       </div>
       <div className="ds-gallery-full">
-        <p className="ds-gallery-label">Medium (default)</p>
+        <Text size="sm" className="ds-gallery-label">Medium (default)</Text>
         <Accordion type="single" collapsible size="md">
           <AccordionItem value="item-1">
             <AccordionTrigger>Medium accordion item</AccordionTrigger>
@@ -87,7 +87,7 @@ export function AccordionSizes() {
         </Accordion>
       </div>
       <div className="ds-gallery-full">
-        <p className="ds-gallery-label">Large</p>
+        <Text size="sm" className="ds-gallery-label">Large</Text>
         <Accordion type="single" collapsible size="lg">
           <AccordionItem value="item-1">
             <AccordionTrigger>Large accordion item</AccordionTrigger>

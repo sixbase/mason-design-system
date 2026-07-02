@@ -1,4 +1,4 @@
-import { Checkbox } from '@ds/components';
+import { Checkbox, Text } from '@ds/components';
 import { Preview } from './Preview';
 
 export function CheckboxStates() {
@@ -32,9 +32,9 @@ export function CheckboxFilter() {
   return (
     <Preview stack>
       <div className="ds-gallery-stack">
-        <p className="ds-demo-section-label">
+        <Text size="sm" className="ds-demo-section-label">
           Size
-        </p>
+        </Text>
         <Checkbox size="sm" label="XS" defaultChecked />
         <Checkbox size="sm" label="S" defaultChecked />
         <Checkbox size="sm" label="M" />

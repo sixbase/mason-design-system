@@ -25,10 +25,15 @@
 }
 
 .ds-stock-indicator__dot--pulse {
-  animation: ds-stock-pulse 2s ease-in-out infinite;
+  /* Ambient pulse: intentionally slower than the interaction
+     duration scale — a 2s breathing rhythm reads as "live status",
+     anything under ~1s reads as an alert. */
+  --stock-indicator-pulse-duration: 2s;
+  animation: ds-stock-pulse var(--stock-indicator-pulse-duration)
+    var(--transition-easing-in-out) infinite;
 }
 
 @keyframes ds-stock-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  0%, 100% { opacity: var(--opacity-full); }
+  50% { opacity: var(--opacity-medium); }
 }

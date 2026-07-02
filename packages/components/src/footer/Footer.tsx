@@ -49,12 +49,16 @@ export const Footer = forwardRef<HTMLElement, FooterProps>(
               <a href={logoHref} className="ds-footer__logo" aria-label={logoAlt}>
                 <img src={logoSrc} alt={logoAlt} className="ds-footer__logo-img" />
               </a>
-              {tagline && <Text className="ds-footer__tagline">{tagline}</Text>}
+              {tagline && (
+                <Text size="sm" className="ds-footer__tagline">
+                  {tagline}
+                </Text>
+              )}
             </div>
 
             {columns.map((col) => (
               <div key={col.heading} className="ds-footer__column">
-                <Heading as="h3" className="ds-footer__heading">
+                <Heading as="h3" size="xl" className="ds-footer__heading">
                   {col.heading}
                 </Heading>
                 <ul className="ds-footer__links">
@@ -70,7 +74,11 @@ export const Footer = forwardRef<HTMLElement, FooterProps>(
 
           {(copyright || legalLinks.length > 0) && (
             <div className="ds-footer__bottom">
-              {copyright && <Text className="ds-footer__copyright">{copyright}</Text>}
+              {copyright && (
+                <Text size="sm" className="ds-footer__copyright">
+                  {copyright}
+                </Text>
+              )}
               {legalLinks.length > 0 && (
                 <div className="ds-footer__legal">
                   {legalLinks.map((link) => (

@@ -59,11 +59,19 @@ import '../../styles/token-docs.css';
         </div>
       </div>
       <div class="color-row">
+        <div class="color-sample" style="background-color: var(--color-foreground-secondary);" />
+        <div class="color-info">
+          <code>--color-foreground-secondary</code>
+          <span class="color-hex">{tokens.primitive.color.stone[600]}</span>
+          <span class="color-usage">The floor for any readable text at normal sizes (5.96:1) — captions, hints, placeholders, meta text, supporting copy</span>
+        </div>
+      </div>
+      <div class="color-row">
         <div class="color-sample" style="background-color: var(--color-foreground-subtle);" />
         <div class="color-info">
           <code>--color-foreground-subtle</code>
           <span class="color-hex">{tokens.primitive.color.stone[500]}</span>
-          <span class="color-usage">Captions, placeholders, secondary labels, breadcrumb separators, muted icons — text that should recede</span>
+          <span class="color-usage">Large text (24px+) and non-text glyphs only — chevrons, separators, icons (passes 3:1, fails 4.5:1; never small text)</span>
         </div>
       </div>
       <div class="color-row">
@@ -71,7 +79,7 @@ import '../../styles/token-docs.css';
         <div class="color-info">
           <code>--color-foreground-muted</code>
           <span class="color-hex">{tokens.primitive.color.stone[400]}</span>
-          <span class="color-usage">Disabled text, watermarks, ghost-state elements — lowest contrast text that is still perceptible</span>
+          <span class="color-usage">Disabled and decorative elements only (WCAG-exempt) — never readable text or state-bearing glyphs</span>
         </div>
       </div>
     </div>
@@ -270,11 +278,11 @@ import '../../styles/token-docs.css';
   .color-hex {
     font-family: var(--font-family-code);
     font-size: var(--font-size-xs);
-    color: var(--color-foreground-muted);
+    color: var(--color-foreground-secondary);
   }
   .color-usage {
     font-size: var(--font-size-xs);
-    color: var(--color-foreground-subtle);
+    color: var(--color-foreground-secondary);
     line-height: var(--line-height-relaxed);
   }
 
@@ -310,6 +318,6 @@ import '../../styles/token-docs.css';
   .palette-hex {
     font-family: var(--font-family-code);
     font-size: var(--font-size-xs);
-    color: var(--color-foreground-subtle);
+    color: var(--color-foreground-secondary);
   }
 </style>

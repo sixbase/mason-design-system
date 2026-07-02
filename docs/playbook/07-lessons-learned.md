@@ -71,6 +71,7 @@ Every lesson produced a rule. This table collects them all so Claude can scan fo
 | Page-level patterns belong in a docs example demo (e.g. CollectionDemo.tsx) BEFORE they're ported to the theme. Components in isolation aren't enough — the page-level composition is the DS contract | [page-level-demo-pattern](#page-level-demo-pattern) |
 | `<Heading level={N}>` is NOT a valid prop — the API is `<Heading as="hN">`. Pass `level={1}` and you silently get `<h2>` (the default). Grep all demos when seen | [heading-level-prop-bug](#heading-level-prop-bug) |
 | `<CollectionFilters>` is self-contained — render it ONCE per page, not separately for desktop and mobile. CSS visibility inside the component handles the responsive split | [collection-filters-single-render](#collection-filters-single-render) |
+| Components use `<Heading>`/`<Text>` internally too — never raw `<p>`/`<h1>`–`<h6>`. BEM selectors styling a Typography child need `.ds-block .ds-block__el` specificity to beat the `.ds-text`/`.ds-heading` class tie | [raw-html-in-components](#raw-html-in-components) |
 
 ### Docs & Demo Rules
 
@@ -246,6 +247,11 @@ Modal overlay used `40%` — unnamed magic number. System had `--opacity-medium:
 CookieConsent `max-height: 260px` forced scrollbar.
 **Fix:** Content-driven sizing. Mobile: `max-height: 50vh`. Desktop: no cap.
 **Rule:** If adding `overflow-y: auto`, ask: would the user prefer scrolling or a taller container?
+
+### Raw HTML tags leaked into shipped components, not just demos {#raw-html-in-components}
+Footer rendered its tagline, column headings, and copyright as raw `<p>`/`<h3>` instead of `<Text>`/`<Heading>` (Header was clean). The [raw-html-in-demos](#raw-html-in-demos) sweep only covered gallery/demo code — component sources were never audited for the same rule.
+**Fix:** `<Heading as="h3">` / `<Text size="sm">` with the BEM class kept via `className`. Footer.css selectors bumped to `.ds-footer .ds-footer__tagline` / `.ds-footer .ds-footer__copyright` (matching the pre-existing `.ds-footer .ds-footer__heading`) so the component's styling deterministically beats the Typography base classes.
+**Rule:** The no-raw-tags rule applies to component sources, not just demos. And when a component styles a Typography child through its own BEM class, the selector needs `.ds-block .ds-block__el` specificity — a bare `.ds-block__el` ties with `.ds-text`/`.ds-text--{size}`/`.ds-heading--{size}` (all 0,1,0), and the winner silently depends on CSS import order. Same failure mode as the PriceDisplay size-tie lesson ([theme-port-text-drift](#theme-port-text-drift)).
 
 ---
 
@@ -440,6 +446,22 @@ The React DS side doesn't hit this because `<Text size="sm" weight="semibold">` 
 **Bug:** Footer and Header predated the 4-file rule (no tests, no stories). Writing the missing tests surfaced that Footer still rendered raw `<h3>` column headings and raw `<p>` tagline/copyright — violating the "always `<Heading>`/`<Text>`" convention.
 **Fix:** Footer now renders `<Heading as="h3">` and `<Text>` with the existing BEM classes. Footer.css tagline/copyright selectors were bumped to `.ds-footer .ds-footer__x` (matching the pre-existing heading selector) so they win the specificity tie against `.ds-text--base`.
 **Rule:** When backfilling tests for older components, also diff them against current conventions — missing tests and stale patterns travel together.
+
+### Headings get `text-wrap: balance` — never hand-tune wraps with `&nbsp;` {#heading-text-wrap-balance}
+**Bug:** The example homepage hero heading (`Everyday Essentials, Thoughtfully Made`) wrapped badly at every width. A non-breaking space had been hand-placed between "Essentials," and "Thoughtfully" to "control" the wrap. It did the opposite: it glued together the two words that *should* break and let the rest split freely. Result — an orphaned "Made" on its own line on wide screens (640px content box with empty horizontal space), and on mobile (~343px box) the glued chunk was wider than the container, so the glyphs clipped past the rounded hero edges.
+**Fix:** Two altitudes. (1) Removed the `{' '}` from the demo content so words break on natural boundaries. (2) Added `text-wrap: balance` to `.ds-heading` in `Typography.css` — the browser now evens out line lengths for *all* headings, eliminating orphans without any manual hinting.
+**Rule:** Never encode line breaks into heading *content* with `&nbsp;`/` ` or `<br>`. Wrapping is a styling concern and lives on the component. `.ds-heading` carries `text-wrap: balance`; trust it. A non-breaking space is only legitimate for keeping genuinely-atomic tokens together (e.g. "10 kg", "Mason & Co"), never for aesthetic line shaping.
+**Gotcha:** The docs site consumes the **built** `@ds/components` package (`dist/index.css`), not `src`. A CSS edit to a component is invisible in the docs preview until `pnpm --filter @ds/components build` runs. Verify the *computed* property in the browser (`getComputedStyle(el).getPropertyValue('text-wrap-style')`) — a screenshot alone can falsely look fixed when greedy wrapping happens to land well.
+
+### Token build scripts must fail loudly — JS `undefined` becomes valid-looking CSS {#token-build-fails-silently}
+**Bug:** `build-css.mjs` interpolated `${p.color.slate[300]}` into the dark-mode CSS — but `slate.300` doesn't exist, so JavaScript happily produced `--color-info-foreground: undefined;`. CSS never errors on this: the variable just resolves to nothing and every dark-mode consumer silently falls back. The bug shipped and sat unnoticed because nothing red ever appeared in any console.
+**Root cause (deeper):** The build script hardcoded its own semantic mappings instead of reading the `semantic` tier from `tokens.json` — two sources of truth, so the JSON couldn't catch the dangling reference either.
+**Fix:** Semantic tokens (light + dark) now live in `tokens.json` and the build script resolves `{primitive.*}` references, **throwing** on any that don't exist. A bad reference now kills the build instead of shipping `undefined`.
+**Rule:** Any generator that turns data into CSS custom properties must validate every reference at build time. Template-string interpolation of object paths is banned in token tooling — resolve through a lookup that throws.
+
+### Two audit false alarms worth remembering — check the global layer before sweeping components {#global-css-safety-nets}
+**Context:** A component-by-component audit flagged "12 components missing `prefers-reduced-motion`" and "8 components missing `:focus-visible`". Both were wrong: `tokens.css` ships a global reduced-motion kill switch (`* { animation-duration: 0.01ms !important }` — the one sanctioned `!important`) and a global `*:focus-visible` outline safety net. Every component that suppresses `outline: none` was verified to provide a replacement ring (`:focus-visible` box-shadow or `:focus-within`).
+**Rule:** Before adding per-component handling for a cross-cutting concern (motion, focus, form font inheritance), check the global layer in `packages/tokens/dist/tokens.css` — it may already own the concern. Per-component blocks are only for *opting back in* with an alternative treatment (e.g. Button's spinner switching to a static dimmed state).
 
 ---
 

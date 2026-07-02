@@ -25,6 +25,11 @@
   /* Optical centering: trim em-box to cap height + baseline */
   text-box-trim: both;
   text-box-edge: cap alphabetic;
+
+  /* Balance multi-line headings: the browser evens out line
+     lengths instead of leaving an orphaned final word. Keeps
+     wrap points on natural word boundaries at every width. */
+  text-wrap: balance;
 }
 
 .ds-heading--4xl {
@@ -69,7 +74,7 @@
   font-family: var(--font-family-body);
   font-size: var(--font-size-xs);
   line-height: var(--line-height-normal);
-  color: var(--color-foreground-subtle);
+  color: var(--color-foreground-secondary);
   margin: 0;
 
   /* Optical centering: trim em-box to cap height + baseline */
@@ -91,7 +96,7 @@
 /* ─── Color modifiers ──────────────────────────────────────── */
 .ds-text--muted,
 .ds-heading--muted {
-  color: var(--color-foreground-subtle);
+  color: var(--color-foreground-secondary);
 }
 
 /* ─── Weight modifiers ─────────────────────────────────────── */

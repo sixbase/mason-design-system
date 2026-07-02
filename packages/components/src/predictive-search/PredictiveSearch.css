@@ -57,7 +57,7 @@
 }
 
 .ds-predictive-search__input::placeholder {
-  color: var(--color-foreground-muted);
+  color: var(--color-foreground-secondary);
 }
 
 /* Has clear button → extra right padding */
@@ -209,7 +209,7 @@
   font-weight: var(--font-weight-semibold);
   letter-spacing: var(--letter-spacing-wider);
   text-transform: uppercase;
-  color: var(--color-foreground-muted);
+  color: var(--color-foreground-secondary);
 }
 
 /* ─── Result item ─────────────────────────────────────────── */
@@ -230,8 +230,8 @@
 
 /* ─── Product thumbnail ───────────────────────────────────── */
 .ds-predictive-search__thumbnail {
-  width: 48px;
-  height: 48px;
+  width: var(--spacing-12);
+  height: var(--spacing-12);
   border-radius: var(--radius-sm);
   object-fit: cover;
   flex-shrink: 0;
@@ -299,7 +299,8 @@
   padding: 0;
   margin: -1px;
   overflow: hidden;
-  clip: rect(0, 0, 0, 0);
+  clip: rect(0, 0, 0, 0); /* legacy fallback */
+  clip-path: inset(50%);
   white-space: nowrap;
   border-width: 0;
 }

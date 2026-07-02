@@ -53,7 +53,7 @@ Every component includes axe accessibility scans. If axe fails, the test fails.
 
 ## Tech Stack
 
-TypeScript (strict) · React · pnpm workspaces · Turborepo · tsup · Radix UI · Storybook 8 · Astro 4 · Vitest · Chromatic · Changesets · Ancizar Serif
+TypeScript (strict) · React · pnpm workspaces · Turborepo · tsup · Radix UI · Storybook 8 · Astro 4 · Vitest · Chromatic · Changesets · Source Serif 4
 
 ## License
 

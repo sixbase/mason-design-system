@@ -69,7 +69,7 @@
 /* ─── Chevron ───────────────────────────────────────────── */
 .ds-accordion__chevron {
   flex-shrink: 0;
-  color: var(--color-foreground-muted);
+  color: var(--color-foreground-subtle);
   transition: transform var(--transition-duration-normal) var(--transition-easing-out);
 }
 
@@ -81,7 +81,7 @@
 /* ─── Content ───────────────────────────────────────────── */
 .ds-accordion__content {
   overflow: hidden;
-  color: var(--color-foreground-subtle);
+  color: var(--color-foreground-secondary);
   line-height: var(--line-height-relaxed);
 }
 

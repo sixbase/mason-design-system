@@ -54,7 +54,7 @@ Is one side clearly the "main" content?
 ```css
 .ds-page-container {
   width: 100%;
-  max-width: 1200px;
+  max-width: var(--size-container);     /* 1200px */
   margin-inline: auto;
   padding-inline: var(--spacing-4);     /* 16px mobile */
 }
@@ -75,7 +75,16 @@ Is one side clearly the "main" content?
 
 Applied to `<main>` in `FullWidthLayout.astro`.
 
-**Why 1200px instead of `--size-content-xl` (1280px)?** 1200px divides more cleanly into 12 columns and provides slightly more generous margins at large viewports. `--size-content-xl` (1280px) remains at its current value for full-width shell elements (Header, Footer). **For page content max-width, always use `.ds-page-container` (1200px), never `--size-content-xl`.** See `06-decisions-log.md` "Layout Grid System" and "Container Width Clarification."
+**Why 1200px instead of `--size-content-xl` (1280px)?** 1200px divides more cleanly into 12 columns and provides slightly more generous margins at large viewports. `--size-content-xl` (1280px) remains at its current value for full-width shell elements (Header, Footer). **For page content max-width, always use `.ds-page-container` (which references `--size-container`, 1200px), never `--size-content-xl`.** See `06-decisions-log.md` "Layout Grid System" and "Container Width Clarification."
+
+### Storefront divergence: 1300px visible on wide screens
+
+The Shopify storefront (`sixbase/mason-storefront`) deliberately runs a **wider page frame** than this document specifies. Its `.ds-page-container`, header inner, footer inner, and announcement bar all use `max-width: var(--size-container-wide)` (1396px), which with the 48px desktop padding yields **1300px of visible content** on wide screens. The grid itself is unchanged — same 12 columns, same 24px gutters, same 64px section rhythm — only the frame is wider.
+
+**This is a documented divergence, not drift** (owner decision, 2026-07-01):
+- The storefront's 1300px frame is **storefront-side and stays there** — do not port it back into the design system.
+- The design system's own container (`--size-container`, 1200px) governs the React library and the docs site.
+- Both widths are tokens, so neither side hardcodes a number. If either value changes, update this section and the decisions log.
 
 ---
 

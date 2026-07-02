@@ -104,7 +104,7 @@
 
 /* Placeholder text */
 .ds-select-trigger [data-placeholder] {
-  color: var(--color-foreground-muted);
+  color: var(--color-foreground-secondary);
 }
 
 /* ─── Chevron icon ───────────────────────────────────────── */
@@ -193,7 +193,7 @@
   font-weight: var(--font-weight-semibold);
   letter-spacing: var(--letter-spacing-wider);
   text-transform: uppercase;
-  color: var(--color-foreground-muted);
+  color: var(--color-foreground-secondary);
 }
 
 /* ─── Separator ──────────────────────────────────────────── */
@@ -216,7 +216,7 @@
 /* ─── Hint / error ───────────────────────────────────────── */
 .ds-select-hint {
   font-size: var(--font-size-xs);
-  color: var(--color-foreground-subtle);
+  color: var(--color-foreground-secondary);
   line-height: var(--line-height-normal);
 }
 

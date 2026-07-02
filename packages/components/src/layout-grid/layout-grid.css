@@ -17,7 +17,7 @@
 
 .ds-page-container {
   width: 100%;
-  max-width: 1200px;
+  max-width: var(--size-container);
   margin-inline: auto;
   padding-inline: var(--spacing-4);     /* 16px — mobile */
 }
@@ -66,17 +66,24 @@
   grid-column: span 12;
 }
 
+/*
+ * Positional child selectors are wrapped in :where() to keep every
+ * variant rule at class-level specificity (0,1,0). The mobile stack
+ * rule at the end of this file then wins purely by cascade order —
+ * no !important needed.
+ */
+
 /* Equal halves: 6 + 6 */
-.ds-layout--halves > :first-child  { grid-column: span 6; }
-.ds-layout--halves > :nth-child(2) { grid-column: span 6; }
+.ds-layout--halves > :where(:first-child)  { grid-column: span 6; }
+.ds-layout--halves > :where(:nth-child(2)) { grid-column: span 6; }
 
 /* Golden split: 7 + 5 — primary + secondary (7/12 ≈ 0.583) */
-.ds-layout--golden > :first-child  { grid-column: span 7; }
-.ds-layout--golden > :nth-child(2) { grid-column: span 5; }
+.ds-layout--golden > :where(:first-child)  { grid-column: span 7; }
+.ds-layout--golden > :where(:nth-child(2)) { grid-column: span 5; }
 
 /* Reverse golden: 5 + 7 — secondary + primary */
-.ds-layout--golden-reverse > :first-child  { grid-column: span 5; }
-.ds-layout--golden-reverse > :nth-child(2) { grid-column: span 7; }
+.ds-layout--golden-reverse > :where(:first-child)  { grid-column: span 5; }
+.ds-layout--golden-reverse > :where(:nth-child(2)) { grid-column: span 7; }
 
 /* Thirds: 4 + 4 + 4 */
 .ds-layout--thirds > * { grid-column: span 4; }
@@ -85,8 +92,8 @@
 .ds-layout--quarters > * { grid-column: span 3; }
 
 /* Wide + narrow: 8 + 4 — heavy primary + sidebar */
-.ds-layout--wide-narrow > :first-child  { grid-column: span 8; }
-.ds-layout--wide-narrow > :nth-child(2) { grid-column: span 4; }
+.ds-layout--wide-narrow > :where(:first-child)  { grid-column: span 8; }
+.ds-layout--wide-narrow > :where(:nth-child(2)) { grid-column: span 4; }
 
 /* ─── Span Utility ───────────────────────────────────────── */
 
@@ -133,10 +140,12 @@
   }
 }
 
-/* Mobile: below 768px — everything stacks */
+/* Mobile: below 768px — everything stacks.
+   Wins over the variant rules above at equal specificity because
+   it comes last in the cascade (variants use :where()). */
 @media (max-width: 767px) {
   .ds-layout > * {
-    grid-column: 1 / -1 !important;
+    grid-column: 1 / -1;
   }
 
   .ds-layout__sticky {

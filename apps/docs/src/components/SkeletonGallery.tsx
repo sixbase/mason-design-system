@@ -47,7 +47,7 @@ export function SkeletonText() {
 export function SkeletonProductCard() {
   return (
     <Preview>
-      <div style={{ width: '280px', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)' }}>
+      <div style={{ width: '280px', maxWidth: '100%', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)' }}>
         <Skeleton variant="rectangular" height={280} />
         <Skeleton variant="text" />
         <Skeleton variant="text" width="60%" />

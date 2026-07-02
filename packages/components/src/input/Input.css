@@ -62,7 +62,7 @@
 }
 
 .ds-input-field::placeholder {
-  color: var(--color-foreground-muted);
+  color: var(--color-foreground-secondary);
 }
 
 /* Focus */
@@ -131,7 +131,7 @@
 /* ─── Helper text / error message ──────────────────────────── */
 .ds-input-hint {
   font-size: var(--font-size-xs);
-  color: var(--color-foreground-subtle);
+  color: var(--color-foreground-secondary);
   line-height: var(--line-height-normal);
 }
 

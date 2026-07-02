@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { axe } from 'jest-axe';
 import { describe, expect, it, vi } from 'vitest';
 import { Button } from './Button';
 
@@ -114,6 +115,20 @@ describe('Button', () => {
         </Button>,
       );
       expect(screen.queryByTestId('icon')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('accessibility', () => {
+    it('has no accessibility violations', async () => {
+      const { container } = render(
+        <div>
+          <Button>Add to cart</Button>
+          <Button variant="secondary" size="lg">View details</Button>
+          <Button disabled>Out of stock</Button>
+          <Button loading>Adding…</Button>
+        </div>,
+      );
+      expect(await axe(container)).toHaveNoViolations();
     });
   });
 });

@@ -1,7 +1,7 @@
 ---
 import '@ds/tokens/css';
 import '@ds/components/styles';
-import { Moon, Sun } from '@ds/components';
+import { Menu, Moon, Sun } from '@ds/components';
 import './base.css';
 import '../styles/demo-utilities.css';
 
@@ -36,8 +36,24 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     </script>
   </head>
   <body>
+    <header class="mobile-topbar">
+      <button
+        type="button"
+        class="mobile-topbar__menu"
+        id="nav-toggle"
+        aria-label="Open navigation"
+        aria-controls="docs-sidebar"
+        aria-expanded="false"
+      >
+        <Menu size="md" />
+      </button>
+      <a href={`${base}/`}>
+        <img src={`${base}/mason-supply-co-logo.svg`} alt="Mason Supply Co." class="mobile-topbar__logo-img" />
+      </a>
+    </header>
     <div class="layout">
-      <aside class="sidebar">
+      <div class="sidebar-backdrop" id="nav-backdrop"></div>
+      <aside class="sidebar" id="docs-sidebar">
         <nav>
           <div class="sidebar__header">
             <a href={`${base}/`} class="sidebar__logo">
@@ -136,6 +152,31 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
         var isDark = document.documentElement.classList.toggle('dark');
         localStorage.setItem('ds-theme', isDark ? 'dark' : 'light');
       });
+
+      (function() {
+        var toggle = document.getElementById('nav-toggle');
+        var backdrop = document.getElementById('nav-backdrop');
+        var sidebar = document.getElementById('docs-sidebar');
+        var root = document.documentElement;
+        function setNav(open) {
+          root.classList.toggle('nav-open', open);
+          toggle.setAttribute('aria-expanded', String(open));
+          toggle.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+        }
+        toggle.addEventListener('click', function() {
+          setNav(!root.classList.contains('nav-open'));
+        });
+        backdrop.addEventListener('click', function() { setNav(false); });
+        sidebar.addEventListener('click', function(e) {
+          if (e.target.closest('a')) setNav(false);
+        });
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape' && root.classList.contains('nav-open')) {
+            setNav(false);
+            toggle.focus();
+          }
+        });
+      })();
     </script>
   </body>
 </html>

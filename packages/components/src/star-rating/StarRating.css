@@ -27,7 +27,7 @@
 .ds-star-rating__count {
   font-family: var(--font-family-numeric);
   font-variant-numeric: tabular-nums;
-  color: var(--color-foreground-subtle);
+  color: var(--color-foreground-secondary);
 }
 
 /* ─── Size: sm ──────────────────────────────────────────── */

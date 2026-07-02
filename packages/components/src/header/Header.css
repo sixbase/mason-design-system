@@ -3,7 +3,7 @@
 }
 
 .ds-header__inner {
-  max-width: 1200px;
+  max-width: var(--size-container);
   margin: 0 auto;
   display: flex;
   align-items: center;
@@ -51,7 +51,7 @@
 .ds-header__nav a {
   font-family: var(--font-family-body);
   font-size: var(--font-size-sm);
-  color: var(--color-foreground-subtle);
+  color: var(--color-foreground-secondary);
   text-decoration: none;
   transition: color var(--transition-fast);
 }

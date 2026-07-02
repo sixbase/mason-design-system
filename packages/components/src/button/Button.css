@@ -151,10 +151,10 @@
 .ds-button__spinner {
   width: 1em;
   height: 1em;
-  border: 2px solid currentColor;
+  border: var(--border-width-lg) solid currentColor;
   border-right-color: transparent;
   border-radius: var(--radius-full);
-  animation: ds-button-spin 0.65s linear infinite;
+  animation: ds-button-spin var(--transition-duration-slowest) linear infinite;
   flex-shrink: 0;
 }
 
@@ -189,7 +189,7 @@
 @media (prefers-reduced-motion: reduce) {
   .ds-button__spinner {
     animation: none;
-    opacity: 0.5;
+    opacity: var(--opacity-high);
   }
   .ds-button:active:not(:disabled) {
     transform: none;

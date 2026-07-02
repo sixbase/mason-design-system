@@ -82,7 +82,7 @@
 
 .ds-gallery-label {
   font-size: var(--font-size-xs);
-  color: var(--color-foreground-muted);
+  color: var(--color-foreground-secondary);
   margin: 0 0 var(--spacing-2);
 }
 

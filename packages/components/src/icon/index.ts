@@ -3,6 +3,7 @@ export type { IconProps, IconSize } from './Icon';
 export {
   X,
   Check,
+  Menu,
   ChevronDown,
   ChevronUp,
   ChevronLeft,

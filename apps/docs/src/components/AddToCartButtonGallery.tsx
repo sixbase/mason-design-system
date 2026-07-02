@@ -34,7 +34,7 @@ export function AddToCartButtonSizes() {
 export function AddToCartButtonFullWidth() {
   return (
     <Preview>
-      <div style={{ width: '320px' }}>
+      <div style={{ width: '320px', maxWidth: '100%' }}>
         <AddToCartButton fullWidth />
       </div>
     </Preview>
@@ -64,7 +64,7 @@ export function AddToCartButtonInteractive() {
 
   return (
     <Preview>
-      <div style={{ width: '240px' }}>
+      <div style={{ width: '240px', maxWidth: '100%' }}>
         <AddToCartButton
           status={status}
           onClick={handleClick}

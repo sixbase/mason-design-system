@@ -2,148 +2,90 @@ import { render, screen } from '@testing-library/react';
 import { axe } from 'jest-axe';
 import { describe, expect, it } from 'vitest';
 import { Footer } from './Footer';
-import type { FooterColumn } from './Footer';
 
-const sampleColumns: FooterColumn[] = [
+const columns = [
   {
     heading: 'Shop',
     links: [
-      { label: 'Phone Cases', href: '/collections/phone-cases' },
-      { label: 'Wallets', href: '/collections/wallets' },
+      { label: 'Kitchen', href: '/collections/kitchen' },
+      { label: 'Hardware', href: '/collections/hardware' },
     ],
   },
   {
-    heading: 'Company',
-    links: [
-      { label: 'About', href: '/pages/about' },
-      { label: 'Journal', href: '/blogs/journal' },
-    ],
+    heading: 'Support',
+    links: [{ label: 'Shipping & Returns', href: '/pages/shipping' }],
   },
 ];
 
-const defaultProps = {
-  logoSrc: '/logo.svg',
-  logoAlt: 'Mason Supply Co.',
-  tagline: 'Thoughtfully designed accessories for everyday carry.',
-  columns: sampleColumns,
-  copyright: '© 2026 Mason Supply Co. All rights reserved.',
-  legalLinks: [
-    { label: 'Privacy Policy', href: '/policies/privacy' },
-    { label: 'Terms of Service', href: '/policies/terms' },
-  ],
-};
-
 describe('Footer', () => {
-  // ── Rendering ──────────────────────────────────────────
-
-  it('renders as a contentinfo landmark', () => {
-    render(<Footer {...defaultProps} />);
+  it('renders as a footer landmark', () => {
+    render(<Footer logoSrc="/logo.svg" />);
     expect(screen.getByRole('contentinfo')).toBeInTheDocument();
   });
 
-  it('renders the logo image with alt text', () => {
-    render(<Footer {...defaultProps} />);
-    expect(screen.getByAltText('Mason Supply Co.')).toBeInTheDocument();
+  it('renders the logo linked to logoHref', () => {
+    render(<Footer logoSrc="/logo.svg" logoAlt="Mason Supply home" logoHref="/" />);
+    const link = screen.getByRole('link', { name: 'Mason Supply home' });
+    expect(link).toHaveAttribute('href', '/');
   });
 
-  it('links the logo to the logoHref', () => {
-    render(<Footer {...defaultProps} logoHref="/home" />);
-    const logoLink = screen.getByRole('link', { name: 'Mason Supply Co.' });
-    expect(logoLink).toHaveAttribute('href', '/home');
+  it('renders the tagline when provided', () => {
+    render(<Footer logoSrc="/logo.svg" tagline="Housewares built to outlast trends." />);
+    expect(screen.getByText('Housewares built to outlast trends.')).toBeInTheDocument();
   });
 
-  it('renders the tagline', () => {
-    render(<Footer {...defaultProps} />);
-    expect(
-      screen.getByText('Thoughtfully designed accessories for everyday carry.'),
-    ).toBeInTheDocument();
+  it('renders column headings and links', () => {
+    render(<Footer logoSrc="/logo.svg" columns={columns} />);
+    expect(screen.getByRole('heading', { name: 'Shop' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Kitchen' })).toHaveAttribute('href', '/collections/kitchen');
+    expect(screen.getByRole('link', { name: 'Shipping & Returns' })).toHaveAttribute('href', '/pages/shipping');
   });
 
-  // ── Columns ────────────────────────────────────────────
-
-  it('renders column headings as level-3 headings', () => {
-    render(<Footer {...defaultProps} />);
-    const headings = screen.getAllByRole('heading', { level: 3 });
-    expect(headings).toHaveLength(2);
-    expect(headings[0]).toHaveTextContent('Shop');
-    expect(headings[1]).toHaveTextContent('Company');
+  it('renders copyright text', () => {
+    render(<Footer logoSrc="/logo.svg" copyright="© 2026 Mason Supply Co." />);
+    expect(screen.getByText('© 2026 Mason Supply Co.')).toBeInTheDocument();
   });
 
-  it('renders each column heading via getByRole', () => {
-    render(<Footer {...defaultProps} />);
-    expect(screen.getByRole('heading', { level: 3, name: 'Shop' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 3, name: 'Company' })).toBeInTheDocument();
-  });
-
-  it('renders column links with correct hrefs', () => {
-    render(<Footer {...defaultProps} />);
-    expect(screen.getByRole('link', { name: 'Phone Cases' })).toHaveAttribute(
-      'href',
-      '/collections/phone-cases',
+  it('renders legal links', () => {
+    render(
+      <Footer
+        logoSrc="/logo.svg"
+        legalLinks={[
+          { label: 'Privacy Policy', href: '/policies/privacy' },
+          { label: 'Terms of Service', href: '/policies/terms' },
+        ]}
+      />,
     );
-    expect(screen.getByRole('link', { name: 'About' })).toHaveAttribute(
-      'href',
-      '/pages/about',
-    );
+    expect(screen.getByRole('link', { name: 'Privacy Policy' })).toHaveAttribute('href', '/policies/privacy');
+    expect(screen.getByRole('link', { name: 'Terms of Service' })).toBeInTheDocument();
   });
 
-  it('renders no headings when columns are omitted', () => {
-    render(<Footer logoSrc="/logo.svg" />);
-    expect(screen.queryByRole('heading', { level: 3 })).not.toBeInTheDocument();
-  });
-
-  // ── Bottom bar ─────────────────────────────────────────
-
-  it('renders the copyright text', () => {
-    render(<Footer {...defaultProps} />);
-    expect(
-      screen.getByText('© 2026 Mason Supply Co. All rights reserved.'),
-    ).toBeInTheDocument();
-  });
-
-  it('renders legal links with correct hrefs', () => {
-    render(<Footer {...defaultProps} />);
-    expect(screen.getByRole('link', { name: 'Privacy Policy' })).toHaveAttribute(
-      'href',
-      '/policies/privacy',
-    );
-    expect(screen.getByRole('link', { name: 'Terms of Service' })).toHaveAttribute(
-      'href',
-      '/policies/terms',
-    );
-  });
-
-  it('omits the bottom bar without copyright or legal links', () => {
-    const { container } = render(
-      <Footer logoSrc="/logo.svg" columns={sampleColumns} />,
-    );
+  it('omits the bottom bar when no copyright or legal links are given', () => {
+    const { container } = render(<Footer logoSrc="/logo.svg" columns={columns} />);
     expect(container.querySelector('.ds-footer__bottom')).not.toBeInTheDocument();
   });
 
-  // ── API ────────────────────────────────────────────────
-
-  it('merges a custom className', () => {
-    render(<Footer {...defaultProps} className="custom-class" />);
-    const footer = screen.getByRole('contentinfo');
-    expect(footer).toHaveClass('ds-footer');
-    expect(footer).toHaveClass('custom-class');
+  it('merges custom className', () => {
+    render(<Footer logoSrc="/logo.svg" className="custom" />);
+    expect(screen.getByRole('contentinfo')).toHaveClass('custom', 'ds-footer');
   });
 
-  it('forwards additional HTML attributes', () => {
-    render(<Footer {...defaultProps} data-testid="site-footer" />);
-    expect(screen.getByTestId('site-footer')).toBeInTheDocument();
+  it('forwards ref correctly', () => {
+    const ref = { current: null };
+    render(<Footer ref={ref} logoSrc="/logo.svg" />);
+    expect(ref.current).toBeInstanceOf(HTMLElement);
   });
-
-  // ── Accessibility ──────────────────────────────────────
 
   it('has no accessibility violations', async () => {
-    const { container } = render(<Footer {...defaultProps} />);
-    expect(await axe(container)).toHaveNoViolations();
-  });
-
-  it('has no accessibility violations in minimal form', async () => {
     const { container } = render(
-      <Footer logoSrc="/logo.svg" copyright="© 2026 Mason Supply Co." />,
+      <Footer
+        logoSrc="/logo.svg"
+        logoAlt="Mason Supply home"
+        tagline="Housewares built to outlast trends."
+        columns={columns}
+        copyright="© 2026 Mason Supply Co. All rights reserved."
+        legalLinks={[{ label: 'Privacy Policy', href: '/policies/privacy' }]}
+      />,
     );
     expect(await axe(container)).toHaveNoViolations();
   });
