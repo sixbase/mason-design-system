@@ -28,6 +28,8 @@
 .ds-carousel__slide {
   flex-shrink: 0;
   scroll-snap-align: start;
+  /* WebKit guard: stop stale content forcing a slide past its flex-basis. */
+  min-width: 0;
 }
 
 /* sm: narrow slides */

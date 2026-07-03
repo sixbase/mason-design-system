@@ -15,19 +15,19 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: var(--spacing-1);
+  gap: var(--spacing-2);
   list-style: none;
   margin: 0;
   padding: 0;
   font-family: var(--font-family-body);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   line-height: var(--line-height-normal);
 }
 
 .ds-breadcrumb__item {
   display: flex;
   align-items: center;
-  gap: var(--spacing-1);
+  gap: var(--spacing-2);
   min-width: 0;
 }
 
@@ -55,7 +55,7 @@ a.ds-breadcrumb__link:hover {
 
 .ds-breadcrumb__current {
   color: var(--color-foreground);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-normal);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

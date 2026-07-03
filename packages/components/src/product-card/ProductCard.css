@@ -64,7 +64,7 @@
   font-family: var(--font-family-numeric);
   font-variant-numeric: tabular-nums;
   line-height: var(--line-height-snug);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-normal);
 }
 
 /* ─── Badge overlay ──────────────────────────────────────── */

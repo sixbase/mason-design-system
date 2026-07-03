@@ -28,10 +28,13 @@
 .ds-highlights__item {
   display: flex;
   flex-direction: column;
+  /* WebKit: let 1fr tracks size from the grid, not a stale aspect-ratio min. */
+  min-width: 0;
 }
 
 .ds-highlights__media {
   aspect-ratio: 4 / 5;
+  width: 100%;
   overflow: hidden;
   border-radius: var(--radius-3xl);       /* 34px */
   background-color: var(--color-background-subtle);
