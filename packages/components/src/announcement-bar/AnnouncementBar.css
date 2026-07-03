@@ -20,7 +20,12 @@
   align-items: center;
   justify-content: center;
   gap: var(--spacing-2);
-  padding: var(--spacing-2) calc(var(--size-touch-target) + var(--spacing-4)) var(--spacing-2) var(--spacing-4);
+  /* Pin the bar height so the message's cap-height text-box trim doesn't
+     collapse it (line-height-normal x font-size-sm + 2 x padding). */
+  min-height: calc(var(--font-size-sm) * var(--line-height-normal) + var(--spacing-2) * 2);
+  /* Symmetric inline padding reserves the dismiss footprint on BOTH sides so
+     the centered message sits at the true centre while clearing the button. */
+  padding: var(--spacing-2) calc(var(--size-touch-target) + var(--spacing-4));
   text-align: center;
 }
 
@@ -41,6 +46,24 @@
 .ds-announcement-bar__message {
   color: var(--announcement-bar-fg);
   max-width: none;
+  /* Optical y-centring via cap-height trim (correct `text-box` shorthand;
+     the longhand value `both` is invalid and no-ops). */
+  text-box: trim-both cap alphabetic;
+  /* Cancel the inherited .ds-text 0.05em nudge so only the trim positions it. */
+  transform: none;
+}
+
+@supports not (text-box: trim-both cap alphabetic) {
+  .ds-announcement-bar__message {
+    transform: translateY(0.05em);
+  }
+}
+
+/* Mobile: step the announcement text down one size (sm -> xs). */
+@media (max-width: 767px) {
+  .ds-announcement-bar__message {
+    font-size: var(--font-size-xs);
+  }
 }
 
 /* ─── Link ─────────────────────────────────────────────── */
@@ -66,12 +89,14 @@
 
 .ds-announcement-bar__dismiss {
   position: absolute;
-  top: 50%;
+  /* Even margin on top, bottom and right; icon stays centred via flex. */
+  top: var(--spacing-1);
   right: var(--spacing-1);
-  transform: translateY(-50%);
+  bottom: var(--spacing-1);
   display: flex;
   align-items: center;
   justify-content: center;
+  aspect-ratio: 1;
   width: auto;
   height: auto;
   border: none;

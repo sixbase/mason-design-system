@@ -1,6 +1,9 @@
 /* ─── ProductCard ────────────────────────────────────────── */
 .ds-product-card {
-  --card-radius: var(--radius-md);
+  /* Editorial card: 34px corner on the image tile, matching the homepage
+     highlight cards. */
+  --card-radius: var(--radius-3xl);
+  --card-image-ratio: 4 / 5;
   --card-padding: var(--spacing-3);
   /* Standalone default (carousels, side-by-side rows). In page grids,
      always use --fluid so the parent grid owns the width — the fixed
@@ -13,6 +16,12 @@
   border: none;
   box-shadow: none;
   background-color: transparent;
+
+  /* Ghost card: the 34px corner lives on the image tile only. The base
+     .ds-card would round + clip the whole card (slicing the name/price at
+     the bottom), so undo its radius + overflow here. */
+  border-radius: 0;
+  overflow: visible;
 }
 
 /* Fluid mode: when placed inside a CSS Grid, fill the cell.
@@ -29,6 +38,7 @@
 /* Image gets uniform radius since ghost card has no clipping background */
 .ds-product-card .ds-card-image {
   border-radius: var(--card-radius);
+  aspect-ratio: 4 / 5;
 }
 
 /* Override Card interactive hover — image zoom only, no lift/shadow */
@@ -44,7 +54,7 @@
 
 .ds-product-card .ds-card-body {
   gap: var(--spacing-phi-2);
-  padding: var(--spacing-phi-3) 0 0 0;
+  padding: var(--spacing-phi-5) var(--spacing-phi-8) 0;
 }
 
 /* ─── Product name — uses <Text> primitive, card-specific layout only ── */
@@ -57,6 +67,8 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  color: var(--color-foreground);
+  text-decoration: none;
 }
 
 /* ─── Price — uses <Text> primitive, card-specific layout only ── */
@@ -70,8 +82,8 @@
 /* ─── Badge overlay ──────────────────────────────────────── */
 .ds-product-card__badge {
   position: absolute;
-  top: var(--spacing-2);
-  left: var(--spacing-2);
+  top: var(--spacing-phi-8);
+  left: var(--spacing-phi-8);
   z-index: var(--z-index-raised);
 }
 
@@ -108,12 +120,11 @@
 /* ─── Large variant ────────────────────────────────────── */
 .ds-product-card--lg {
   --product-card-width: 300px;
-  --card-radius: var(--radius-lg);
 }
 
 .ds-product-card--lg .ds-card-body {
   gap: var(--spacing-phi-2);
-  padding: var(--spacing-phi-5) 0 0 0;
+  padding: var(--spacing-phi-5) var(--spacing-phi-8) 0;
 }
 
 .ds-product-card--lg .ds-product-card__name {
@@ -122,4 +133,16 @@
 
 .ds-product-card--lg .ds-product-card__price {
   font-size: var(--font-size-base);
+}
+
+/* ─── Mobile: smaller corner + price than desktop ──────────── */
+@media (max-width: 767px) {
+  .ds-product-card {
+    --card-radius: var(--radius-2xl);
+  }
+
+  .ds-product-card .ds-product-card__price,
+  .ds-product-card .ds-product-card__price .ds-text {
+    font-size: var(--font-size-tight-2xs);
+  }
 }
