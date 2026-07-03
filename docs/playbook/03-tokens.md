@@ -277,6 +277,19 @@ lg   = 20px (1.25rem)    xl   = 26px (1.625rem)    2xl  = 33px (2.0625rem)
 ```
 Note: xs and sm anchored at 12px/14px (not strict φ values 10px/13px) for accessibility at small sizes.
 
+**Fluid sizing (clamp).** `base` through `5xl` are *fluid*, not fixed: each token
+is a `clamp(min, preferred + Nvw, max)` where the px listed above is the **max**
+(the desktop cap). They scale down smoothly on narrower viewports to a floor and
+grow back up with the screen — so type resizes continuously with viewport width,
+with **no breakpoints**. `xs` and `sm` stay fixed (legibility at small sizes).
+
+Example — `--font-size-4xl: clamp(2.125rem, 1.39rem + 3.76vw, 3.375rem)` renders
+~34px on a 375px phone and caps at 54px on desktop. Because heading classes
+(`.ds-heading--4xl` etc.) and body classes (`.ds-text--lg` etc.) consume these
+tokens directly, every consumer inherits the fluid behavior automatically —
+avoid re-declaring `font-size` at breakpoints unless a specific design step-down
+is intended (e.g. the hero headline drops one scale on mobile on purpose).
+
 **Tight scale** (base 16px, φ^(1/3) step):
 ```
 tight-2xs = 10px   tight-xs = 12px    tight-sm = 14px    tight-base = 16px
