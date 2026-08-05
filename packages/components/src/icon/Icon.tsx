@@ -5,16 +5,40 @@ import './Icon.css';
 export type IconSize = 'sm' | 'md' | 'lg';
 
 export interface IconProps extends SVGAttributes<SVGElement> {
-  /** Icon size — sm (16px), md (20px), lg (24px) */
+  /** Icon size — sm (--size-icon-sm), md (--size-icon-md), lg (--size-icon-lg) */
   size?: IconSize;
   /** Accessible label — required when decorative={false} */
   label?: string;
-  /** When true (default), icon is hidden from assistive tech */
+  /**
+   * When true (default), the icon is decorative: it renders with
+   * `aria-hidden="true"` and is invisible to assistive technology.
+   * Keep the default whenever the icon sits next to visible text that
+   * already carries the meaning (e.g. a chevron in an accordion trigger,
+   * the icon inside a labeled button).
+   *
+   * Set `decorative={false}` ONLY when the icon is the sole conveyor of
+   * meaning (e.g. a standalone status glyph) — then you MUST also pass
+   * `label`, which becomes the `aria-label` on a `role="img"` element.
+   *
+   * @example
+   * // Decorative (default) — text carries the meaning
+   * <Button><CartIcon /> Add to cart</Button>
+   *
+   * @example
+   * // Meaningful — icon stands alone
+   * <Icon decorative={false} label="In stock"><CheckPath /></Icon>
+   */
   decorative?: boolean;
   /** Pass an SVG element directly */
   children?: ReactNode;
 }
 
+/**
+ * Icon
+ *
+ * Base SVG wrapper for the design system icon set. Sizes come from
+ * `--size-icon-*` tokens; color inherits `currentColor` from the parent.
+ */
 export const Icon = forwardRef<SVGSVGElement, IconProps>(
   function Icon(
     {

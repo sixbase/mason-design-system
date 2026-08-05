@@ -60,6 +60,7 @@ export const Alert = forwardRef<HTMLDivElement, AlertProps>(
     const classes = [
       'ds-alert',
       `ds-alert--${variant}`,
+      !title && 'ds-alert--compact',
       className,
     ]
       .filter(Boolean)

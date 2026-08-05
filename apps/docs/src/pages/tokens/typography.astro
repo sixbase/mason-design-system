@@ -130,6 +130,10 @@ const { font } = tokens.primitive;
       Use only for marketing pages, campaign landing pages, and editorial content where type <em>is</em> the design.
       None of the product components in this system use the display scale.
       If you're building within the app shell, you almost certainly don't need this.
+      <code>display-md</code> through <code>display-2xl</code> are <strong>fluid</strong> — the same
+      <code>clamp()</code> technique as the default scale, scaling from ~72% of the desktop size at a
+      375px viewport up to the full φ-scale value at 1200px. <code>display-xs</code> and
+      <code>display-sm</code> stay fixed for legibility. The previews below resize live with the viewport.
     </p>
     <div class="token-table token-table--annotated token-table--muted">
       <div class="token-row">
@@ -141,21 +145,36 @@ const { font } = tokens.primitive;
         <span class="token-preview" style="font-size: 1rem; line-height: 1.5;">Aa</span>
       </div>
       <div class="token-row">
-        <span class="token-name"><code>--font-size-display-md</code> <span class="token-size-info">1.625rem / 26px</span><span class="token-usage">Section headings on marketing and landing pages</span></span>
-        <span class="token-preview" style="font-size: 1.625rem; line-height: 1.4;">Aa</span>
+        <span class="token-name"><code>--font-size-display-md</code> <span class="token-size-info">fluid — 18.72px → 26px</span><span class="token-usage">Section headings on marketing and landing pages</span></span>
+        <span class="token-preview" style="font-size: var(--font-size-display-md); line-height: 1.4;">Aa</span>
       </div>
       <div class="token-row">
-        <span class="token-name"><code>--font-size-display-lg</code> <span class="token-size-info">2.625rem / 42px</span><span class="token-usage">Page hero subheadings, campaign section titles paired with a larger headline</span></span>
-        <span class="token-preview" style="font-size: 2.625rem; line-height: 1.2;">Aa</span>
+        <span class="token-name"><code>--font-size-display-lg</code> <span class="token-size-info">fluid — 30.24px → 42px</span><span class="token-usage">Page hero subheadings, campaign section titles paired with a larger headline</span></span>
+        <span class="token-preview" style="font-size: var(--font-size-display-lg); line-height: 1.2;">Aa</span>
       </div>
       <div class="token-row">
-        <span class="token-name"><code>--font-size-display-xl</code> <span class="token-size-info">4.25rem / 68px</span><span class="token-usage">Primary hero headline on a marketing page or campaign landing</span></span>
-        <span class="token-preview" style="font-size: 4.25rem; line-height: 1.1;">Aa</span>
+        <span class="token-name"><code>--font-size-display-xl</code> <span class="token-size-info">fluid — 48.96px → 68px</span><span class="token-usage">Primary hero headline on a marketing page or campaign landing</span></span>
+        <span class="token-preview" style="font-size: var(--font-size-display-xl); line-height: 1.1;">Aa</span>
       </div>
       <div class="token-row">
-        <span class="token-name"><code>--font-size-display-2xl</code> <span class="token-size-info">6.875rem / 110px</span><span class="token-usage">Full-screen hero text — a single word or short phrase at maximum visual impact</span></span>
-        <span class="token-preview" style="font-size: 6.875rem; line-height: 1.0;">Aa</span>
+        <span class="token-name"><code>--font-size-display-2xl</code> <span class="token-size-info">fluid — 79.2px → 110px</span><span class="token-usage">Full-screen hero text — a single word or short phrase at maximum visual impact</span></span>
+        <span class="token-preview" style="font-size: var(--font-size-display-2xl); line-height: 1.0;">Aa</span>
       </div>
+    </div>
+
+    <h2>Reading measure</h2>
+    <p>
+      <code>--measure-reading</code> (65ch) is the optimal line length for body text — the token
+      behind the system-wide reading-width rule. The Typography components apply it automatically;
+      use the token for any custom body-text container. Always <code>ch</code> units, never px.
+    </p>
+    <div class="measure-demo">
+      <p class="measure-demo__text">
+        This paragraph is constrained to <code>max-width: var(--measure-reading)</code>.
+        Around 65 characters per line, the eye tracks comfortably from the end of one line
+        to the start of the next — long enough to establish rhythm, short enough that the
+        return sweep never gets lost. Headings are exempt; body text is not.
+      </p>
     </div>
 
     <h2>Font weights</h2>
@@ -335,6 +354,23 @@ const { font } = tokens.primitive;
     font-size: var(--font-size-xs);
     color: var(--color-foreground-secondary);
     margin-top: 2px;
+  }
+
+  /* ─── Reading measure demo ───────────────────────────── */
+  .measure-demo {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-4);
+    margin: var(--spacing-4) 0 var(--spacing-8);
+    background-color: var(--color-background-surface);
+  }
+
+  .measure-demo__text {
+    max-width: var(--measure-reading);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-normal);
+    color: var(--color-foreground-secondary);
+    margin: 0;
   }
 
   /* ─── Semantic mapping table ─────────────────────────── */

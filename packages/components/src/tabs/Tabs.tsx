@@ -1,6 +1,7 @@
 import * as TabsPrimitive from '@radix-ui/react-tabs';
 import { forwardRef } from 'react';
-import type { ComponentPropsWithoutRef } from 'react';
+import type { ComponentPropsWithoutRef, ReactNode } from 'react';
+import { Badge } from '../badge';
 import './Tabs.css';
 
 // ─── Types ────────────────────────────────────────────────
@@ -9,7 +10,14 @@ export interface TabsProps extends ComponentPropsWithoutRef<typeof TabsPrimitive
 
 export interface TabsListProps extends ComponentPropsWithoutRef<typeof TabsPrimitive.List> {}
 
-export interface TabsTriggerProps extends ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger> {}
+export interface TabsTriggerProps extends ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger> {
+  /**
+   * Optional badge shown after the label — e.g. a review count.
+   * Strings and numbers render inside a secondary `<Badge>`;
+   * any other node renders as-is.
+   */
+  badge?: ReactNode;
+}
 
 export interface TabsContentProps extends ComponentPropsWithoutRef<typeof TabsPrimitive.Content> {}
 
@@ -54,9 +62,21 @@ TabsList.displayName = 'TabsList';
 // ─── Trigger ──────────────────────────────────────────────
 
 export const TabsTrigger = forwardRef<HTMLButtonElement, TabsTriggerProps>(
-  function TabsTrigger({ className, ...props }, ref) {
+  function TabsTrigger({ className, badge, children, ...props }, ref) {
     const classes = ['ds-tabs__trigger', className].filter(Boolean).join(' ');
-    return <TabsPrimitive.Trigger ref={ref} className={classes} {...props} />;
+    return (
+      <TabsPrimitive.Trigger ref={ref} className={classes} {...props}>
+        <span className="ds-tabs__trigger-label">{children}</span>
+        {badge != null &&
+          (typeof badge === 'string' || typeof badge === 'number' ? (
+            <Badge size="sm" variant="secondary" className="ds-tabs__badge">
+              {badge}
+            </Badge>
+          ) : (
+            <span className="ds-tabs__badge">{badge}</span>
+          ))}
+      </TabsPrimitive.Trigger>
+    );
   },
 );
 TabsTrigger.displayName = 'TabsTrigger';

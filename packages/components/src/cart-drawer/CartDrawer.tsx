@@ -178,7 +178,7 @@ export const CartDrawer = forwardRef<HTMLDivElement, CartDrawerProps>(
                 </Button>
                 <Button
                   variant="ghost"
-                  size="md"
+                  size="lg"
                   fullWidth
                   onClick={() => onOpenChange(false)}
                 >

@@ -41,6 +41,12 @@ describe('Footer', () => {
     expect(screen.getByRole('link', { name: 'Shipping & Returns' })).toHaveAttribute('href', '/pages/shipping');
   });
 
+  it('renders each column as a labelled navigation landmark', () => {
+    render(<Footer logoSrc="/logo.svg" columns={columns} />);
+    expect(screen.getByRole('navigation', { name: 'Shop' })).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: 'Support' })).toBeInTheDocument();
+  });
+
   it('renders copyright text', () => {
     render(<Footer logoSrc="/logo.svg" copyright="© 2026 Mason Supply Co." />);
     expect(screen.getByText('© 2026 Mason Supply Co.')).toBeInTheDocument();

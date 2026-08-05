@@ -38,6 +38,16 @@ describe('Alert', () => {
     expect(screen.queryByText('.ds-alert__title')).not.toBeInTheDocument();
   });
 
+  it('applies compact class when no title is provided', () => {
+    const { container } = render(<Alert>Single line</Alert>);
+    expect(container.querySelector('.ds-alert--compact')).toBeInTheDocument();
+  });
+
+  it('does not apply compact class when title is provided', () => {
+    const { container } = render(<Alert title="Heads up">Body</Alert>);
+    expect(container.querySelector('.ds-alert--compact')).not.toBeInTheDocument();
+  });
+
   it('uses role="alert" for destructive variant', () => {
     render(<Alert variant="destructive">Error occurred</Alert>);
     expect(screen.getByRole('alert')).toBeInTheDocument();

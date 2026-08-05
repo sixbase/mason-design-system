@@ -1,0 +1,61 @@
+---
+import ComponentPage from '../../layouts/ComponentPage.astro';
+import { TagVariants, TagSizes, TagWithIcon, TagActiveFilters } from '../../components/TagGallery';
+---
+
+<ComponentPage
+  title="Tag"
+  description="An interactive, removable token — active filters, selected options, applied search refinements. Distinct from Badge: Badge is a passive status display; Tag represents a value the user selected and can remove."
+  installCode="import { Tag } from '@ds/components';"
+  props={[
+    {
+      headers: ['Prop', 'Type', 'Default', 'Description'],
+      rows: [
+        ['<code>variant</code>', "<code>'default' | 'outline'</code>", "<code>'default'</code>", 'Visual style'],
+        ['<code>size</code>', "<code>'sm' | 'md'</code>", "<code>'md'</code>", 'Size — aligned with Badge sizing'],
+        ['<code>icon</code>', '<code>ReactNode</code>', '—', 'Optional leading icon (decorative, hidden from assistive tech)'],
+        ['<code>onDismiss</code>', '<code>() => void</code>', '—', 'When provided, renders a remove button and is called on click'],
+        ['<code>removeLabel</code>', '<code>string</code>', '<code>"Remove {children}"</code>', 'Accessible label for the remove button — required when children is not a plain string'],
+      ],
+    },
+  ]}
+  accessibility={[
+    'Remove button receives <code>aria-label="Remove {children}"</code> automatically when children is a string',
+    'Remove button is a real <code>&lt;button type="button"&gt;</code> — keyboard operable with Enter and Space',
+    'Remove button meets the 44px hit area (<code>--size-hit-area</code>) on touch devices via an invisible pseudo-element — coarse-pointer only, since adjacent tags in a filter row would otherwise overlap targets',
+    'Focus ring via <code>box-shadow: var(--focus-ring)</code> on <code>:focus-visible</code>',
+    'All text meets WCAG 1.4.3 AA — minimum 4.5:1 contrast in light and dark mode',
+  ]}
+>
+  <h2>Tag vs Badge</h2>
+  <p>
+    Use <code>Badge</code> for passive status display — stock state, sale labels,
+    order status. Use <code>Tag</code> for interactive, removable tokens — active
+    collection filters, selected variant options, applied search refinements.
+    If the user can remove it, it is a Tag.
+  </p>
+
+  <h2>Variants</h2>
+  <TagVariants client:load />
+  <pre><code>{`<Tag variant="default">Blue</Tag>
+<Tag variant="outline">Size: M</Tag>`}</code></pre>
+
+  <h2>Sizes</h2>
+  <TagSizes client:load />
+  <pre><code>{`<Tag size="sm">Small</Tag>
+<Tag size="md">Medium</Tag>   {/* default */}`}</code></pre>
+
+  <h2>Leading icon</h2>
+  <TagWithIcon client:load />
+  <pre><code>{`<Tag icon={<Check />}>In stock</Tag>
+<Tag variant="outline" icon={<Check />}>Free shipping</Tag>`}</code></pre>
+
+  <h2>Dismissible — active filters</h2>
+  <p>Pass <code>onDismiss</code> to render a remove button. Click the X to remove a filter.</p>
+  <TagActiveFilters client:load />
+  <pre><code>{`{filters.map((filter) => (
+  <Tag key={filter} onDismiss={() => removeFilter(filter)}>
+    {filter}
+  </Tag>
+))}`}</code></pre>
+</ComponentPage>

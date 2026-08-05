@@ -96,7 +96,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  aspect-ratio: 1;
+  aspect-ratio: var(--aspect-square);
   width: auto;
   height: auto;
   border: none;
@@ -106,6 +106,18 @@
   border-radius: var(--radius-sm);
   padding: 0;
   transition: background-color var(--transition-fast);
+}
+
+/* 44px hit area beyond the visual footprint (WCAG 2.5.5). The button
+   sits alone at the bar's edge, so no adjacent-target guard is needed. */
+.ds-announcement-bar__dismiss::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: max(100%, var(--size-hit-area));
+  height: max(100%, var(--size-hit-area));
 }
 
 .ds-announcement-bar__dismiss:hover {

@@ -1,5 +1,6 @@
-import { forwardRef, useState, useEffect, useCallback } from 'react';
-import { Moon, ShoppingBag, Sun } from '../icon';
+import { forwardRef, useCallback, useEffect, useId, useState } from 'react';
+import { Menu, Moon, ShoppingBag, Sun } from '../icon';
+import { Drawer } from '../drawer';
 import './Header.css';
 
 export interface HeaderNavItem {
@@ -22,6 +23,14 @@ export interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
   cartCount?: number;
   /** Show dark/light theme toggle */
   showThemeToggle?: boolean;
+  /** Stick the header to the top of the viewport on scroll */
+  sticky?: boolean;
+  /** Skip-to-content link target */
+  skipHref?: string;
+  /** Controlled open state for the mobile navigation drawer */
+  menuOpen?: boolean;
+  /** Called when the mobile navigation drawer open state changes */
+  onMenuOpenChange?: (open: boolean) => void;
 }
 
 export const Header = forwardRef<HTMLElement, HeaderProps>(
@@ -34,12 +43,29 @@ export const Header = forwardRef<HTMLElement, HeaderProps>(
       cartHref = '/cart',
       cartCount = 0,
       showThemeToggle = true,
+      sticky = false,
+      skipHref = '#main-content',
+      menuOpen,
+      onMenuOpenChange,
       className,
       ...props
     },
     ref,
   ) => {
     const [isDark, setIsDark] = useState(false);
+    const [internalMenuOpen, setInternalMenuOpen] = useState(false);
+    const menuId = useId();
+
+    // Controlled when menuOpen is provided, uncontrolled otherwise.
+    const isMenuOpen = menuOpen ?? internalMenuOpen;
+
+    const handleMenuOpenChange = useCallback(
+      (open: boolean) => {
+        if (menuOpen === undefined) setInternalMenuOpen(open);
+        onMenuOpenChange?.(open);
+      },
+      [menuOpen, onMenuOpenChange],
+    );
 
     useEffect(() => {
       setIsDark(document.documentElement.classList.contains('dark'));
@@ -52,11 +78,32 @@ export const Header = forwardRef<HTMLElement, HeaderProps>(
       localStorage.setItem('ds-theme', next ? 'dark' : 'light');
     }, [isDark]);
 
-    const classes = ['ds-header', className].filter(Boolean).join(' ');
+    const classes = ['ds-header', sticky && 'ds-header--sticky', className]
+      .filter(Boolean)
+      .join(' ');
 
     return (
       <header ref={ref} className={classes} {...props}>
+        <a href={skipHref} className="ds-header__skip-link">
+          Skip to content
+        </a>
+
         <div className="ds-header__inner">
+          {navItems.length > 0 && (
+            <button
+              type="button"
+              className="ds-header__icon-btn ds-header__menu-btn"
+              aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={isMenuOpen}
+              // Reference only while the drawer (and thus the nav) is mounted
+              // to avoid a dangling ID reference when closed.
+              aria-controls={isMenuOpen ? menuId : undefined}
+              onClick={() => handleMenuOpenChange(!isMenuOpen)}
+            >
+              <Menu />
+            </button>
+          )}
+
           <a href={logoHref} className="ds-header__logo" aria-label={logoAlt}>
             <img src={logoSrc} alt={logoAlt} className="ds-header__logo-img" />
           </a>
@@ -90,9 +137,35 @@ export const Header = forwardRef<HTMLElement, HeaderProps>(
               aria-label={`Shopping bag (${cartCount} ${cartCount === 1 ? 'item' : 'items'})`}
             >
               <ShoppingBag />
+              {cartCount > 0 && (
+                <span className="ds-header__cart-count" aria-hidden="true">
+                  {cartCount > 99 ? '99+' : cartCount}
+                </span>
+              )}
             </a>
           </div>
         </div>
+
+        {navItems.length > 0 && (
+          <Drawer
+            open={isMenuOpen}
+            onOpenChange={handleMenuOpenChange}
+            side="left"
+            title="Menu"
+          >
+            <nav id={menuId} className="ds-header__drawer-nav" aria-label="Main">
+              {navItems.map((item) => (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  onClick={() => handleMenuOpenChange(false)}
+                >
+                  {item.label}
+                </a>
+              ))}
+            </nav>
+          </Drawer>
+        )}
       </header>
     );
   },

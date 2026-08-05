@@ -28,7 +28,7 @@
 .ds-image-gallery__main {
   position: relative;
   width: 100%;
-  aspect-ratio: var(--gallery-ratio, 4/5);
+  aspect-ratio: var(--gallery-ratio, var(--aspect-portrait));
   border-radius: var(--radius-lg);
   overflow: hidden;
   background-color: var(--color-background-subtle);

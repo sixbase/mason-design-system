@@ -116,6 +116,27 @@
   display: inline;
 }
 
+/* ─── Touch hit areas ────────────────────────────────────── */
+/* Visual sizes stay compact (34/42px controls); on coarse pointers
+   every page button and prev/next gets an invisible ≥44px hit area.
+   Coarse-only guard: page buttons sit 4px apart, so the expanded
+   areas overlap slightly — acceptable for touch, wrong for mouse. */
+@media (pointer: coarse) {
+  .ds-pagination .ds-button {
+    position: relative;
+  }
+
+  .ds-pagination .ds-button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: max(100%, var(--size-hit-area));
+    height: max(100%, var(--size-hit-area));
+  }
+}
+
 /* ─── Optical centering fallback ─────────────────────────── */
 @supports not (text-box-trim: both) {
   .ds-pagination__page {

@@ -81,6 +81,31 @@ export function TabsDisabled() {
   );
 }
 
+export function TabsWithBadges() {
+  return (
+    <Preview>
+      <div style={{ width: '100%' }}>
+        <Tabs defaultValue="description">
+          <TabsList>
+            <TabsTrigger value="description">Description</TabsTrigger>
+            <TabsTrigger value="reviews" badge={127}>Reviews</TabsTrigger>
+            <TabsTrigger value="questions" badge={4}>Questions</TabsTrigger>
+          </TabsList>
+          <TabsContent value="description">
+            A minimal stoneware bowl with a matte finish.
+          </TabsContent>
+          <TabsContent value="reviews">
+            127 reviews — 4.8 average. Customers highlight the weight and texture.
+          </TabsContent>
+          <TabsContent value="questions">
+            4 answered questions about care, sizing, and shipping.
+          </TabsContent>
+        </Tabs>
+      </div>
+    </Preview>
+  );
+}
+
 export function TabsOverflow() {
   return (
     <Preview>

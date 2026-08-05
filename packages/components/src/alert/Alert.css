@@ -28,6 +28,11 @@
   position: relative;
 }
 
+/* Single-line alert (no title): center the chip against the one line. */
+.ds-alert--compact {
+  align-items: center;
+}
+
 /* ─── Variants ──────────────────────────────────────────── */
 /* Only the icon chip carries the semantic color — the card stays neutral. */
 
@@ -80,13 +85,27 @@
 
 .ds-alert__description {
   color: var(--alert-desc);
-  max-width: 65ch;
+  max-width: var(--measure-reading);
 }
 
 .ds-alert__dismiss {
   flex-shrink: 0;
   margin-left: auto;
   color: var(--color-foreground-secondary);
+  position: relative;
+}
+
+/* Touch target: extend the dismiss tap zone to ≥44px without growing
+   the visible ghost button. The alert card padding absorbs the overflow,
+   so the invisible zone stays inside the card and overlaps nothing. */
+.ds-alert__dismiss::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, var(--size-hit-area));
+  height: max(100%, var(--size-hit-area));
+  transform: translate(-50%, -50%);
 }
 
 /* ─── Reduced motion ────────────────────────────────────── */

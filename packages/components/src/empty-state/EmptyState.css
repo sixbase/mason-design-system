@@ -1,7 +1,9 @@
 /* ─── Component tokens ──────────────────────────────────── */
 
 .ds-empty-state {
-  --empty-state-padding-block: var(--spacing-16);
+  /* Fluid: scales continuously with viewport (≈42px mobile → 68px desktop),
+     replacing the old fixed --spacing-16 (64px) step. */
+  --empty-state-padding-block: var(--spacing-fluid-lg);
   --empty-state-gap: var(--spacing-4);
   --empty-state-icon-size: var(--spacing-16);
   --empty-state-icon-color: var(--color-foreground-muted);
@@ -41,7 +43,7 @@
 
 .ds-empty-state__description {
   text-align: center;
-  max-width: 65ch;
+  max-width: var(--measure-reading);
   color: var(--empty-state-description-color);
 }
 
@@ -57,7 +59,8 @@
 /* ─── Compact variant ──────────────────────────────────── */
 
 .ds-empty-state--compact {
-  --empty-state-padding-block: var(--spacing-8);
+  /* Fluid: ≈16px mobile → 26px desktop (was fixed --spacing-8 / 32px). */
+  --empty-state-padding-block: var(--spacing-fluid-sm);
   --empty-state-gap: var(--spacing-3);
   --empty-state-icon-size: var(--spacing-12);
 }

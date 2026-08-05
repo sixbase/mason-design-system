@@ -1,23 +1,36 @@
 /* ─── Container ──────────────────────────────────────────── */
+/*
+ * Horizontal padding respects device safe areas (notches, curved
+ * edges) via max(): padding never drops below the token value, and
+ * grows to the safe-area inset when the device reports a larger one.
+ * --safe-area-left/right resolve to env(safe-area-inset-*, 0px),
+ * so on regular screens the token value always wins.
+ */
 
 .ds-container {
   width: 100%;
   max-width: var(--container-max-width, var(--size-content-xl));
   margin-inline: auto;
-  padding-inline: var(--spacing-4);
+  padding-inline:
+    max(var(--spacing-4), var(--safe-area-left))
+    max(var(--spacing-4), var(--safe-area-right));
 }
 
 /* @breakpoint-md = 768px */
 @media (min-width: 768px) {
   .ds-container {
-    padding-inline: var(--spacing-8);
+    padding-inline:
+      max(var(--spacing-8), var(--safe-area-left))
+      max(var(--spacing-8), var(--safe-area-right));
   }
 }
 
 /* @breakpoint-lg = 1024px */
 @media (min-width: 1024px) {
   .ds-container {
-    padding-inline: var(--spacing-16);
+    padding-inline:
+      max(var(--spacing-16), var(--safe-area-left))
+      max(var(--spacing-16), var(--safe-area-right));
   }
 }
 
@@ -33,6 +46,8 @@
   max-width: none;
 }
 
+/* Explicit opt-out for nested containers — the parent container
+   already absorbed the safe-area inset, so 0 is correct here. */
 .ds-container--no-padding {
   padding-inline: 0;
 }

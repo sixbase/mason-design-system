@@ -177,7 +177,7 @@ export function PDPDemo({ basePath = '' }: { basePath?: string }) {
           <Heading as="h2">In the Wild</Heading>
           <Text muted>See it in action</Text>
         </div>
-        <Carousel>
+        <Carousel label="Lifestyle photos">
           {lifestyleImages.map((img) => (
             <CarouselSlide key={img.alt}>
               <img src={img.src} alt={img.alt} className="ds-pdp__lifestyle-img" />

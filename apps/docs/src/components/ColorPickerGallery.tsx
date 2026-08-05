@@ -19,6 +19,21 @@ export function ColorPickerDefault() {
   );
 }
 
+export function ColorPickerWithLabel() {
+  const [value, setValue] = useState('black');
+  return (
+    <Preview>
+      <ColorPicker
+        options={COLORS}
+        value={value}
+        onChange={setValue}
+        showLabel
+        aria-label="Case color"
+      />
+    </Preview>
+  );
+}
+
 export function ColorPickerSizes() {
   const [value, setValue] = useState('black');
   return (

@@ -19,6 +19,13 @@ export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
    * and aria-label="N notifications".
    */
   count?: number;
+  /**
+   * Show a small status dot before the label. The dot inherits the
+   * variant's text color, so the label always names the state the dot
+   * signals (color is never the only indicator — WCAG 1.4.1).
+   * Common for stock/status: "In stock", "Low stock", "Shipped".
+   */
+  dot?: boolean;
 }
 
 /**
@@ -39,13 +46,14 @@ export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
  * <Badge count={3} />
  */
 export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(function Badge(
-  { variant = 'default', size = 'md', count, className, children, role, ...props },
+  { variant = 'default', size = 'md', count, dot = false, className, children, role, ...props },
   ref,
 ) {
   const classes = [
     'ds-badge',
     `ds-badge--${variant}`,
     `ds-badge--${size}`,
+    dot && 'ds-badge--dot',
     className,
   ]
     .filter(Boolean)
@@ -71,6 +79,7 @@ export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(function Badge(
       aria-label={ariaLabel}
       {...props}
     >
+      {dot && <span className="ds-badge__dot" aria-hidden="true" />}
       {content}
     </span>
   );

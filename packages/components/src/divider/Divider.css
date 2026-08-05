@@ -23,8 +23,39 @@
   border-left: var(--divider-thickness) solid var(--divider-color);
 }
 
+/* ─── Labeled ("OR" pattern) ────────────────────────────── */
+/* Root is a flex row; the two line halves draw the rule, so the
+   labeled root must not draw its own border-top. */
+.ds-divider--labeled {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  border-top: none;
+  height: auto;
+}
+
+.ds-divider__line {
+  flex: 1;
+  border-top: var(--divider-thickness) solid var(--divider-color);
+}
+
+.ds-divider--labeled .ds-divider__label {
+  color: var(--color-foreground-secondary);
+  white-space: nowrap;
+}
+
 /* ─── Variant: subtle ───────────────────────────────────── */
 .ds-divider--subtle {
+  opacity: var(--opacity-medium);
+}
+
+/* Subtle + label: dim only the rule lines, never the text —
+   fading the label would break WCAG contrast on real copy. */
+.ds-divider--labeled.ds-divider--subtle {
+  opacity: 1;
+}
+
+.ds-divider--labeled.ds-divider--subtle .ds-divider__line {
   opacity: var(--opacity-medium);
 }
 

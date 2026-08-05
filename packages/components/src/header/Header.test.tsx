@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -89,6 +89,135 @@ describe('Header', () => {
   it('merges custom className', () => {
     render(<Header logoSrc="/logo.svg" className="custom" />);
     expect(screen.getByRole('banner')).toHaveClass('custom', 'ds-header');
+  });
+
+  // ── Skip link ───────────────────────────────────────────
+
+  it('renders a skip link as the first focusable element', () => {
+    render(<Header logoSrc="/logo.svg" navItems={navItems} />);
+    const skip = screen.getByRole('link', { name: 'Skip to content' });
+    expect(skip).toHaveAttribute('href', '#main-content');
+    expect(skip).toBe(screen.getByRole('banner').firstElementChild);
+  });
+
+  it('honours a custom skipHref', () => {
+    render(<Header logoSrc="/logo.svg" skipHref="#content" />);
+    expect(screen.getByRole('link', { name: 'Skip to content' })).toHaveAttribute(
+      'href',
+      '#content',
+    );
+  });
+
+  // ── Sticky ──────────────────────────────────────────────
+
+  it('applies the sticky modifier class when sticky is set', () => {
+    render(<Header logoSrc="/logo.svg" sticky />);
+    expect(screen.getByRole('banner')).toHaveClass('ds-header--sticky');
+  });
+
+  it('does not apply the sticky modifier by default', () => {
+    render(<Header logoSrc="/logo.svg" />);
+    expect(screen.getByRole('banner')).not.toHaveClass('ds-header--sticky');
+  });
+
+  // ── Cart count badge ────────────────────────────────────
+
+  it('renders a visual cart count badge hidden from screen readers', () => {
+    const { container } = render(<Header logoSrc="/logo.svg" cartCount={3} />);
+    const badge = container.querySelector('.ds-header__cart-count');
+    expect(badge).toHaveTextContent('3');
+    expect(badge).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('omits the cart count badge when the cart is empty', () => {
+    const { container } = render(<Header logoSrc="/logo.svg" cartCount={0} />);
+    expect(container.querySelector('.ds-header__cart-count')).not.toBeInTheDocument();
+  });
+
+  it('caps the cart count badge at 99+', () => {
+    const { container } = render(<Header logoSrc="/logo.svg" cartCount={120} />);
+    expect(container.querySelector('.ds-header__cart-count')).toHaveTextContent('99+');
+  });
+
+  // ── Mobile menu ─────────────────────────────────────────
+
+  it('renders the menu button when navItems are provided', () => {
+    render(<Header logoSrc="/logo.svg" navItems={navItems} />);
+    const trigger = screen.getByRole('button', { name: 'Open menu' });
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    expect(trigger).not.toHaveAttribute('aria-controls');
+  });
+
+  it('omits the menu button when no navItems are given', () => {
+    render(<Header logoSrc="/logo.svg" />);
+    expect(screen.queryByRole('button', { name: 'Open menu' })).not.toBeInTheDocument();
+  });
+
+  it('opens the nav drawer with stacked links on menu click', async () => {
+    const user = userEvent.setup();
+    render(<Header logoSrc="/logo.svg" navItems={navItems} />);
+    const trigger = screen.getByRole('button', { name: 'Open menu' });
+
+    await user.click(trigger);
+
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toHaveAttribute('aria-label', 'Menu');
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
+
+    const drawerNav = within(dialog).getByRole('navigation', { name: 'Main' });
+    expect(trigger.getAttribute('aria-controls')).toBe(drawerNav.getAttribute('id'));
+    navItems.forEach((item) => {
+      expect(within(drawerNav).getByRole('link', { name: item.label })).toHaveAttribute(
+        'href',
+        item.href,
+      );
+    });
+  });
+
+  // Hash hrefs below avoid jsdom "navigation not implemented" noise when
+  // the link click actually fires.
+  it('closes the drawer when a nav link is clicked', async () => {
+    const user = userEvent.setup();
+    render(
+      <Header logoSrc="/logo.svg" navItems={[{ label: 'Kitchen', href: '#kitchen' }]} />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Open menu' }));
+    const dialog = screen.getByRole('dialog');
+    await user.click(within(dialog).getByRole('link', { name: 'Kitchen' }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('supports controlled menu state', async () => {
+    const user = userEvent.setup();
+    const onMenuOpenChange = vi.fn();
+    render(
+      <Header
+        logoSrc="/logo.svg"
+        navItems={[{ label: 'Kitchen', href: '#kitchen' }]}
+        menuOpen
+        onMenuOpenChange={onMenuOpenChange}
+      />,
+    );
+
+    // Drawer is open because menuOpen is controlled to true
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toBeInTheDocument();
+
+    // Closing requests a state change but does not close by itself
+    await user.click(within(dialog).getByRole('link', { name: 'Kitchen' }));
+    expect(onMenuOpenChange).toHaveBeenCalledWith(false);
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
+  it('has no accessibility violations with the menu open', async () => {
+    const user = userEvent.setup();
+    const { baseElement } = render(
+      <Header logoSrc="/logo.svg" logoAlt="Mason Supply home" navItems={navItems} />,
+    );
+    await user.click(screen.getByRole('button', { name: 'Open menu' }));
+    expect(await axe(baseElement)).toHaveNoViolations();
   });
 
   it('forwards ref correctly', () => {

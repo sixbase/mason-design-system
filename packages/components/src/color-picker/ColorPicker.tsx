@@ -1,5 +1,5 @@
-import { forwardRef } from 'react';
-import type { HTMLAttributes } from 'react';
+import { forwardRef, useRef } from 'react';
+import type { HTMLAttributes, KeyboardEvent } from 'react';
 import './ColorPicker.css';
 
 export interface ColorOption {
@@ -20,6 +20,8 @@ export interface ColorPickerProps extends Omit<HTMLAttributes<HTMLDivElement>, '
   onChange?: (value: string) => void;
   /** Size of the swatches */
   size?: 'sm' | 'md' | 'lg';
+  /** Show the selected option's name next to the swatch group */
+  showLabel?: boolean;
 }
 
 /**
@@ -27,12 +29,44 @@ export interface ColorPickerProps extends Omit<HTMLAttributes<HTMLDivElement>, '
  *
  * A group of selectable color swatches. Used for product option selection
  * such as choosing a case color on a PDP.
+ *
+ * Follows the WAI-ARIA radio group pattern: one tab stop (roving tabindex),
+ * arrow keys move and select, Space selects the focused swatch.
  */
 export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
   function ColorPicker(
-    { options, value, onChange, size = 'md', className, ...props },
+    { options, value, onChange, size = 'md', showLabel = false, className, ...props },
     ref,
   ) {
+    const buttonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+
+    const selectedIndex = options.findIndex((option) => option.value === value);
+    // Roving tabindex: the selected swatch is the single tab stop;
+    // fall back to the first swatch when nothing is selected.
+    const tabStopIndex = selectedIndex >= 0 ? selectedIndex : 0;
+    const selected = selectedIndex >= 0 ? options[selectedIndex] : undefined;
+
+    const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
+      let nextIndex: number;
+      switch (event.key) {
+        case 'ArrowRight':
+        case 'ArrowDown':
+          nextIndex = (index + 1) % options.length;
+          break;
+        case 'ArrowLeft':
+        case 'ArrowUp':
+          nextIndex = (index - 1 + options.length) % options.length;
+          break;
+        default:
+          return;
+      }
+      const next = options[nextIndex];
+      if (!next) return;
+      event.preventDefault();
+      onChange?.(next.value);
+      buttonRefs.current.get(next.value)?.focus();
+    };
+
     const classes = [
       'ds-color-picker',
       `ds-color-picker--${size}`,
@@ -41,16 +75,23 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
       .filter(Boolean)
       .join(' ');
 
-    return (
+    const group = (
       <div
         ref={ref}
         className={classes}
         role="radiogroup"
         {...props}
       >
-        {options.map((option) => (
+        {options.map((option, index) => (
           <button
             key={option.value}
+            ref={(node) => {
+              if (node) {
+                buttonRefs.current.set(option.value, node);
+              } else {
+                buttonRefs.current.delete(option.value);
+              }
+            }}
             type="button"
             className={[
               'ds-color-picker__btn',
@@ -62,9 +103,22 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
             aria-label={option.label}
             aria-checked={value === option.value}
             role="radio"
+            tabIndex={index === tabStopIndex ? 0 : -1}
             onClick={() => onChange?.(option.value)}
+            onKeyDown={(event) => handleKeyDown(event, index)}
           />
         ))}
+      </div>
+    );
+
+    if (!showLabel) return group;
+
+    return (
+      <div className="ds-color-picker-root">
+        {group}
+        {selected && (
+          <span className="ds-color-picker-label">{selected.label}</span>
+        )}
       </div>
     );
   },

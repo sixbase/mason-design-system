@@ -142,6 +142,26 @@ export const WithTrailingIcon: Story = {
   },
 };
 
+// ─── Icon-only ────────────────────────────────────────────────
+// On coarse pointers, sm/md sizes expand their tap zone to
+// --size-hit-area (44px) via an invisible pseudo-element.
+
+export const IconOnly: Story = {
+  render: () => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)' }}>
+      <Button size="sm" iconOnly aria-label="Add item (small)">
+        <PlusIcon />
+      </Button>
+      <Button size="md" iconOnly aria-label="Add item (medium)">
+        <PlusIcon />
+      </Button>
+      <Button size="lg" variant="secondary" iconOnly aria-label="Continue (large)">
+        <ArrowIcon />
+      </Button>
+    </div>
+  ),
+};
+
 // ─── Polymorphic ──────────────────────────────────────────────
 
 export const AsLink: Story = {

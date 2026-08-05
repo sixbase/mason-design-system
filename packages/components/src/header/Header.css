@@ -1,7 +1,57 @@
 .ds-header {
+  position: relative;
+  background-color: var(--color-background);
   border-bottom: 1px solid var(--color-border);
 }
 
+/* ─── Sticky variant ─────────────────────────────────────── */
+.ds-header--sticky {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-index-sticky);
+  box-shadow: var(--elevation-sticky);
+}
+
+/* ─── Skip link ──────────────────────────────────────────── */
+/* Visually hidden until keyboard focus, then revealed as an
+   overlay pill at the top-left of the header. */
+.ds-header__skip-link {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0); /* legacy fallback */
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.ds-header__skip-link:focus {
+  top: var(--spacing-2);
+  left: var(--spacing-2);
+  z-index: var(--z-index-sticky);
+  display: inline-flex;
+  align-items: center;
+  width: auto;
+  height: auto;
+  min-height: var(--size-hit-area);
+  margin: 0;
+  padding: var(--spacing-2) var(--spacing-4);
+  overflow: visible;
+  clip: auto;
+  clip-path: none;
+  background-color: var(--color-background-surface);
+  color: var(--color-foreground);
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-sm);
+  text-decoration: none;
+  border-radius: var(--radius-md);
+  box-shadow: var(--focus-ring);
+}
+
+/* ─── Inner layout ───────────────────────────────────────── */
 .ds-header__inner {
   max-width: var(--size-container);
   margin: 0 auto;
@@ -12,12 +62,14 @@
   gap: var(--spacing-4);
 }
 
+/* @breakpoint-md = 768px */
 @media (min-width: 768px) {
   .ds-header__inner {
     padding: var(--spacing-4) var(--spacing-8);
   }
 }
 
+/* @breakpoint-lg = 1024px */
 @media (min-width: 1024px) {
   .ds-header__inner {
     padding: var(--spacing-4) var(--spacing-12);
@@ -37,11 +89,13 @@
   color: var(--color-foreground);
 }
 
+/* ─── Desktop nav ────────────────────────────────────────── */
 .ds-header__nav {
   display: none;
   gap: var(--spacing-6);
 }
 
+/* @breakpoint-md = 768px */
 @media (min-width: 768px) {
   .ds-header__nav {
     display: flex;
@@ -60,18 +114,26 @@
   color: var(--color-foreground);
 }
 
+.ds-header__nav a:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-sm);
+}
+
 .ds-header__actions {
   display: flex;
   align-items: center;
   gap: var(--spacing-1);
 }
 
+/* ─── Icon buttons ───────────────────────────────────────── */
 .ds-header__icon-btn {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: var(--size-touch-target, 36px);
-  height: var(--size-touch-target, 36px);
+  width: var(--size-touch-target);
+  height: var(--size-touch-target);
   border: none;
   background: none;
   cursor: pointer;
@@ -85,6 +147,21 @@
   text-box-edge: cap alphabetic;
 }
 
+/* 44px hit area, expanded beyond the 36px visual footprint.
+   Guarded to coarse pointers because the action icons sit adjacent
+   with a --spacing-1 gap — on fine pointers the visual size is enough. */
+@media (pointer: coarse) {
+  .ds-header__icon-btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: max(100%, var(--size-hit-area));
+    height: max(100%, var(--size-hit-area));
+  }
+}
+
 .ds-header__icon-btn:hover {
   background-color: var(--color-background-subtle);
 }
@@ -92,6 +169,69 @@
 .ds-header__icon-btn:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
+}
+
+/* ─── Mobile menu button ─────────────────────────────────── */
+.ds-header__menu-btn {
+  display: none;
+}
+
+/* @breakpoint-md = 768px */
+@media (max-width: 767px) {
+  .ds-header__menu-btn {
+    display: flex;
+  }
+}
+
+/* ─── Mobile drawer nav ──────────────────────────────────── */
+/* Rendered inside a Radix portal, so font-family is declared here. */
+.ds-header__drawer-nav {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-family-body);
+}
+
+.ds-header__drawer-nav a {
+  display: flex;
+  align-items: center;
+  min-height: var(--size-hit-area);
+  padding: var(--spacing-2) 0;
+  font-size: var(--font-size-base);
+  color: var(--color-foreground);
+  text-decoration: none;
+  border-bottom: 1px solid var(--color-border);
+  transition: color var(--transition-fast);
+}
+
+.ds-header__drawer-nav a:hover {
+  color: var(--color-foreground-secondary);
+}
+
+.ds-header__drawer-nav a:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-sm);
+}
+
+/* ─── Cart count badge ───────────────────────────────────── */
+.ds-header__cart-count {
+  position: absolute;
+  top: var(--spacing-1);
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--spacing-4);
+  height: var(--spacing-4);
+  padding: 0 var(--spacing-1);
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-none);
+  border-radius: var(--radius-full);
+  pointer-events: none;
 }
 
 /* Theme toggle icon visibility */
@@ -116,5 +256,14 @@
 @supports not (text-box-trim: both) {
   .ds-header__icon-btn {
     transform: translateY(0.05em);
+  }
+}
+
+/* ─── Reduced motion ─────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .ds-header__icon-btn,
+  .ds-header__nav a,
+  .ds-header__drawer-nav a {
+    transition: none;
   }
 }

@@ -1,6 +1,7 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe, toHaveNoViolations } from 'jest-axe';
+import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { CookieConsent } from './CookieConsent';
 import type { CookieCategory } from './CookieConsent';
@@ -169,6 +170,47 @@ describe('CookieConsent', () => {
     expect(links.length).toBeGreaterThanOrEqual(1);
     const functionalLink = links.find((el) => el.closest('a')?.getAttribute('href') === '#functional');
     expect(functionalLink).toBeInTheDocument();
+  });
+
+  // ─── Focus management ───────────────────────────────────
+
+  it('moves focus to the dialog heading on open', () => {
+    render(<CookieConsent />);
+    expect(screen.getByText('We Use Cookies')).toHaveFocus();
+  });
+
+  it('heading is focusable but not in the tab order', () => {
+    render(<CookieConsent />);
+    expect(screen.getByText('We Use Cookies')).toHaveAttribute(
+      'tabindex',
+      '-1',
+    );
+  });
+
+  it('returns focus to the previously focused element on close', async () => {
+    const user = userEvent.setup();
+
+    function Harness() {
+      const [open, setOpen] = useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setOpen(true)}>
+            Open banner
+          </button>
+          <CookieConsent open={open} onOpenChange={setOpen} />
+        </>
+      );
+    }
+
+    render(<Harness />);
+    await user.click(screen.getByText('Open banner'));
+    expect(screen.getByText('We Use Cookies')).toHaveFocus();
+
+    await user.click(screen.getByText('Accept All'));
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+    );
+    expect(screen.getByText('Open banner')).toHaveFocus();
   });
 
   // ─── Keyboard ───────────────────────────────────────────

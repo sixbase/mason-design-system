@@ -1,6 +1,6 @@
 ---
 import ComponentPage from '../../layouts/ComponentPage.astro';
-import { ProgressBarDefault, ProgressBarSizes, ProgressBarSuccess, ProgressBarCustomText, ProgressBarEcommerce } from '../../components/ProgressBarGallery';
+import { ProgressBarDefault, ProgressBarIndeterminate, ProgressBarSizes, ProgressBarSuccess, ProgressBarCustomText, ProgressBarEcommerce } from '../../components/ProgressBarGallery';
 ---
 
 <ComponentPage
@@ -11,7 +11,8 @@ import { ProgressBarDefault, ProgressBarSizes, ProgressBarSuccess, ProgressBarCu
     {
       headers: ['Prop', 'Type', 'Default', 'Description'],
       rows: [
-        ['<code>value</code>', '<code>number</code>', '—', 'Current progress value (0–100, or 0–max)'],
+        ['<code>value</code>', '<code>number</code>', '—', 'Current progress value (0–100, or 0–max). Required unless <code>indeterminate</code>'],
+        ['<code>indeterminate</code>', '<code>boolean</code>', '<code>false</code>', 'Unknown-duration loading — looping sweep animation, <code>aria-valuetext="Loading"</code>, no <code>aria-valuenow</code>'],
         ['<code>max</code>', '<code>number</code>', '<code>100</code>', 'Maximum value'],
         ['<code>label</code>', '<code>string</code>', '—', 'Visible label above the bar and aria-label for screen readers'],
         ['<code>showValue</code>', '<code>boolean</code>', '<code>false</code>', 'Show percentage text below the bar'],
@@ -27,6 +28,7 @@ import { ProgressBarDefault, ProgressBarSizes, ProgressBarSuccess, ProgressBarCu
     '<code>aria-label</code> from the <code>label</code> prop',
     '<code>aria-valuetext</code> from <code>valueText</code> prop — screen readers announce "$12 away from free shipping" instead of "75 percent"',
     'Fill animation respects <code>prefers-reduced-motion: reduce</code>',
+    'Indeterminate mode exposes <code>aria-valuetext="Loading"</code> with no <code>aria-valuenow</code>; under reduced motion the sweep becomes a static mid-track fill',
     'Values clamped: below 0 → 0%, above max → 100%',
   ]}
 >
@@ -35,6 +37,12 @@ import { ProgressBarDefault, ProgressBarSizes, ProgressBarSuccess, ProgressBarCu
   <ProgressBarDefault client:load />
   <pre><code>{`<ProgressBar value={60} label="Progress" />
 <ProgressBar value={45} label="Upload progress" showValue />`}</code></pre>
+
+  <h2>Indeterminate</h2>
+  <p>When completion is unknown — fetching products, refreshing a cart — pass <code>indeterminate</code>. A φ-proportioned sweep (38.2% of the track) loops until the work finishes. Screen readers hear "Loading"; reduced-motion users see a static mid-track fill instead of the animation.</p>
+  <ProgressBarIndeterminate client:load />
+  <pre><code>{`<ProgressBar indeterminate label="Loading products" />
+<ProgressBar indeterminate size="sm" label="Refreshing cart" />`}</code></pre>
 
   <h2>Sizes</h2>
   <p>Two sizes: <code>sm</code> (4px) for inline/subtle indicators, <code>md</code> (8px) for standard use.</p>

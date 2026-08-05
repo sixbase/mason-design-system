@@ -49,11 +49,32 @@
   font-weight: var(--font-weight-medium);
   line-height: var(--line-height-tight);
   cursor: pointer;
+  position: relative;
   transition: background-color var(--transition-fast),
     border-color var(--transition-fast);
 
   text-box-trim: both;
   text-box-edge: cap alphabetic;
+}
+
+/* Coarse pointers: each pill (a remove button) gets an invisible
+   ≥44px tap zone. Pills are ~26px tall, so the zone extends
+   vertically; row-gap widens so zones on wrapped rows don't
+   swallow each other's taps. */
+@media (pointer: coarse) {
+  .ds-collection-filters__pill::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, var(--size-hit-area));
+    height: max(100%, var(--size-hit-area));
+    transform: translate(-50%, -50%);
+  }
+
+  .ds-collection-filters__active-pills {
+    row-gap: var(--spacing-5);
+  }
 }
 
 .ds-collection-filters__pill:hover {
@@ -80,6 +101,13 @@
   display: flex;
   flex-direction: column;
   gap: var(--cf-gap);
+}
+
+/* Drawer variant: when the panel renders inside the mobile filter
+   Drawer (a portal — ancestor selectors can't reach it), pad the
+   bottom so the last controls clear the device home indicator. */
+.ds-collection-filters__panel--drawer {
+  padding-bottom: var(--safe-area-bottom);
 }
 
 .ds-collection-filters__header {

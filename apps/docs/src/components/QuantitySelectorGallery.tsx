@@ -24,6 +24,15 @@ export function QuantitySelectorSizes() {
   );
 }
 
+export function QuantitySelectorEditable() {
+  const [value, setValue] = useState(5);
+  return (
+    <Preview>
+      <QuantitySelector value={value} onChange={setValue} min={1} max={20} />
+    </Preview>
+  );
+}
+
 export function QuantitySelectorStates() {
   const [value, setValue] = useState(1);
   return (

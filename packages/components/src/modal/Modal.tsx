@@ -17,6 +17,8 @@ export interface ModalContentProps
   extends ComponentPropsWithoutRef<typeof Dialog.Content> {
   /** Size preset — controls max-width */
   size?: ModalSize;
+  /** Below 640px, expand to fill the viewport (full-screen sheet) */
+  fullScreenOnMobile?: boolean;
 }
 
 export interface ModalHeaderProps {
@@ -74,10 +76,14 @@ ModalClose.displayName = 'ModalClose';
 // ─── Portal + Overlay + Content ───────────────────────────
 
 export const ModalContent = forwardRef<HTMLDivElement, ModalContentProps>(
-  function ModalContent({ size = 'md', className, children, ...props }, ref) {
+  function ModalContent(
+    { size = 'md', fullScreenOnMobile = false, className, children, ...props },
+    ref,
+  ) {
     const classes = [
       'ds-modal__content',
       `ds-modal__content--${size}`,
+      fullScreenOnMobile && 'ds-modal__content--full-screen-mobile',
       className,
     ]
       .filter(Boolean)
@@ -88,7 +94,7 @@ export const ModalContent = forwardRef<HTMLDivElement, ModalContentProps>(
         <Dialog.Overlay className="ds-modal__overlay" />
         <Dialog.Content ref={ref} className={classes} {...props}>
           {children}
-          <Dialog.Close className="ds-modal__close" aria-label="Close">
+          <Dialog.Close type="button" className="ds-modal__close" aria-label="Close">
             <X size="sm" />
           </Dialog.Close>
         </Dialog.Content>

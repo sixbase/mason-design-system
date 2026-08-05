@@ -114,6 +114,37 @@ export const Large: Story = {
   ),
 };
 
+export const FullScreenOnMobile: Story = {
+  render: () => (
+    <Modal>
+      <ModalTrigger asChild>
+        <Button>Open full-screen modal</Button>
+      </ModalTrigger>
+      <ModalContent fullScreenOnMobile>
+        <ModalHeader>
+          <ModalTitle>Size guide</ModalTitle>
+          <ModalDescription>
+            Below 640px this modal fills the screen — padding respects device
+            safe areas. Resize the viewport to see it.
+          </ModalDescription>
+        </ModalHeader>
+        <ModalBody>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}>
+            <Input label="Chest (cm)" defaultValue="96" />
+            <Input label="Waist (cm)" defaultValue="81" />
+          </div>
+        </ModalBody>
+        <ModalFooter>
+          <ModalClose asChild>
+            <Button variant="secondary">Close</Button>
+          </ModalClose>
+          <Button>Find my size</Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  ),
+};
+
 export const Controlled: Story = {
   render: function ControlledStory() {
     const [open, setOpen] = useState(false);

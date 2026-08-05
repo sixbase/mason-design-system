@@ -1,0 +1,90 @@
+---
+import ComponentPage from '../../layouts/ComponentPage.astro';
+import {
+  RadioGroupDefault,
+  RadioGroupWithDescriptions,
+  RadioGroupWithText,
+  RadioGroupStates,
+  RadioGroupLayouts,
+} from '../../components/RadioGroupGallery';
+---
+
+<ComponentPage
+  title="Radio Group"
+  description="An accessible radio group built on Radix UI. Group-level label, hint, and error; per-item label and optional description. Common ecommerce uses: shipping method, payment method, delivery frequency — anywhere exactly one choice is valid."
+  installCode="import { RadioGroup, RadioGroupItem } from '@ds/components';"
+  props={[
+    {
+      name: 'RadioGroup',
+      headers: ['Prop', 'Type', 'Default', 'Description'],
+      rows: [
+        ['<code>label</code>', '<code>string</code>', '—', 'Visible label for the group'],
+        ['<code>hint</code>', '<code>string</code>', '—', 'Helper text below the group'],
+        ['<code>error</code>', '<code>string</code>', '—', 'Error message for the group'],
+        ['<code>size</code>', "<code>'sm' | 'md'</code>", "<code>'md'</code>", 'Radio circle size'],
+        ['<code>orientation</code>', "<code>'horizontal' | 'vertical'</code>", "<code>'vertical'</code>", 'Layout direction'],
+        ['<code>value</code>', '<code>string</code>', '—', 'Controlled selected value'],
+        ['<code>defaultValue</code>', '<code>string</code>', '—', 'Uncontrolled initial value'],
+        ['<code>disabled</code>', '<code>boolean</code>', '<code>false</code>', 'Disable the whole group'],
+        ['<code>onValueChange</code>', '<code>(value: string) =&gt; void</code>', '—', 'Change handler'],
+      ],
+    },
+    {
+      name: 'RadioGroupItem',
+      headers: ['Prop', 'Type', 'Default', 'Description'],
+      rows: [
+        ['<code>value</code>', '<code>string</code>', '—', 'Value submitted when selected (required)'],
+        ['<code>label</code>', '<code>string</code>', '—', 'Visible label (required)'],
+        ['<code>description</code>', '<code>string</code>', '—', 'Helper text below the item label'],
+        ['<code>disabled</code>', '<code>boolean</code>', '<code>false</code>', 'Disable this item only'],
+      ],
+    },
+  ]}
+  accessibility={[
+    'Renders with <code>role="radiogroup"</code>, named by the group label via <code>aria-labelledby</code>',
+    'Item labels are associated via <code>htmlFor</code>/<code>id</code> — clicking a label selects the item',
+    'Item descriptions are announced via <code>aria-describedby</code>',
+    'Keyboard: <kbd>Tab</kbd> enters the group, arrow keys move selection (Radix roving tabindex)',
+    'Error message is announced via <code>role="alert"</code>',
+    'Hit area extends to 44px even at small sizes',
+  ]}
+>
+  <h2>Default</h2>
+  <RadioGroupDefault client:load />
+  <pre><code>{`<RadioGroup label="Shipping method" defaultValue="standard">
+  <RadioGroupItem value="standard" label="Standard" />
+  <RadioGroupItem value="express" label="Express" />
+  <RadioGroupItem value="overnight" label="Overnight" />
+</RadioGroup>`}</code></pre>
+
+  <h2>With descriptions</h2>
+  <RadioGroupWithDescriptions client:load />
+  <pre><code>{`<RadioGroup label="Shipping method" defaultValue="standard">
+  <RadioGroupItem value="standard" label="Standard" description="4–7 business days · Free" />
+  <RadioGroupItem value="express" label="Express" description="1–2 business days · $12.00" />
+  <RadioGroupItem value="overnight" label="Overnight" description="Next business day · $28.00" />
+</RadioGroup>`}</code></pre>
+
+  <h2>With hint and error</h2>
+  <RadioGroupWithText client:load />
+  <pre><code>{`<RadioGroup label="Delivery frequency" hint="You can change this any time" defaultValue="monthly">
+  ...
+</RadioGroup>
+<RadioGroup label="Payment method" error="Please choose a payment method">
+  ...
+</RadioGroup>`}</code></pre>
+
+  <h2>Disabled</h2>
+  <RadioGroupStates client:load />
+  <pre><code>{`<RadioGroup label="Disabled group" disabled defaultValue="standard">...</RadioGroup>
+<RadioGroup label="Disabled item" defaultValue="standard">
+  <RadioGroupItem value="standard" label="Standard" />
+  <RadioGroupItem value="overnight" label="Overnight" disabled />
+</RadioGroup>`}</code></pre>
+
+  <h2>Sizes and orientation</h2>
+  <p>Small circles suit dense filter and sort UIs; horizontal layout suits short option sets.</p>
+  <RadioGroupLayouts client:load />
+  <pre><code>{`<RadioGroup label="Sort by" size="sm" defaultValue="featured">...</RadioGroup>
+<RadioGroup label="Condition" orientation="horizontal" defaultValue="new">...</RadioGroup>`}</code></pre>
+</ComponentPage>

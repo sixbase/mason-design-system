@@ -1,0 +1,58 @@
+---
+import ComponentPage from '../../layouts/ComponentPage.astro';
+import { TextareaStates, TextareaWithText, TextareaAutoResize } from '../../components/TextareaGallery';
+---
+
+<ComponentPage
+  title="Textarea"
+  description="A multi-line text input with built-in label, hint, and error state. Accessible by default. Common ecommerce uses: order notes, gift messages, product reviews, contact forms."
+  installCode="import { Textarea } from '@ds/components';"
+  props={[
+    {
+      headers: ['Prop', 'Type', 'Default', 'Description'],
+      rows: [
+        ['<code>label</code>', '<code>string</code>', '—', 'Visible label above the field'],
+        ['<code>hint</code>', '<code>string</code>', '—', 'Helper text below'],
+        ['<code>error</code>', '<code>string</code>', '—', 'Error message'],
+        ['<code>autoResize</code>', '<code>boolean</code>', '<code>false</code>', 'Grow with content (field-sizing, JS fallback)'],
+        ['<code>rows</code>', '<code>number</code>', '<code>4</code>', 'Initial visible rows'],
+        ['<code>required</code>', '<code>boolean</code>', '<code>false</code>', 'Marks field required, adds asterisk'],
+        ['<code>disabled</code>', '<code>boolean</code>', '<code>false</code>', 'Disable interaction'],
+      ],
+    },
+  ]}
+  accessibility={[
+    'Label is associated via <code>htmlFor</code>/<code>id</code>',
+    'Hint and error are announced via <code>aria-describedby</code>',
+    'Error message uses <code>role="alert"</code> and sets <code>aria-invalid</code>',
+    'Font size never drops below 1rem on touch devices — prevents iOS Safari focus zoom',
+    'Manual resize is vertical-only, so the field never breaks the layout grid',
+  ]}
+>
+  <h2>States</h2>
+  <TextareaStates client:load />
+  <pre><code>{`<Textarea label="Order notes" placeholder="Delivery instructions, gate codes, etc." />
+<Textarea label="Message" required placeholder="How can we help?" />
+<Textarea label="Archived note" defaultValue="This order shipped on March 3." disabled />`}</code></pre>
+
+  <h2>With hint and error</h2>
+  <TextareaWithText client:load />
+  <pre><code>{`<Textarea
+  label="Gift message"
+  hint="Printed on the packing slip — max 200 characters"
+/>
+<Textarea
+  label="Review"
+  error="Please write at least 20 characters"
+/>`}</code></pre>
+
+  <h2>Auto-resize</h2>
+  <p>Uses CSS <code>field-sizing: content</code> where supported, with a JS scrollHeight fallback elsewhere.</p>
+  <TextareaAutoResize client:load />
+  <pre><code>{`<Textarea
+  label="Gift message"
+  autoResize
+  rows={2}
+  hint="The field expands to fit your message"
+/>`}</code></pre>
+</ComponentPage>

@@ -120,6 +120,8 @@ export const CookieConsent = forwardRef<HTMLDivElement, CookieConsentProps>(
 
     const headingId = useId();
     const bannerRef = useRef<HTMLDivElement>(null);
+    const headingRef = useRef<HTMLElement>(null);
+    const previousFocusRef = useRef<HTMLElement | null>(null);
 
     // ─── Handlers ───────────────────────────────────────────
 
@@ -131,6 +133,9 @@ export const CookieConsent = forwardRef<HTMLDivElement, CookieConsentProps>(
       } else {
         setInternalOpen(false);
       }
+      // Return focus to where it was before the banner opened
+      previousFocusRef.current?.focus();
+      previousFocusRef.current = null;
     }, [isControlled, onOpenChange]);
 
     const close = useCallback(() => {
@@ -186,6 +191,19 @@ export const CookieConsent = forwardRef<HTMLDivElement, CookieConsentProps>(
       }
     }, [closing, finishClose]);
 
+    // ─── Focus management ───────────────────────────────────
+    // On open, move focus to the dialog heading so screen readers announce
+    // the banner. The previously focused element is restored on close.
+
+    useEffect(() => {
+      if (!isOpen) return;
+      previousFocusRef.current =
+        document.activeElement instanceof HTMLElement
+          ? document.activeElement
+          : null;
+      headingRef.current?.focus();
+    }, [isOpen]);
+
     // ─── Escape key ─────────────────────────────────────────
 
     useEffect(() => {
@@ -227,7 +245,14 @@ export const CookieConsent = forwardRef<HTMLDivElement, CookieConsentProps>(
       >
         <div className="ds-cookie-consent__content" ref={bannerRef}>
           <div className="ds-cookie-consent__header">
-            <Text as="p" size="lg" weight="semibold" id={headingId}>
+            <Text
+              as="p"
+              size="lg"
+              weight="semibold"
+              id={headingId}
+              ref={headingRef}
+              tabIndex={-1}
+            >
               {heading}
             </Text>
             <Text size="sm" muted>

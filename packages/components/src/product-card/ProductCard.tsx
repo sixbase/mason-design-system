@@ -21,8 +21,18 @@ export interface ProductCardProps extends Omit<HTMLAttributes<HTMLDivElement>, '
   renderPrice?: (price: number, currency: string) => ReactNode;
   /** Badge or label overlay positioned over the image */
   badge?: ReactNode;
-  /** Secondary image URL shown on hover */
+  /** Secondary image URL shown on hover (pointer devices only — touch keeps the first image) */
   hoverImage?: string;
+  /**
+   * Action overlay slot, top-right of the image (e.g. a wishlist icon button).
+   * Pure slot — no baked-in behavior. Slotted buttons/links get a 44px hit area.
+   */
+  actionSlot?: ReactNode;
+  /**
+   * Footer slot rendered below the name/price (e.g. a quick-add button).
+   * Pure slot — no baked-in behavior.
+   */
+  footerSlot?: ReactNode;
 }
 
 function formatPrice(cents: number, currency: string): string {
@@ -65,6 +75,8 @@ export const ProductCard = forwardRef<HTMLDivElement, ProductCardProps>(function
     renderPrice,
     badge,
     hoverImage,
+    actionSlot,
+    footerSlot,
     className,
     ...props
   },
@@ -88,10 +100,8 @@ export const ProductCard = forwardRef<HTMLDivElement, ProductCardProps>(function
       {...props}
     >
       <div className="ds-product-card__image-wrapper">
-        <div
-          className="ds-card-image"
-          style={{ '--card-image-ratio': '4/5' } as React.CSSProperties}
-        >
+        {/* --card-image-ratio is set to var(--aspect-portrait) on the card root */}
+        <div className="ds-card-image">
           <img src={image} alt={name} className="ds-card-image__img" loading="lazy" />
           {hoverImage && (
             <img
@@ -104,6 +114,7 @@ export const ProductCard = forwardRef<HTMLDivElement, ProductCardProps>(function
           )}
         </div>
         {badge && <div className="ds-product-card__badge">{badge}</div>}
+        {actionSlot && <div className="ds-product-card__action">{actionSlot}</div>}
       </div>
       <CardBody>
         <Text size="sm" className="ds-product-card__name">
@@ -117,6 +128,7 @@ export const ProductCard = forwardRef<HTMLDivElement, ProductCardProps>(function
           </Text>
         )}
       </CardBody>
+      {footerSlot && <div className="ds-product-card__footer">{footerSlot}</div>}
     </Card>
   );
 });

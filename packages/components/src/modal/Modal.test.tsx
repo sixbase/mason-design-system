@@ -135,6 +135,29 @@ describe('Modal', () => {
     expect(results).toHaveNoViolations();
   });
 
+  it('applies full-screen-mobile class when fullScreenOnMobile is set', () => {
+    render(
+      <Modal open>
+        <ModalContent fullScreenOnMobile>
+          <ModalHeader>
+            <ModalTitle>Title</ModalTitle>
+            <ModalDescription>Description</ModalDescription>
+          </ModalHeader>
+        </ModalContent>
+      </Modal>,
+    );
+    const dialog = screen.getByRole('dialog');
+    expect(dialog.className).toContain('ds-modal__content--full-screen-mobile');
+  });
+
+  it('does not apply full-screen-mobile class by default', () => {
+    render(<TestModal open />);
+    const dialog = screen.getByRole('dialog');
+    expect(dialog.className).not.toContain(
+      'ds-modal__content--full-screen-mobile',
+    );
+  });
+
   it('forwards custom className to content', () => {
     render(
       <Modal open>

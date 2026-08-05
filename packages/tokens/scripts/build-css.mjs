@@ -49,8 +49,18 @@ const css = lines(
   ...Object.entries(p.color).flatMap(([name, shades]) =>
     Object.entries(shades).map(([shade, val]) => `  --color-${name}-${shade}: ${val};`)
   ),
-  // spacing
+  // spacing — includes fluid steps (--spacing-fluid-*): clamp() between adjacent
+  // phi-scale values (16→26, 26→42, 42→68, 68→110px), interpolated linearly
+  // across 375px→1200px viewports, same technique as the fluid type scale.
   ...Object.entries(p.spacing).map(([k, v]) => `  --spacing-${k}: ${v};`),
+  // aspect ratios — φ-derived (golden = φ:1) plus practical media ratios
+  ...Object.entries(p.aspect).map(([k, v]) => `  --aspect-${k}: ${v};`),
+  // reading measure — 65ch optimal line length for body text
+  ...Object.entries(p.measure).map(([k, v]) => `  --measure-${k}: ${v};`),
+  // interaction scale — pressed-state transform shared by all pressable components
+  ...Object.entries(p.scale).map(([k, v]) => `  --scale-${k}: ${v};`),
+  // safe area — device notch/home-indicator insets, 0px fallback on desktop
+  ...Object.entries(p.safeArea).map(([k, v]) => `  --safe-area-${k}: ${v};`),
   // size (control heights, checkbox dimensions — φ/Fibonacci-derived)
   ...Object.entries(p.size).map(([k, v]) => `  --size-${k}: ${v};`),
   // radius
@@ -82,6 +92,12 @@ const css = lines(
   ...Object.entries(p.zIndex).map(([k, v]) => `  --z-index-${k}: ${v};`),
   // breakpoints (for JS access; use raw values in @media queries)
   ...Object.entries(p.breakpoint).map(([k, v]) => `  --breakpoint-${k}: ${v};`),
+  ``,
+  `  /* ── Semantic elevation (references, not copies) ─── */`,
+  `  /* Emitted as var(--shadow-*) so a shadow-scale change flows through */`,
+  ...Object.entries(tokens.semantic.elevation).map(
+    ([k, { $value }]) => `  --elevation-${k}: ${$value};`
+  ),
   ``,
   `  /* ── Composite tokens (derived from primitives) ──── */`,
   `  --color-overlay: color-mix(in srgb, var(--color-foreground) 38.2%, transparent);`,

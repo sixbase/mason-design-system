@@ -1,0 +1,146 @@
+/* ─── SegmentedControl ─────────────────────────────────── */
+
+/* 1. Component tokens */
+.ds-segmented-control {
+  --segmented-control-padding: var(--spacing-1);
+  --segmented-control-radius: var(--radius-lg);
+  --segmented-control-indicator-radius: var(--radius-md);
+  --segmented-control-track-color: var(--color-background-subtle);
+  --segmented-control-indicator-color: var(--color-background-surface);
+}
+
+/* 2. Base styles — the muted track */
+.ds-segmented-control {
+  position: relative;
+  display: inline-grid;
+  /* Equal-width segments regardless of count — the sliding indicator
+     relies on every segment being exactly (100% / count) wide. */
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  padding: var(--segmented-control-padding);
+  background-color: var(--segmented-control-track-color);
+  border-radius: var(--segmented-control-radius);
+  font-family: var(--font-family-body);
+}
+
+/* ─── Sizes ────────────────────────────────────────────── */
+.ds-segmented-control--sm {
+  height: var(--size-control-sm);
+}
+
+.ds-segmented-control--md {
+  height: var(--size-control-md);
+}
+
+/* ─── Sliding indicator (the raised pill) ──────────────── */
+/* Position is pure CSS: data-count / data-index on the root map to
+   custom properties below — no inline styles, no JS measurement. */
+.ds-segmented-control__indicator {
+  position: absolute;
+  top: var(--segmented-control-padding);
+  bottom: var(--segmented-control-padding);
+  left: var(--segmented-control-padding);
+  width: calc(
+    (100% - 2 * var(--segmented-control-padding)) /
+      var(--segmented-control-count, 1)
+  );
+  background-color: var(--segmented-control-indicator-color);
+  border-radius: var(--segmented-control-indicator-radius);
+  box-shadow: var(--elevation-card);
+  transform: translateX(calc(var(--segmented-control-index, 0) * 100%));
+  transition: transform var(--transition-normal);
+}
+
+/* Segment counts (2–5 segments supported) */
+.ds-segmented-control[data-count='2'] { --segmented-control-count: 2; }
+.ds-segmented-control[data-count='3'] { --segmented-control-count: 3; }
+.ds-segmented-control[data-count='4'] { --segmented-control-count: 4; }
+.ds-segmented-control[data-count='5'] { --segmented-control-count: 5; }
+
+/* Selected segment index */
+.ds-segmented-control[data-index='0'] { --segmented-control-index: 0; }
+.ds-segmented-control[data-index='1'] { --segmented-control-index: 1; }
+.ds-segmented-control[data-index='2'] { --segmented-control-index: 2; }
+.ds-segmented-control[data-index='3'] { --segmented-control-index: 3; }
+.ds-segmented-control[data-index='4'] { --segmented-control-index: 4; }
+
+/* No selection yet — keep the pill hidden */
+.ds-segmented-control:not([data-index]) .ds-segmented-control__indicator {
+  opacity: 0;
+}
+
+/* ─── Item ─────────────────────────────────────────────── */
+.ds-segmented-control__item {
+  position: relative;
+  z-index: var(--z-index-raised);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-2);
+  padding: 0 var(--spacing-3);
+  border: none;
+  background: transparent;
+  border-radius: var(--segmented-control-indicator-radius);
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-foreground-secondary);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+  transition: color var(--transition-fast);
+
+  /* Optical centering */
+  text-box-trim: both;
+  text-box-edge: cap alphabetic;
+}
+
+/* Hover */
+.ds-segmented-control__item:hover:not(:disabled) {
+  color: var(--color-foreground);
+}
+
+/* Selected — the pill behind it carries the surface + elevation */
+.ds-segmented-control__item--selected {
+  color: var(--color-foreground);
+}
+
+/* Focus */
+.ds-segmented-control__item:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
+/* Disabled */
+.ds-segmented-control__item:disabled {
+  opacity: var(--opacity-medium);
+  cursor: not-allowed;
+}
+
+/* ─── Touch hit area ───────────────────────────────────── */
+/* Segments are adjacent, so invisible hit-area extenders would
+   overlap neighbors. On coarse pointers the whole track grows to
+   the 44px minimum instead; segments stretch with it. */
+@media (pointer: coarse) {
+  .ds-segmented-control {
+    min-height: var(--size-hit-area);
+  }
+}
+
+/* ─── Optical centering fallback ───────────────────────── */
+@supports not (text-box-trim: both) {
+  .ds-segmented-control__item {
+    transform: translateY(0.05em);
+  }
+}
+
+/* ─── Reduced motion ───────────────────────────────────── */
+/* The pill snaps to its new position instead of sliding. */
+@media (prefers-reduced-motion: reduce) {
+  .ds-segmented-control__indicator {
+    transition: none;
+  }
+  .ds-segmented-control__item {
+    transition: none;
+  }
+}

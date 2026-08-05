@@ -17,6 +17,24 @@ export function PriceDisplayWithCompare() {
   );
 }
 
+export function PriceDisplaySaleEmphasis() {
+  return (
+    <Preview>
+      <PriceDisplay price="$38.00" emphasis="sale" />
+    </Preview>
+  );
+}
+
+export function PriceDisplayNarrowWrap() {
+  return (
+    <Preview>
+      <div style={{ width: 'var(--spacing-phi-34)' }}>
+        <PriceDisplay price="$1,238.00" comparePrice="$1,560.00" />
+      </div>
+    </Preview>
+  );
+}
+
 export function PriceDisplaySizes() {
   return (
     <Preview direction="column">

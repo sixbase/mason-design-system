@@ -7,9 +7,16 @@ export type SkeletonVariant = 'text' | 'circular' | 'rectangular';
 export interface SkeletonProps extends HTMLAttributes<HTMLDivElement> {
   /** Shape of the skeleton placeholder */
   variant?: SkeletonVariant;
-  /** CSS width value or number (px). Defaults to 100%. */
+  /**
+   * CSS width — accepts token references (`"var(--spacing-20)"`),
+   * any CSS length (`"75%"`, `"12ch"`), or a number (px). Defaults to 100%.
+   * Prefer tokens so placeholder dimensions match the content they mimic.
+   */
   width?: string | number;
-  /** CSS height value or number (px). */
+  /**
+   * CSS height — accepts token references (`"var(--spacing-12)"`),
+   * any CSS length, or a number (px).
+   */
   height?: string | number;
   /** Number of text lines to render (text variant only, default: 1) */
   lines?: number;
@@ -31,7 +38,7 @@ export interface SkeletonProps extends HTMLAttributes<HTMLDivElement> {
  *
  * @example
  * <Skeleton variant="rectangular" width={300} height={200} />
- * <Skeleton variant="circular" width={48} height={48} />
+ * <Skeleton variant="circular" width="var(--spacing-12)" height="var(--spacing-12)" />
  * <Skeleton variant="text" lines={3} />
  */
 export const Skeleton = forwardRef<HTMLDivElement, SkeletonProps>(function Skeleton(

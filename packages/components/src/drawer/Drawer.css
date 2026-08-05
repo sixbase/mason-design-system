@@ -44,7 +44,7 @@
 
   background-color: var(--color-background-surface);
   border: none;
-  box-shadow: var(--shadow-2xl);
+  box-shadow: var(--elevation-toast);
 }
 
 .ds-drawer__panel:focus-visible {
@@ -72,6 +72,39 @@
   animation: ds-drawer-slide-out-left var(--transition-normal) forwards;
 }
 
+/* ─── Bottom sheet variant ─────────────────────────────── */
+.ds-drawer__panel--bottom {
+  top: auto;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-height: 85vh;
+  max-height: 85dvh; /* iOS Safari: track the dynamic toolbar */
+  border-top: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+  animation: ds-drawer-slide-in-up var(--transition-normal) forwards;
+}
+
+.ds-drawer__panel--bottom[data-state='closed'] {
+  animation: ds-drawer-slide-out-down var(--transition-normal) forwards;
+}
+
+/* Drag-handle affordance — visual only, no drag physics */
+.ds-drawer__handle {
+  flex-shrink: 0;
+  width: var(--spacing-10);
+  height: var(--spacing-1);
+  margin: var(--spacing-2) auto 0;
+  border-radius: var(--radius-full);
+  background-color: var(--color-border-strong);
+}
+
+/* ─── Size presets (left/right only) ───────────────────── */
+.ds-drawer__panel--size-sm { --drawer-width: var(--size-modal-sm); }
+.ds-drawer__panel--size-md { --drawer-width: var(--size-modal-md); }
+.ds-drawer__panel--size-lg { --drawer-width: var(--size-modal-lg); }
+
 /* ─── Slide animations ─────────────────────────────────── */
 @keyframes ds-drawer-slide-in-right {
   from { transform: translateX(100%); }
@@ -93,8 +126,19 @@
   to   { transform: translateX(-100%); }
 }
 
-/* ─── Visually hidden title ────────────────────────────── */
-.ds-drawer__title {
+@keyframes ds-drawer-slide-in-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+@keyframes ds-drawer-slide-out-down {
+  from { transform: translateY(0); }
+  to   { transform: translateY(100%); }
+}
+
+/* ─── Visually hidden title + description ──────────────── */
+.ds-drawer__title,
+.ds-drawer__description {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -132,6 +176,18 @@
   text-box-edge: cap alphabetic;
 }
 
+/* Invisible hit-area extender — guarantees a ≥44px touch target
+   without inflating the visible button */
+.ds-drawer__close::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, var(--size-hit-area));
+  height: max(100%, var(--size-hit-area));
+  transform: translate(-50%, -50%);
+}
+
 .ds-drawer__close:hover {
   background-color: var(--color-secondary);
   color: var(--color-foreground);
@@ -139,7 +195,7 @@
 
 .ds-drawer__close:active {
   background-color: var(--color-secondary-active);
-  transform: scale(0.98);
+  transform: scale(var(--scale-press));
 }
 
 .ds-drawer__close:focus-visible {
@@ -155,10 +211,32 @@
   padding-top: calc(var(--drawer-close-size) + var(--spacing-4) + var(--spacing-2));
 }
 
+/* Safe-area padding on the anchored edge (notch / rounded corners) */
+.ds-drawer__panel--right .ds-drawer__body {
+  padding-right: max(var(--drawer-padding), var(--safe-area-right));
+}
+
+.ds-drawer__panel--left .ds-drawer__body {
+  padding-left: max(var(--drawer-padding), var(--safe-area-left));
+}
+
+.ds-drawer__panel--bottom .ds-drawer__body {
+  padding-bottom: max(var(--drawer-padding), var(--safe-area-bottom));
+}
+
 /* ─── Responsive: full-width on mobile ─────────────────── */
+/* @breakpoint-md = 768px */
 @media (max-width: 767px) {
-  .ds-drawer__panel {
+  .ds-drawer__panel--left,
+  .ds-drawer__panel--right {
     width: 100%;
+  }
+
+  /* Full-width panels touch both screen edges — pad for both safe areas */
+  .ds-drawer__panel--left .ds-drawer__body,
+  .ds-drawer__panel--right .ds-drawer__body {
+    padding-left: max(var(--drawer-padding), var(--safe-area-left));
+    padding-right: max(var(--drawer-padding), var(--safe-area-right));
   }
 }
 
@@ -168,7 +246,7 @@
     transform: translateY(0.05em);
   }
   .ds-drawer__close:active {
-    transform: translateY(0.05em) scale(0.98);
+    transform: translateY(0.05em) scale(var(--scale-press));
   }
 }
 
@@ -179,7 +257,9 @@
   .ds-drawer__panel--right,
   .ds-drawer__panel--right[data-state='closed'],
   .ds-drawer__panel--left,
-  .ds-drawer__panel--left[data-state='closed'] {
+  .ds-drawer__panel--left[data-state='closed'],
+  .ds-drawer__panel--bottom,
+  .ds-drawer__panel--bottom[data-state='closed'] {
     animation: none;
   }
 }

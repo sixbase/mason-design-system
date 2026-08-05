@@ -68,6 +68,66 @@ export function DrawerCustomWidth() {
   );
 }
 
+export function DrawerBottomSheet() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="ds-gallery-row">
+      <Button onClick={() => setOpen(true)}>Open bottom sheet</Button>
+      <Drawer
+        open={open}
+        onOpenChange={setOpen}
+        side="bottom"
+        title="Filter and sort"
+        description="Refine the product list by category and price"
+      >
+        <div className="ds-gallery-stack">
+          <Heading level={3} size="md">Sort by</Heading>
+          {['Newest', 'Price: low to high', 'Price: high to low', 'Best selling'].map(
+            (option) => (
+              <Button key={option} variant="ghost" fullWidth>
+                {option}
+              </Button>
+            ),
+          )}
+          <Button fullWidth onClick={() => setOpen(false)}>
+            Apply
+          </Button>
+        </div>
+      </Drawer>
+    </div>
+  );
+}
+
+export function DrawerSizes() {
+  const [openSize, setOpenSize] = useState<'sm' | 'md' | 'lg' | null>(null);
+  return (
+    <div className="ds-gallery-row">
+      {(['sm', 'md', 'lg'] as const).map((size) => (
+        <Button key={size} variant="secondary" onClick={() => setOpenSize(size)}>
+          Open {size}
+        </Button>
+      ))}
+      {(['sm', 'md', 'lg'] as const).map((size) => (
+        <Drawer
+          key={size}
+          open={openSize === size}
+          onOpenChange={(open) => setOpenSize(open ? size : null)}
+          size={size}
+          title={`${size} drawer`}
+        >
+          <div className="ds-gallery-stack">
+            <Heading level={3} size="md">Size preset: {size}</Heading>
+            <Text>
+              This drawer uses the <code>{size}</code> width preset, which maps
+              to <code>--size-modal-{size}</code>.
+            </Text>
+          </div>
+        </Drawer>
+      ))}
+    </div>
+  );
+}
+
 export function DrawerScrollable() {
   const [open, setOpen] = useState(false);
   return (

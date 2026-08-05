@@ -10,21 +10,43 @@
 }
 
 /* ─── Position variants ───────────────────────────────────── */
+/* Viewport insets respect device safe areas (notches, home
+   indicators): the larger of the design inset and the safe area. */
 
 .ds-toast-container--top-right {
-  top: var(--spacing-4);
-  right: var(--spacing-4);
+  top: max(var(--spacing-4), var(--safe-area-top));
+  right: max(var(--spacing-4), var(--safe-area-right));
 }
 
 .ds-toast-container--bottom-right {
-  bottom: var(--spacing-4);
-  right: var(--spacing-4);
+  bottom: max(var(--spacing-4), var(--safe-area-bottom));
+  right: max(var(--spacing-4), var(--safe-area-right));
 }
 
 .ds-toast-container--bottom-center {
-  bottom: var(--spacing-4);
+  bottom: max(var(--spacing-4), var(--safe-area-bottom));
   left: 50%;
   transform: translateX(-50%);
+}
+
+.ds-toast-container--top-center {
+  top: max(var(--spacing-4), var(--safe-area-top));
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* ─── Swipe axis per position ─────────────────────────────── */
+/* Right positions dismiss with a horizontal swipe (vertical page
+   scroll stays native); center positions dismiss vertically. */
+
+.ds-toast-container--top-right .ds-toast,
+.ds-toast-container--bottom-right .ds-toast {
+  touch-action: pan-y;
+}
+
+.ds-toast-container--bottom-center .ds-toast,
+.ds-toast-container--top-center .ds-toast {
+  touch-action: pan-x;
 }
 
 /* ─── Individual toast — component tokens ─────────────────── */
@@ -35,6 +57,11 @@
   --toast-padding-x: var(--spacing-4);
   --toast-padding-y: var(--spacing-3);
   --toast-gap: var(--spacing-3);
+  --toast-swipe-x: 0px;
+  --toast-swipe-y: 0px;
+
+  /* Animated return when a swipe is released below the threshold */
+  transition: transform var(--transition-fast);
 
   display: flex;
   align-items: flex-start;
@@ -59,6 +86,10 @@
   animation: ds-toast-slide-in-center var(--transition-duration-normal) var(--transition-easing-out) forwards;
 }
 
+.ds-toast--enter-top {
+  animation: ds-toast-slide-in-top var(--transition-duration-normal) var(--transition-easing-out) forwards;
+}
+
 @keyframes ds-toast-slide-in {
   from {
     opacity: 0;
@@ -81,6 +112,17 @@
   }
 }
 
+@keyframes ds-toast-slide-in-top {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* ─── Exit animations ─────────────────────────────────────── */
 
 .ds-toast--closing {
@@ -91,10 +133,18 @@
   animation: ds-toast-slide-out-center var(--transition-duration-normal) var(--transition-easing-in) forwards;
 }
 
+.ds-toast--closing-top {
+  animation: ds-toast-slide-out-top var(--transition-duration-normal) var(--transition-easing-in) forwards;
+}
+
+/* Exit animations start from the current swipe offset (0 when the
+   toast was dismissed without swiping), so a swipe-dismiss continues
+   smoothly instead of jumping back to rest. */
+
 @keyframes ds-toast-slide-out {
   from {
     opacity: 1;
-    transform: translateX(0);
+    transform: translateX(var(--toast-swipe-x, 0px));
   }
   to {
     opacity: 0;
@@ -105,12 +155,35 @@
 @keyframes ds-toast-slide-out-center {
   from {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(var(--toast-swipe-y, 0px));
   }
   to {
     opacity: 0;
     transform: translateY(100%);
   }
+}
+
+@keyframes ds-toast-slide-out-top {
+  from {
+    opacity: 1;
+    transform: translateY(var(--toast-swipe-y, 0px));
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+}
+
+/* ─── Swipe to dismiss ────────────────────────────────────── */
+/* While the pointer is down, the toast tracks the finger directly.
+   Double class beats the enter/closing animation rules and the
+   reduced-motion overrides — dragging is direct manipulation, not
+   an animation, so it stays active under prefers-reduced-motion. */
+
+.ds-toast.ds-toast--swiping {
+  animation: none;
+  transition: none;
+  transform: translate(var(--toast-swipe-x, 0px), var(--toast-swipe-y, 0px));
 }
 
 /* ─── Variant: default (info) ─────────────────────────────── */
@@ -217,18 +290,47 @@
   box-shadow: var(--toast-shadow), var(--focus-ring);
 }
 
+/* ─── Touch hit area on actions ───────────────────────────── */
+/* Dismiss (and action) buttons keep their compact visual size but
+   get an invisible ≥44px hit area on coarse pointers. Coarse-only:
+   the two buttons sit adjacent, so the expanded areas overlap. */
+
+@media (pointer: coarse) {
+  .ds-toast__actions .ds-button {
+    position: relative;
+  }
+
+  .ds-toast__actions .ds-button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: max(100%, var(--size-hit-area));
+    height: max(100%, var(--size-hit-area));
+  }
+}
+
 /* ─── Reduced motion ──────────────────────────────────────── */
+/* Swiping still works (direct manipulation), but there is no
+   animated return or slide — positions snap. */
 
 @media (prefers-reduced-motion: reduce) {
+  .ds-toast {
+    transition: none;
+  }
+
   .ds-toast--enter,
-  .ds-toast--enter-center {
+  .ds-toast--enter-center,
+  .ds-toast--enter-top {
     animation: none;
     opacity: 1;
     transform: none;
   }
 
   .ds-toast--closing,
-  .ds-toast--closing-center {
+  .ds-toast--closing-center,
+  .ds-toast--closing-top {
     animation: none;
   }
 }

@@ -1,5 +1,12 @@
 /* ─── Stock Indicator — uses <Text> primitive, layout only ── */
 .ds-stock-indicator {
+  /* Ambient pulse: two φ steps past the end of the named duration chain —
+     686ms (--transition-duration-slowest) × φ² ≈ 1.8s. A near-2s breathing
+     rhythm reads as "live status"; anything under ~1s reads as an alert. */
+  --stock-indicator-pulse-duration: calc(
+    var(--transition-duration-slowest) * 1.618 * 1.618
+  );
+
   display: flex;
   align-items: center;
   gap: var(--spacing-2);
@@ -25,10 +32,6 @@
 }
 
 .ds-stock-indicator__dot--pulse {
-  /* Ambient pulse: intentionally slower than the interaction
-     duration scale — a 2s breathing rhythm reads as "live status",
-     anything under ~1s reads as an alert. */
-  --stock-indicator-pulse-duration: 2s;
   animation: ds-stock-pulse var(--stock-indicator-pulse-duration)
     var(--transition-easing-in-out) infinite;
 }
@@ -36,4 +39,10 @@
 @keyframes ds-stock-pulse {
   0%, 100% { opacity: var(--opacity-full); }
   50% { opacity: var(--opacity-medium); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-stock-indicator__dot--pulse {
+    animation: none;
+  }
 }

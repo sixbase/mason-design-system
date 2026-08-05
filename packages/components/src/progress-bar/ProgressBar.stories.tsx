@@ -33,6 +33,16 @@ export const WithCustomText: Story = {
   },
 };
 
+/* ─── Indeterminate ───────────────────────────────────────────────── */
+
+export const Indeterminate: Story = {
+  args: { indeterminate: true, label: 'Loading products' },
+};
+
+export const IndeterminateSmall: Story = {
+  args: { indeterminate: true, size: 'sm', label: 'Refreshing cart' },
+};
+
 /* ─── Sizes ───────────────────────────────────────────────────────── */
 
 export const Small: Story = {

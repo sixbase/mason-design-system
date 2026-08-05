@@ -49,6 +49,15 @@ describe('Skeleton', () => {
     expect(el.style.height).toBe('10rem');
   });
 
+  it('accepts design token references for width and height', () => {
+    const { container } = render(
+      <Skeleton variant="circular" width="var(--spacing-12)" height="var(--spacing-12)" />,
+    );
+    const el = container.firstChild as HTMLElement;
+    expect(el.style.width).toBe('var(--spacing-12)');
+    expect(el.style.height).toBe('var(--spacing-12)');
+  });
+
   /* ─── Text lines ───────────────────────────────────────────── */
 
   it('renders multiple text lines as a group', () => {

@@ -42,6 +42,41 @@ a.ds-breadcrumb__link:hover {
   color: var(--color-foreground);
 }
 
+a.ds-breadcrumb__link:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-sm);
+}
+
+/* ─── Reduced motion ─────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .ds-breadcrumb__link {
+    transition: none;
+  }
+}
+
+/* ─── Touch targets ──────────────────────────────────────── */
+/* On coarse pointers, give links a taller tap zone: block padding
+   grows the visual row, and a pseudo-element extends the hit area
+   to 44px tall (full-width only — adjacent links sit inline, so
+   widening horizontally would overlap neighbouring targets). */
+@media (pointer: coarse) {
+  a.ds-breadcrumb__link {
+    position: relative;
+    padding-block: var(--spacing-2);
+  }
+
+  a.ds-breadcrumb__link::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: max(100%, var(--size-hit-area));
+  }
+}
+
 .ds-breadcrumb__separator {
   color: var(--color-foreground-subtle);
   user-select: none;

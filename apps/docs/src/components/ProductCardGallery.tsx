@@ -1,4 +1,4 @@
-import { Badge, Grid, PriceDisplay, ProductCard } from '@ds/components';
+import { Badge, Button, Grid, PriceDisplay, ProductCard } from '@ds/components';
 import { Preview } from './Preview';
 import { makePlaceholder } from '../lib/placeholder';
 
@@ -95,6 +95,59 @@ export function ProductCardWithHoverImage() {
         image={placeholder}
         hoverImage={placeholderAlt}
       />
+    </Preview>
+  );
+}
+
+export function ProductCardWithActionSlot() {
+  return (
+    <Preview>
+      <ProductCard
+        name="Aramid Fiber iPhone 17 Pro Max Case"
+        price={8500}
+        image={placeholder}
+        actionSlot={
+          <Button variant="secondary" size="sm" iconOnly aria-label="Add to wishlist">
+            ♡
+          </Button>
+        }
+      />
+    </Preview>
+  );
+}
+
+export function ProductCardWithFooterSlot() {
+  return (
+    <Preview>
+      <ProductCard
+        name="Aramid Fiber iPhone 17 Pro Max Case"
+        price={8500}
+        image={placeholder}
+        footerSlot={
+          <Button variant="secondary" size="sm" fullWidth>
+            Quick add
+          </Button>
+        }
+      />
+    </Preview>
+  );
+}
+
+export function ProductCardContainerAdaptive() {
+  return (
+    <Preview>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '160px 220px 340px',
+          gap: 'var(--spacing-4)',
+          alignItems: 'start',
+        }}
+      >
+        <ProductCard name="Narrow cell (160px)" price={8500} image={placeholder} fluid />
+        <ProductCard name="Reference cell (220px)" price={8500} image={placeholder} fluid />
+        <ProductCard name="Wide cell (340px)" price={8500} image={placeholderAlt} fluid />
+      </div>
     </Preview>
   );
 }

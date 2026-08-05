@@ -49,6 +49,35 @@ export const Default: Story = {
   ),
 };
 
+export const DisabledItem: Story = {
+  args: {
+    type: 'single',
+    collapsible: true,
+  },
+  render: (args) => (
+    <Accordion {...args}>
+      <AccordionItem value="shipping">
+        <AccordionTrigger>Shipping & Delivery</AccordionTrigger>
+        <AccordionContent>
+          Free standard shipping on orders over $50.
+        </AccordionContent>
+      </AccordionItem>
+      <AccordionItem value="preorders" disabled>
+        <AccordionTrigger>Pre-orders (coming soon)</AccordionTrigger>
+        <AccordionContent>
+          Pre-order details will be published closer to launch.
+        </AccordionContent>
+      </AccordionItem>
+      <AccordionItem value="returns">
+        <AccordionTrigger>Returns & Exchanges</AccordionTrigger>
+        <AccordionContent>
+          We accept returns within 30 days of purchase.
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+  ),
+};
+
 export const Multiple: Story = {
   args: {
     type: 'multiple',

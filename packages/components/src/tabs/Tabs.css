@@ -30,28 +30,24 @@
   display: none;
 }
 
-/* Scroll fade indicators for overflow (mobile) */
+/* CSS-only scroll shadow indicators for overflow.
+   Same technique as the Table wrapper: the "cover" gradients scroll
+   with the content (background-attachment: local) and slide over the
+   fixed "shadow" gradients — edges only appear when content actually
+   overflows in that direction. Replaces a fragile :has()-based mask
+   toggle that guessed at overflow from child counts. */
 .ds-tabs__list {
-  mask-image: linear-gradient(
-    to right,
-    transparent 0,
-    black var(--spacing-4),
-    black calc(100% - var(--spacing-4)),
-    transparent 100%
-  );
-  -webkit-mask-image: linear-gradient(
-    to right,
-    transparent 0,
-    black var(--spacing-4),
-    black calc(100% - var(--spacing-4)),
-    transparent 100%
-  );
-}
-
-/* Remove mask when content doesn't overflow */
-.ds-tabs__list:not(:has(.ds-tabs__trigger:last-child:not(:nth-child(-n+1)))) {
-  mask-image: none;
-  -webkit-mask-image: none;
+  background:
+    linear-gradient(to right, var(--color-background) 30%, transparent),
+    linear-gradient(to left, var(--color-background) 30%, transparent),
+    linear-gradient(to right, var(--color-border), transparent),
+    linear-gradient(to left, var(--color-border), transparent);
+  background-position: left center, right center, left center, right center;
+  background-repeat: no-repeat;
+  background-size:
+    var(--spacing-10) 100%, var(--spacing-10) 100%,
+    var(--spacing-3) 100%, var(--spacing-3) 100%;
+  background-attachment: local, local, scroll, scroll;
 }
 
 /* ─── Trigger ──────────────────────────────────────────── */
@@ -59,6 +55,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: var(--spacing-2);
+  /* Touch target: triggers meet the 44px minimum by actual height —
+     adjacent tabs sit flush, so an invisible overflow hit area would
+     overlap its neighbors. */
+  min-height: var(--size-hit-area);
   padding: var(--spacing-3) var(--spacing-4);
   border: none;
   border-bottom: 2px solid transparent;
@@ -101,11 +102,26 @@
   cursor: not-allowed;
 }
 
-/* Long labels: truncate with ellipsis */
+/* Long labels: truncate with ellipsis (on the label span so a badge
+   is never clipped) */
 .ds-tabs__trigger {
   max-width: var(--tabs-trigger-max-width);
+}
+
+.ds-tabs__trigger-label {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+
+  /* Optical centering on the span that owns the line box */
+  text-box-trim: both;
+  text-box-edge: cap alphabetic;
+}
+
+/* ─── Badge slot ───────────────────────────────────────── */
+.ds-tabs__badge {
+  flex-shrink: 0;
 }
 
 /* ─── Content ──────────────────────────────────────────── */

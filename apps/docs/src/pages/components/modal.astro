@@ -1,6 +1,6 @@
 ---
 import ComponentPage from '../../layouts/ComponentPage.astro';
-import { ModalDefault, ModalSizes, ModalConfirmation, ModalControlled } from '../../components/ModalGallery';
+import { ModalDefault, ModalSizes, ModalConfirmation, ModalFullScreenMobile, ModalControlled } from '../../components/ModalGallery';
 ---
 
 <ComponentPage
@@ -19,6 +19,8 @@ import { ModalDefault, ModalSizes, ModalConfirmation, ModalControlled } from '..
     '<code>ModalTitle</code> is linked via <code>aria-labelledby</code>',
     '<code>ModalDescription</code> is linked via <code>aria-describedby</code>',
     'The dialog has <code>role="dialog"</code>',
+    'Close button has a 44px minimum touch target',
+    'Overlay fade and content scale animations are disabled under <code>prefers-reduced-motion</code>',
   ]}
 >
   <h2>Default</h2>
@@ -73,6 +75,13 @@ import { ModalDefault, ModalSizes, ModalConfirmation, ModalControlled } from '..
     </ModalFooter>
   </ModalContent>
 </Modal>`}</code></pre>
+
+  <h2>Full-screen on mobile</h2>
+  <p>Pass <code>fullScreenOnMobile</code> to <code>ModalContent</code> for content-heavy dialogs (size guides, filters). Below 640px the modal fills the viewport (100dvh, no radius) and its padding respects device safe areas. Above 640px it behaves like a normal modal.</p>
+  <ModalFullScreenMobile client:load />
+  <pre><code>{`<ModalContent fullScreenOnMobile>
+  ...
+</ModalContent>`}</code></pre>
 
   <h2>Controlled</h2>
   <p>Pass <code>open</code> and <code>onOpenChange</code> to manage the modal state externally.</p>

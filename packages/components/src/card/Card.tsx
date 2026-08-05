@@ -24,6 +24,13 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {
  * - CardBody     — padded content area
  * - CardFooter   — action row at the bottom
  *
+ * Interactivity: the `interactive` prop is visual only (hover lift + focus
+ * styles) — it does NOT add `role`, `tabIndex`, or keyboard handling. Always
+ * wrap an interactive card in a semantic element (`<a>` around the card, or
+ * a `<button>`/link inside it). If you attach `onClick` directly to the Card
+ * with no semantic wrapper, you must also pass `role="button"`, `tabIndex={0}`
+ * and keyboard handlers yourself — prefer the wrapper.
+ *
  * @example
  * <Card>
  *   <CardImage src="/product.jpg" alt="Product name" />
@@ -63,19 +70,30 @@ Card.displayName = 'Card';
 export interface CardImageProps extends HTMLAttributes<HTMLDivElement> {
   src: string;
   alt: string;
-  /** Aspect ratio of the image container */
+  /**
+   * Aspect ratio of the image container. When omitted, the container falls
+   * back to the `--aspect-landscape` token (4/3). To use any other aspect
+   * token, override the `--card-image-ratio` component token instead:
+   * `style={{ '--card-image-ratio': 'var(--aspect-portrait)' }}` — all
+   * `--aspect-*` tokens (square, portrait, landscape, video, golden,
+   * golden-portrait) are valid values.
+   */
   aspectRatio?: '1/1' | '4/3' | '3/2' | '16/9' | '4/5';
 }
 
 export const CardImage = forwardRef<HTMLDivElement, CardImageProps>(function CardImage(
-  { src, alt, aspectRatio = '4/3', className, ...props },
+  { src, alt, aspectRatio, className, ...props },
   ref,
 ) {
   return (
     <div
       ref={ref}
       className={['ds-card-image', className].filter(Boolean).join(' ')}
-      style={{ '--card-image-ratio': aspectRatio } as React.CSSProperties}
+      style={
+        aspectRatio
+          ? ({ '--card-image-ratio': aspectRatio } as React.CSSProperties)
+          : undefined
+      }
       {...props}
     >
       <img src={src} alt={alt} className="ds-card-image__img" loading="lazy" />

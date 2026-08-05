@@ -14,6 +14,17 @@ export function BadgeVariants() {
   );
 }
 
+export function BadgeStatusDots() {
+  return (
+    <Preview>
+      <Badge variant="success" dot>In stock</Badge>
+      <Badge variant="warning" dot>Low stock</Badge>
+      <Badge variant="destructive" dot>Out of stock</Badge>
+      <Badge variant="outline" dot>Discontinued</Badge>
+    </Preview>
+  );
+}
+
 export function BadgeSizes() {
   return (
     <Preview>

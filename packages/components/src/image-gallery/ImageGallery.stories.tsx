@@ -5,6 +5,9 @@ const meta: Meta<typeof ImageGallery> = {
   title: 'Components/ImageGallery',
   component: ImageGallery,
   tags: ['autodocs'],
+  argTypes: {
+    loading: { control: 'select', options: ['eager', 'lazy'] },
+  },
 };
 export default meta;
 

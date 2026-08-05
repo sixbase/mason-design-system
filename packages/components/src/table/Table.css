@@ -41,9 +41,9 @@
 
 .ds-table {
   /* Readability floor: below this, columns crush together and the
-     wrapper scrolls instead. Between content-sm (640) and modal-sm
-     (400) on the size scale — a deliberate in-between, kept local. */
-  --table-min-width: 480px;
+     wrapper scrolls instead (scroll mode). Stack mode removes the
+     floor below the sm breakpoint. */
+  --table-min-width: var(--size-modal-md);
 
   width: 100%;
   min-width: var(--table-min-width);
@@ -77,6 +77,52 @@
   display: inline-block;
   margin-left: var(--spacing-1);
   font-size: var(--font-size-xs);
+}
+
+/* ─── Sort Button ─────────────────────────────────────────── */
+/* Real <button> inside the th so sorting is keyboard-operable.
+   Inherits the header cell's type styles; visual size unchanged. */
+
+.ds-table__sort-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-weight: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  text-box-trim: both;
+  text-box-edge: cap alphabetic;
+}
+
+.ds-table__sort-button:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* Idle (sortable but unsorted) icon stays quiet until engaged */
+.ds-table__sort-icon--idle {
+  color: var(--color-foreground-subtle);
+}
+
+/* ≥44px hit area without growing the visual header. Coarse-pointer
+   only — adjacent column headers would overlap on desktop hover. */
+@media (pointer: coarse) {
+  .ds-table__sort-button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: max(100%, var(--size-hit-area));
+    height: max(100%, var(--size-hit-area));
+  }
 }
 
 /* ─── Body Row ────────────────────────────────────────────── */
@@ -148,6 +194,76 @@
   top: 0;
   z-index: var(--z-index-sticky);
   background-color: var(--table-header-bg);
+}
+
+/* ─── Responsive: Stack ───────────────────────────────────── */
+/* Below the sm breakpoint each row renders as a card and each cell
+   becomes a label/value pair (label from data-label, injected from
+   the column header). Markup stays a semantic <table> — explicit
+   roles in the TSX preserve semantics under these display overrides. */
+
+/* @breakpoint-sm = 640px */
+@media (max-width: 639px) {
+  .ds-table-wrapper--stack {
+    overflow-x: visible;
+    background: none;
+  }
+
+  .ds-table--stack {
+    display: block;
+    min-width: 0;
+  }
+
+  /* Header is redundant when every cell carries its own label.
+     Visually hidden — not display:none — so screen readers keep it. */
+  .ds-table--stack .ds-table__header {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0); /* legacy fallback */
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .ds-table--stack .ds-table__body {
+    display: block;
+  }
+
+  .ds-table--stack .ds-table__body .ds-table__row {
+    display: block;
+    border: 1px solid var(--table-border-color);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-2) 0;
+    margin-bottom: var(--spacing-3);
+  }
+
+  .ds-table--stack .ds-table__body .ds-table__row:last-child {
+    margin-bottom: 0;
+    border-bottom: 1px solid var(--table-border-color);
+  }
+
+  .ds-table--stack .ds-table__cell {
+    display: block;
+    border: none;
+  }
+
+  /* Label/value pair on a golden-ratio split (1 : φ) */
+  .ds-table--stack .ds-table__cell[data-label] {
+    display: grid;
+    grid-template-columns: 1fr 1.618fr;
+    gap: var(--spacing-3);
+    align-items: start;
+  }
+
+  .ds-table--stack .ds-table__cell[data-label]::before {
+    content: attr(data-label);
+    font-weight: var(--table-header-weight);
+    color: var(--color-foreground-secondary);
+  }
 }
 
 /* ─── text-box-trim Fallback ──────────────────────────────── */

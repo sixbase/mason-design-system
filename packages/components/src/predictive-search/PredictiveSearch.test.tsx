@@ -375,6 +375,26 @@ describe('PredictiveSearch', () => {
       expect(screen.getByRole('combobox')).toHaveAttribute('aria-autocomplete', 'list');
     });
 
+    it('adds aria-label with full text (and price) to result options', async () => {
+      const user = userEvent.setup();
+      render(
+        <PredictiveSearch onSearch={noop} results={MOCK_RESULTS} debounce={0} />,
+      );
+      await user.type(screen.getByRole('combobox'), 'to');
+
+      expect(
+        screen.getByRole('option', { name: 'Canvas Tote, $48.00' }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('option', {
+          name: 'Linen Shirt, $89.00, was $112.00',
+        }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('option', { name: 'Summer Collection' }),
+      ).toBeInTheDocument();
+    });
+
     it('has no axe violations (default state)', async () => {
       const { container } = render(<PredictiveSearch onSearch={noop} />);
       expect(await axe(container)).toHaveNoViolations();

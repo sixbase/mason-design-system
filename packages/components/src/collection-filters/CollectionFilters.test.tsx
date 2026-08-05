@@ -302,6 +302,32 @@ describe('CollectionFilters', () => {
     expect(screen.getByText('3')).toBeInTheDocument();
   });
 
+  it('applies the drawer panel variant (safe-area padding) inside the mobile drawer only', async () => {
+    const user = userEvent.setup();
+    render(<CollectionFilters {...defaultProps} />);
+
+    // Desktop sidebar panel has no drawer modifier
+    const desktopPanel = document.querySelector(
+      '.ds-collection-filters__desktop .ds-collection-filters__panel',
+    );
+    expect(desktopPanel).not.toHaveClass('ds-collection-filters__panel--drawer');
+
+    await user.click(screen.getByText('Filters'));
+    const dialog = screen.getByRole('dialog');
+    const drawerPanel = dialog.querySelector('.ds-collection-filters__panel');
+    expect(drawerPanel).toHaveClass('ds-collection-filters__panel--drawer');
+  });
+
+  it('price range inputs have visible labels and accessible names', () => {
+    render(<CollectionFilters {...defaultProps} />);
+    // Visible labels (desktop panel + drawer share markup; at least one each)
+    expect(screen.getAllByText('Min').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Max').length).toBeGreaterThan(0);
+    // Accessible names include the filter context
+    expect(screen.getAllByLabelText(/Minimum price for Price/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText(/Maximum price for Price/i).length).toBeGreaterThan(0);
+  });
+
   // ── Accessibility ──────────────────────────────────────
 
   it('has no accessibility violations', async () => {

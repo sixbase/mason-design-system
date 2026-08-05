@@ -22,7 +22,7 @@ import { CardVariants, CardProduct } from '../../components/CardGallery';
       rows: [
         ['<code>src</code>', '<code>string</code>', '—', 'Image URL'],
         ['<code>alt</code>', '<code>string</code>', '—', 'Alt text (required)'],
-        ['<code>aspectRatio</code>', '<code>string</code>', "<code>'4/3'</code>", 'CSS aspect-ratio value'],
+        ['<code>aspectRatio</code>', '<code>string</code>', '<code>var(--aspect-landscape)</code> (4/3)', 'CSS aspect-ratio value. When omitted, the container uses the landscape aspect token; override the <code>--card-image-ratio</code> component token to use any <code>--aspect-*</code> token.'],
       ],
     },
   ]}

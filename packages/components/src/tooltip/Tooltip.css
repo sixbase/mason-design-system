@@ -1,0 +1,39 @@
+/* ─── Tooltip content ────────────────────────────────────── */
+.ds-tooltip {
+  --tooltip-bg: var(--color-foreground);
+  --tooltip-fg: var(--color-background);
+  --tooltip-radius: var(--radius-md);
+  --tooltip-max-width: 36ch;
+
+  /* Radix Portal content does not inherit font-family — declare explicitly */
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-tight-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-snug);
+
+  color: var(--tooltip-fg);
+  background-color: var(--tooltip-bg);
+  border-radius: var(--tooltip-radius);
+  padding: var(--spacing-1) var(--spacing-2);
+  max-width: var(--tooltip-max-width);
+  z-index: var(--z-index-tooltip);
+  user-select: none;
+
+  /* Animation */
+  transform-origin: var(--radix-tooltip-content-transform-origin);
+  animation: ds-tooltip-open var(--transition-duration-fast) var(--transition-easing-out);
+}
+
+@keyframes ds-tooltip-open {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-tooltip { animation: none; }
+}
+
+/* ─── Arrow ──────────────────────────────────────────────── */
+.ds-tooltip__arrow {
+  fill: var(--tooltip-bg);
+}

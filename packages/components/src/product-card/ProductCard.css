@@ -3,13 +3,18 @@
   /* Editorial card: 34px corner on the image tile, matching the homepage
      highlight cards. */
   --card-radius: var(--radius-3xl);
-  --card-image-ratio: 4 / 5;
+  --card-image-ratio: var(--aspect-portrait); /* 4:5 */
   --card-padding: var(--spacing-3);
   /* Standalone default (carousels, side-by-side rows). In page grids,
-     always use --fluid so the parent grid owns the width — the fixed
-     width has no breakpoints of its own. max-width below keeps a
-     standalone card from ever overflowing a narrow viewport. */
-  --product-card-width: 220px;
+     always use --fluid so the parent grid owns the width — the card is
+     container-query driven, so it adapts to ANY cell width. max-width
+     below keeps a standalone card from ever overflowing a narrow viewport.
+     220px = 2 × --spacing-phi-55 (110px, Fibonacci 55 × 2px). */
+  --product-card-width: calc(var(--spacing-phi-55) * 2);
+  /* Name measure: 78.6% ≈ 1/√φ (1/1.272 ≈ 0.786) — soft golden-ratio
+     constraint leaves breathing room on the right without being too
+     narrow for long names. */
+  --product-card-name-max-width: 78.6%;
 
   width: var(--product-card-width);
   max-width: 100%;
@@ -22,6 +27,13 @@
      the bottom), so undo its radius + overflow here. */
   border-radius: 0;
   overflow: visible;
+
+  /* Container queries: internals adapt to the card's own width, so the
+     card is correct in any grid cell — not just at viewport breakpoints.
+     inline-size containment is safe here: the width comes from the token
+     or the parent grid, never from the contents. First container-query
+     component in the system. */
+  container: product-card / inline-size;
 }
 
 /* Fluid mode: when placed inside a CSS Grid, fill the cell.
@@ -30,7 +42,7 @@
   --product-card-width: 100%;
 }
 
-/* ─── Image wrapper — anchors badge + hover image ────────── */
+/* ─── Image wrapper — anchors badge, action slot + hover image ── */
 .ds-product-card__image-wrapper {
   position: relative;
 }
@@ -38,7 +50,8 @@
 /* Image gets uniform radius since ghost card has no clipping background */
 .ds-product-card .ds-card-image {
   border-radius: var(--card-radius);
-  aspect-ratio: 4 / 5;
+  /* Explicit ratio (not just the custom property) — Safari aspect-ratio guard */
+  aspect-ratio: var(--aspect-portrait);
 }
 
 /* Override Card interactive hover — image zoom only, no lift/shadow */
@@ -58,10 +71,8 @@
 }
 
 /* ─── Product name — uses <Text> primitive, card-specific layout only ── */
-/* max-width: 1/√φ ≈ 78.6% — soft golden ratio constraint leaves
-   breathing room on the right without being too narrow for long names */
 .ds-product-card .ds-product-card__name {
-  max-width: 78.6%;
+  max-width: var(--product-card-name-max-width);
   line-height: var(--line-height-snug);
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -87,7 +98,47 @@
   z-index: var(--z-index-raised);
 }
 
-/* ─── Hover image swap ───────────────────────────────────── */
+/* ─── Action slot overlay (e.g. wishlist button) ─────────── */
+/* Pure slot: positions consumer content top-right; no baked-in behavior.
+   The wrapper reserves at least a 44px region so small icon buttons still
+   land in a comfortable zone. */
+.ds-product-card__action {
+  position: absolute;
+  top: var(--spacing-phi-8);
+  right: var(--spacing-phi-8);
+  z-index: var(--z-index-raised);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--size-hit-area);
+  min-height: var(--size-hit-area);
+}
+
+/* Slotted controls get the invisible hit-area extension. :where() keeps
+   specificity flat so consumer styling is never fought. Unconditional
+   (no pointer guard): the slot is isolated, nothing adjacent to overlap. */
+.ds-product-card__action > :where(button, a) {
+  position: relative;
+}
+
+.ds-product-card__action > :where(button, a)::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: max(100%, var(--size-hit-area));
+  height: max(100%, var(--size-hit-area));
+}
+
+/* ─── Footer slot (e.g. quick-add) — matches body insets ── */
+.ds-product-card__footer {
+  padding: var(--spacing-phi-5) var(--spacing-phi-8) 0;
+}
+
+/* ─── Hover image swap — pointer devices only ────────────── */
+/* On touch (hover: none) the swap is disabled entirely: the first image
+   stays, and no sticky-hover flash occurs after tapping. */
 .ds-product-card__hover-image {
   position: absolute;
   inset: 0;
@@ -98,16 +149,18 @@
   transition: opacity var(--transition-normal);
 }
 
-.ds-product-card--has-hover-image .ds-card-image__img {
-  transition: opacity var(--transition-normal), transform var(--transition-slow);
-}
+@media (hover: hover) {
+  .ds-product-card--has-hover-image .ds-card-image__img {
+    transition: opacity var(--transition-normal), transform var(--transition-slow);
+  }
 
-.ds-product-card--has-hover-image:hover .ds-card-image__img:not(.ds-product-card__hover-image) {
-  opacity: 0;
-}
+  .ds-product-card--has-hover-image:hover .ds-card-image__img:not(.ds-product-card__hover-image) {
+    opacity: 0;
+  }
 
-.ds-product-card--has-hover-image:hover .ds-product-card__hover-image {
-  opacity: 1;
+  .ds-product-card--has-hover-image:hover .ds-product-card__hover-image {
+    opacity: 1;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -119,7 +172,8 @@
 
 /* ─── Large variant ────────────────────────────────────── */
 .ds-product-card--lg {
-  --product-card-width: 300px;
+  /* 300px = --size-container / 4 (a quarter-width column of the 1200px grid) */
+  --product-card-width: calc(var(--size-container) / 4);
 }
 
 .ds-product-card--lg .ds-card-body {
@@ -135,7 +189,61 @@
   font-size: var(--font-size-base);
 }
 
+/* ─── Container adaptation ───────────────────────────────── */
+/* Reference appearance is the 220px standalone card — untouched. In grids,
+   the card tightens below 200px cells and relaxes above 320px cells. */
+
+/* Narrow cells (< 200px): tighter insets, smaller corner + type step down.
+   200px keeps the 220px standalone default on its reference appearance. */
+@container product-card (max-width: 200px) {
+  .ds-product-card .ds-card-image {
+    border-radius: var(--radius-2xl);
+  }
+
+  .ds-product-card .ds-card-body {
+    padding: var(--spacing-phi-3) var(--spacing-phi-5) 0;
+  }
+
+  .ds-product-card .ds-product-card__footer {
+    padding: var(--spacing-phi-3) var(--spacing-phi-5) 0;
+  }
+
+  .ds-product-card .ds-product-card__name {
+    font-size: var(--font-size-xs);
+  }
+
+  .ds-product-card .ds-product-card__price,
+  .ds-product-card .ds-product-card__price .ds-text {
+    font-size: var(--font-size-tight-2xs);
+  }
+
+  .ds-product-card__badge {
+    top: var(--spacing-phi-5);
+    left: var(--spacing-phi-5);
+  }
+
+  .ds-product-card__action {
+    top: var(--spacing-phi-5);
+    right: var(--spacing-phi-5);
+  }
+}
+
+/* Wide cells (≥ 320px): type steps up to base, mirroring the lg variant. */
+@container product-card (min-width: 320px) {
+  .ds-product-card .ds-product-card__name {
+    font-size: var(--font-size-base);
+  }
+
+  .ds-product-card .ds-product-card__price,
+  .ds-product-card .ds-product-card__price .ds-text {
+    font-size: var(--font-size-base);
+  }
+}
+
 /* ─── Mobile: smaller corner + price than desktop ──────────── */
+/* Storefront-aligned mobile steps — kept last so the viewport rule wins
+   over the wide-container relax on phones. */
+/* @breakpoint-md = 768px */
 @media (max-width: 767px) {
   .ds-product-card {
     --card-radius: var(--radius-2xl);

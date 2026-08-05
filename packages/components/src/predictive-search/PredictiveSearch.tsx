@@ -447,12 +447,24 @@ export const PredictiveSearch = forwardRef<HTMLInputElement, PredictiveSearchPro
                           .filter(Boolean)
                           .join(' ');
 
+                        // Full text for assistive tech — the visible title is
+                        // truncated with an ellipsis on narrow widths
+                        const ariaLabel =
+                          item.type === 'product' && item.price != null
+                            ? `${item.title}, ${formatPrice(item.price)}${
+                                item.compareAtPrice != null
+                                  ? `, was ${formatPrice(item.compareAtPrice)}`
+                                  : ''
+                              }`
+                            : item.title;
+
                         return (
                           <li
                             key={item.id}
                             id={`${baseId}-option-${item._flatIndex}`}
                             role="option"
                             aria-selected={isActive}
+                            aria-label={ariaLabel}
                             className={itemClasses}
                             onClick={() => handleSelect(item)}
                             onKeyDown={(e) => {

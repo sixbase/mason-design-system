@@ -1,0 +1,115 @@
+---
+import ComponentPage from '../../layouts/ComponentPage.astro';
+import {
+  LayoutGridVariants,
+  LayoutGridSticky,
+  LayoutGridSections,
+  LayoutGridSpanAll,
+} from '../../components/LayoutGridGallery';
+---
+
+<ComponentPage
+  title="Layout Grid"
+  description="The structural law of every page: a 12-column grid inside a 1200px container with 64px section rhythm. Four components — <code>PageContainer</code>, <code>Section</code>, <code>LayoutGrid</code>, and <code>LayoutGridItem</code> — expose the system as React. Not for repeating card grids; use <code>Grid</code> for those."
+  installCode="import { PageContainer, Section, LayoutGrid, LayoutGridItem } from '@ds/components';"
+  props={[
+    {
+      name: 'LayoutGrid',
+      headers: ['Prop', 'Type', 'Default', 'Description'],
+      rows: [
+        ['<code>variant</code>', "<code>'full' | 'halves' | 'golden' | 'golden-reverse' | 'thirds' | 'quarters' | 'wide-narrow'</code>", "<code>'full'</code>", 'Column split. Default to <code>golden</code> (7+5) for two-column layouts.'],
+        ['<code>section</code>', '<code>boolean</code>', '<code>false</code>', 'Adds the 64px section rhythm below the grid'],
+      ],
+    },
+    {
+      name: 'LayoutGridItem',
+      headers: ['Prop', 'Type', 'Default', 'Description'],
+      rows: [
+        ['<code>sticky</code>', '<code>boolean</code>', '<code>false</code>', 'Sticky column (PDP details, cart summary). Static below 768px.'],
+        ['<code>spanAll</code>', '<code>boolean</code>', '<code>false</code>', 'Span all 12 columns regardless of variant'],
+      ],
+    },
+    {
+      name: 'PageContainer',
+      headers: ['Prop', 'Type', 'Default', 'Description'],
+      rows: [
+        ['<code>as</code>', "<code>'div' | 'main'</code>", "<code>'div'</code>", 'Element to render — use <code>main</code> for the page shell'],
+      ],
+    },
+    {
+      name: 'Section',
+      headers: ['Prop', 'Type', 'Default', 'Description'],
+      rows: [
+        ['<code>as</code>', "<code>'section' | 'div'</code>", "<code>'section'</code>", 'Element to render'],
+      ],
+    },
+  ]}
+  accessibility={[
+    'Pure layout components — no interactive behavior, no ARIA required',
+    '<code>Section</code> renders a semantic <code>&lt;section&gt;</code> element by default',
+    '<code>PageContainer as="main"</code> provides the page\'s <code>&lt;main&gt;</code> landmark',
+    'All multi-column layouts collapse to a single column below 768px — content order is DOM order',
+  ]}
+>
+  <h2>Column splits</h2>
+  <p>
+    Seven splits, all on the same 12-column grid with <code>--spacing-6</code> (24px) gutters.
+    Default to <strong>golden (7+5)</strong> for any two-column section — it keeps the φ
+    proportional DNA. Resize the window: everything stacks below 768px.
+  </p>
+  <LayoutGridVariants client:load />
+  <pre><code>{`<LayoutGrid variant="golden">
+  <LayoutGridItem>Primary (7 cols)</LayoutGridItem>
+  <LayoutGridItem>Secondary (5 cols)</LayoutGridItem>
+</LayoutGrid>`}</code></pre>
+
+  <h2>Sticky sidebar</h2>
+  <p>
+    The PDP/Cart pattern: one column scrolls, the other stays 24px from the viewport top.
+    Sticky positioning turns off automatically when the grid stacks on mobile.
+  </p>
+  <LayoutGridSticky client:load />
+  <pre><code>{`<LayoutGrid variant="golden">
+  <LayoutGridItem>Scrollable content</LayoutGridItem>
+  <LayoutGridItem sticky>Order summary</LayoutGridItem>
+</LayoutGrid>`}</code></pre>
+
+  <h2>Section rhythm</h2>
+  <p>
+    <code>Section</code> (or the <code>section</code> prop on <code>LayoutGrid</code>) adds the
+    64px (<code>--spacing-16</code>) gap between major page blocks. Use it for page divisions
+    only — component internals use the standard spacing tokens.
+  </p>
+  <LayoutGridSections client:load />
+  <pre><code>{`<Section>
+  <Heading as="h2">Section title</Heading>
+  <Text>Content…</Text>
+</Section>
+
+<LayoutGrid variant="halves" section>
+  <LayoutGridItem>Left</LayoutGridItem>
+  <LayoutGridItem>Right</LayoutGridItem>
+</LayoutGrid>`}</code></pre>
+
+  <h2>Span-all utility</h2>
+  <p>A single item can break out of the variant's split and take the full row.</p>
+  <LayoutGridSpanAll client:load />
+  <pre><code>{`<LayoutGrid variant="thirds">
+  <LayoutGridItem spanAll>Full-width intro</LayoutGridItem>
+  <LayoutGridItem>One</LayoutGridItem>
+  <LayoutGridItem>Two</LayoutGridItem>
+  <LayoutGridItem>Three</LayoutGridItem>
+</LayoutGrid>`}</code></pre>
+
+  <h2>Page shell</h2>
+  <p>
+    Every page wraps its content in exactly one <code>PageContainer</code> — 1200px
+    (<code>--size-container</code>) max-width, centered, with responsive padding. Never nest
+    page containers; for non-page contexts use <code>Container</code> instead.
+  </p>
+  <pre><code>{`<PageContainer as="main">
+  <Section>…hero…</Section>
+  <LayoutGrid variant="golden" section>…</LayoutGrid>
+  <Section>…newsletter…</Section>
+</PageContainer>`}</code></pre>
+</ComponentPage>

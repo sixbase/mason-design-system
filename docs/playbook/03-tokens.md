@@ -253,6 +253,12 @@ Implemented by overriding semantic tokens under `.dark` on `<html>`:
 --size-control-md                category: size, subcategory: control, scale: md
 --size-content-xl                category: size, subcategory: content, scale: xl
 --opacity-medium                 category: opacity, scale: medium (φ-derived)
+--spacing-fluid-md               category: spacing, fluid scale: clamp() 26px→42px
+--aspect-golden                  category: aspect, ratio: φ:1
+--elevation-card                 category: elevation, surface: card (→ var(--shadow-md))
+--safe-area-bottom               category: safe-area, edge: bottom (env() inset)
+--scale-press                    category: scale, interaction: pressed state
+--measure-reading                category: measure, context: body-text line length
 ```
 
 ---
@@ -298,9 +304,24 @@ tight-lg  = 19px   tight-xl = 22px    tight-2xl = 26px   tight-3xl = 30px   tigh
 
 **Display scale** (base 16px, φ step):
 ```
-display-2xs = 6px    display-xs = 10px   display-sm = 16px
-display-md  = 26px   display-lg = 42px   display-xl = 68px   display-2xl = 110px
+display-xs = 10px    display-sm = 16px
+display-md = 26px    display-lg = 42px   display-xl = 68px   display-2xl = 110px
 ```
+
+**Display scale is fluid too (2026-07-06).** `display-md` through `display-2xl` use the
+same `clamp()` technique as `base`–`5xl`: min = desktop value × 0.72 at a 375px viewport,
+max = the φ-scale value above, linear interpolation between 375px and 1200px.
+`display-xs` and `display-sm` stay fixed (legibility at small sizes — same reasoning as `xs`/`sm`).
+
+| Token | 375px floor | Desktop max | Emitted value |
+|-------|------------|-------------|---------------|
+| `--font-size-display-md` | 18.72px | 26px | `clamp(1.17rem, 0.9632rem + 0.88vw, 1.625rem)` |
+| `--font-size-display-lg` | 30.24px | 42px | `clamp(1.89rem, 1.5559rem + 1.43vw, 2.625rem)` |
+| `--font-size-display-xl` | 48.96px | 68px | `clamp(3.06rem, 2.5191rem + 2.31vw, 4.25rem)` |
+| `--font-size-display-2xl` | 79.2px | 110px | `clamp(4.95rem, 4.075rem + 3.73vw, 6.875rem)` |
+
+Clamp math (same for every fluid token): `slope = (max − min) / (1200 − 375)`,
+vw coefficient = slope × 100, intercept = min − slope × 375, both converted to rem (÷16).
 
 ### Type Scale Context Mapping
 
@@ -354,6 +375,30 @@ phi-1=2px  phi-2=4px  phi-3=6px  phi-5=10px  phi-8=16px  phi-13=26px  phi-21=42p
 ```
 
 **Layout grid section rhythm:** `--spacing-16` (64px) for gaps between major page sections. See `09-layout-grid.md`.
+
+### Fluid Spacing (2026-07-06)
+
+Four clamp-based steps for **section/layout rhythm** that scales continuously with the
+viewport — no breakpoints. Each step interpolates between two adjacent phi-scale values
+(min at a 375px viewport, max at 1200px), using the same rem + vw `clamp()` technique
+as the fluid type scale. Because the endpoints are consecutive phi steps, each token is
+its floor value on mobile and grows by ×φ by desktop — the φ relationship holds at both
+ends of the range.
+
+| Token | Min (375px) | Max (1200px) | Phi endpoints | Emitted value |
+|-------|-------------|--------------|---------------|---------------|
+| `--spacing-fluid-sm` | 16px | 26px | phi-8 → phi-13 | `clamp(1rem, 0.7159rem + 1.21vw, 1.625rem)` |
+| `--spacing-fluid-md` | 26px | 42px | phi-13 → phi-21 | `clamp(1.625rem, 1.1705rem + 1.94vw, 2.625rem)` |
+| `--spacing-fluid-lg` | 42px | 68px | phi-21 → phi-34 | `clamp(2.625rem, 1.8864rem + 3.15vw, 4.25rem)` |
+| `--spacing-fluid-xl` | 68px | 110px | phi-34 → phi-55 | `clamp(4.25rem, 3.0568rem + 5.09vw, 6.875rem)` |
+
+**Scope:** section/page-level rhythm only (hero padding, section gaps that should breathe
+with the viewport). Component internals keep the fixed standard scale — fluid values inside
+components would break their fixed-height/optical-centering math.
+
+Derivation per token: `slope = (max − min) / (1200 − 375)`; vw coefficient = slope × 100;
+rem intercept = (min − slope × 375) / 16. Example (`fluid-md`): slope = 16 / 825 = 0.0194 →
+`1.94vw`; intercept = 26 − 7.27 = 18.73px = `1.1705rem`.
 
 ### Phi vs Standard Spacing — When to Use Which
 
@@ -466,14 +511,75 @@ Note: 34→42→55 approximates √φ step ratio (42/34=1.235, 55/42=1.310, avg�
 
 ### Aspect Ratios
 
-φ-derived proportions for image containers:
+Tokenized as of 2026-07-06 (`--aspect-*`). Two φ ratios plus the practical media
+ratios components already use — always `aspect-ratio: var(--aspect-*)`, never a raw ratio:
 
-| Ratio | Value | Use Case |
+| Token | Value | Use Case |
 |-------|-------|----------|
-| Portrait | 1:1.618 (1:φ) | Product photos, editorial images |
-| Square | 1:1 | Avatars, thumbnails |
-| Landscape | 1.618:1 (φ:1) | Banners, hero images |
-| Default card | 4:3 | Product grids (practical compromise) — `--card-image-ratio` |
+| `--aspect-square` | 1 / 1 | Avatars, thumbnails, cart line images, icon tiles |
+| `--aspect-portrait` | 4 / 5 | Product cards, gallery images (editorial standard) |
+| `--aspect-landscape` | 4 / 3 | Default card image — `--card-image-ratio` references this shape |
+| `--aspect-video` | 16 / 9 | Embedded video, wide media banners |
+| `--aspect-golden` | 1.618 / 1 | φ landscape — banners, hero images |
+| `--aspect-golden-portrait` | 1 / 1.618 | φ portrait — editorial/campaign imagery |
+
+Note: 4/5 (= 0.8) is the practical neighbor of 1/√φ ≈ 0.786 — the standard product
+ratio chosen with the storefront; the golden pair carries the exact φ proportion for
+editorial moments.
+
+### Elevation (Semantic Shadow Layer)
+
+Semantic aliases over the Fibonacci shadow scale, added 2026-07-06. Components say what
+the surface *is*; the shadow scale decides how it looks. Emitted as **references**
+(`var(--shadow-*)`), not copied values — retuning a shadow flows through every elevation.
+
+| Token | Maps To | Used For |
+|-------|---------|----------|
+| `--elevation-card` | `var(--shadow-md)` | Resting cards, tiles |
+| `--elevation-dropdown` | `var(--shadow-lg)` | Select menus, popovers, tooltips |
+| `--elevation-sticky` | `var(--shadow-lg)` | Sticky headers/bars once scrolled |
+| `--elevation-modal` | `var(--shadow-xl)` | Modal dialogs |
+| `--elevation-toast` | `var(--shadow-2xl)` | Toasts, drawers — topmost transient surfaces |
+
+Rule: components reference `--elevation-*` (intent), not `--shadow-*` (scale), the same
+way color works — semantic over primitive.
+
+### Safe Area
+
+Device inset tokens (notch, home indicator, curved corners) with a `0px` fallback so
+they're inert on desktop:
+
+```
+--safe-area-top     env(safe-area-inset-top, 0px)
+--safe-area-right   env(safe-area-inset-right, 0px)
+--safe-area-bottom  env(safe-area-inset-bottom, 0px)
+--safe-area-left    env(safe-area-inset-left, 0px)
+```
+
+Use in fixed/sticky chrome: `padding-bottom: calc(var(--spacing-4) + var(--safe-area-bottom))`
+on bottom bars, drawers, and toasts. Requires `viewport-fit=cover` in the page's viewport
+meta to take effect on notched devices.
+
+### Interaction
+
+| Token | Value | Purpose |
+|-------|-------|---------|
+| `--scale-press` | 0.98 | Pressed-state `transform: scale(var(--scale-press))` — previously a magic number in Button, Checkbox, Modal, Drawer, VariantSelector |
+| `--size-hit-area` | 44px | Minimum touch **hit zone** (invisible) — Apple HIG/WCAG 2.5.8 floor. Distinct from `--size-touch-target` (36px), which is the *visual* icon-button size; extend the hit area with padding or a pseudo-element, not by growing the visual |
+| `--size-swipe-threshold` | 50px | Minimum drag distance to register a swipe (carousels, drawers) — JS-consumable via the tokens JSON export |
+
+Note: `--size-touch-target-lg` (44px) predates `--size-hit-area` and shares its value;
+`hit-area` is the semantic name for "invisible minimum hit zone" — prefer it in new code.
+
+### Reading Measure
+
+```
+--measure-reading: 65ch
+```
+
+The 65-character optimal line length for body text — the value behind the "reading width"
+rule. Previously hardcoded as `max-width: 65ch` in Typography, Alert, Footer, and
+EmptyState; components should reference the token. `ch` units only — never a px measure.
 
 ### Z-Index
 

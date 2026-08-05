@@ -1,0 +1,84 @@
+/* ─── Spinner component tokens ────────────────────────────── */
+.ds-spinner {
+  --spinner-color: var(--color-foreground-secondary);
+  --spinner-border-width: var(--border-width-lg);
+
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  color: var(--spinner-color);
+  font-family: var(--font-family-body);
+}
+
+/* ─── Circle — same visual language as .ds-button__spinner ── */
+.ds-spinner__circle {
+  border: var(--spinner-border-width) solid currentColor;
+  border-right-color: transparent;
+  border-radius: var(--radius-full);
+  animation: ds-spinner-spin var(--transition-duration-slowest) linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes ds-spinner-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Size variants — icon size scale ─────────────────────── */
+.ds-spinner--sm .ds-spinner__circle {
+  width: var(--size-icon-sm);
+  height: var(--size-icon-sm);
+}
+
+.ds-spinner--md .ds-spinner__circle {
+  width: var(--size-icon-md);
+  height: var(--size-icon-md);
+}
+
+.ds-spinner--lg .ds-spinner__circle {
+  width: var(--size-icon-lg);
+  height: var(--size-icon-lg);
+}
+
+/* ─── Visible label ───────────────────────────────────────── */
+.ds-spinner__label {
+  font-size: var(--font-size-sm);
+  color: var(--spinner-color);
+  line-height: var(--line-height-snug);
+  user-select: none;
+  text-box-trim: both;
+  text-box-edge: cap alphabetic;
+}
+
+/* Optical centering fallback for browsers without text-box-trim */
+@supports not (text-box-trim: both) {
+  .ds-spinner__label {
+    transform: translateY(0.05em);
+  }
+}
+
+/* ─── Screen-reader only ──────────────────────────────────── */
+.ds-spinner__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ─── Reduced motion — replace spin with a slow opacity pulse ── */
+@media (prefers-reduced-motion: reduce) {
+  .ds-spinner__circle {
+    border-right-color: currentColor;
+    animation: ds-spinner-pulse calc(var(--transition-duration-slowest) * 2)
+      var(--transition-easing-in-out) infinite alternate;
+  }
+}
+
+@keyframes ds-spinner-pulse {
+  from { opacity: var(--opacity-full); }
+  to { opacity: var(--opacity-low); }
+}

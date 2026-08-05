@@ -4,14 +4,18 @@
  * Default: 1 → 2 → 3 → 4 columns across breakpoints.
  * Override via CSS custom properties or React props.
  *
- * Row-gap and column-gap always use the same token at each
- * breakpoint so rhythm stays visually unified.
+ * Gap resolution order (each axis):
+ *   --grid-row-gap / --grid-column-gap  → per-axis override
+ *   --grid-gap                          → both axes
+ *   --spacing-4 (16px)                  → default, stepping to
+ *   --spacing-6 (24px) at desktop via --grid-gap-lg fallback chain
  */
 
 .ds-grid {
   display: grid;
   grid-template-columns: repeat(var(--grid-cols, 1), 1fr);
-  gap: var(--grid-gap, var(--spacing-4));
+  row-gap: var(--grid-row-gap, var(--grid-gap, var(--spacing-4)));
+  column-gap: var(--grid-column-gap, var(--grid-gap, var(--spacing-4)));
 }
 
 /* @breakpoint-sm = 640px */
@@ -32,7 +36,8 @@
 @media (min-width: 1024px) {
   .ds-grid {
     grid-template-columns: repeat(var(--grid-cols-lg, 4), 1fr);
-    gap: var(--grid-gap-lg, var(--grid-gap, var(--spacing-6)));
+    row-gap: var(--grid-row-gap, var(--grid-gap-lg, var(--grid-gap, var(--spacing-6))));
+    column-gap: var(--grid-column-gap, var(--grid-gap-lg, var(--grid-gap, var(--spacing-6))));
   }
 }
 
@@ -42,3 +47,31 @@
 .ds-grid--cols-2 { --grid-cols: 2; --grid-cols-sm: 2; --grid-cols-md: 2; --grid-cols-lg: 2; }
 .ds-grid--cols-3 { --grid-cols: 3; --grid-cols-sm: 3; --grid-cols-md: 3; --grid-cols-lg: 3; }
 .ds-grid--cols-4 { --grid-cols: 4; --grid-cols-sm: 4; --grid-cols-md: 4; --grid-cols-lg: 4; }
+
+/* ─── Item alignment modifiers ───────────────────────────── */
+
+.ds-grid--align-start   { align-items: start; }
+.ds-grid--align-center  { align-items: center; }
+.ds-grid--align-end     { align-items: end; }
+.ds-grid--align-stretch { align-items: stretch; }
+
+.ds-grid--justify-start   { justify-items: start; }
+.ds-grid--justify-center  { justify-items: center; }
+.ds-grid--justify-end     { justify-items: end; }
+.ds-grid--justify-stretch { justify-items: stretch; }
+
+/* ─── Auto-fit mode ──────────────────────────────────────── */
+/*
+ * Column count derives from --grid-min-child instead of fixed
+ * counts. min(100%, …) guards against overflow when the minimum
+ * child width exceeds the container (narrow viewports).
+ *
+ * Declared last in this file so it wins the cascade at equal
+ * specificity over the breakpoint column rules above — auto-fit
+ * overrides the column counts at every breakpoint. Gap resolution
+ * is unchanged.
+ */
+
+.ds-grid--auto-fit {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--grid-min-child)), 1fr));
+}

@@ -32,3 +32,32 @@ configureAxe({
     region: { enabled: false },
   },
 });
+
+// jsdom shims for Radix popper-positioned components (Tooltip, Popover,
+// DropdownMenu). jsdom implements none of these; Radix + floating-ui call
+// them during open/close and keyboard interaction.
+class ResizeObserverStub {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+if (typeof globalThis.ResizeObserver === 'undefined') {
+  globalThis.ResizeObserver = ResizeObserverStub as unknown as typeof ResizeObserver;
+}
+
+if (typeof Element.prototype.scrollIntoView !== 'function') {
+  Element.prototype.scrollIntoView = () => {};
+}
+
+if (typeof Element.prototype.hasPointerCapture !== 'function') {
+  Element.prototype.hasPointerCapture = () => false;
+}
+
+if (typeof Element.prototype.setPointerCapture !== 'function') {
+  Element.prototype.setPointerCapture = () => {};
+}
+
+if (typeof Element.prototype.releasePointerCapture !== 'function') {
+  Element.prototype.releasePointerCapture = () => {};
+}

@@ -4,7 +4,7 @@
   --search-bg: var(--color-background-surface);
   --search-radius: var(--radius-md);
   --search-dropdown-radius: var(--radius-lg);
-  --search-dropdown-shadow: var(--shadow-lg);
+  --search-dropdown-shadow: var(--elevation-dropdown);
 
   position: relative;
   width: 100%;
@@ -123,8 +123,24 @@
 }
 
 .ds-predictive-search__clear:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* Invisible hit-area extender — ≥44px touch target on touch devices.
+   Gated to coarse pointers: the clear button sits inside the input,
+   adjacent to the text area, so a permanently enlarged target would
+   swallow precise clicks near the end of the query. */
+@media (pointer: coarse) {
+  .ds-predictive-search__clear::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, var(--size-hit-area));
+    height: max(100%, var(--size-hit-area));
+    transform: translate(-50%, -50%);
+  }
 }
 
 /* ─── Dropdown panel ──────────────────────────────────────── */
@@ -152,6 +168,32 @@
 @media (prefers-reduced-motion: reduce) {
   .ds-predictive-search__dropdown {
     animation: none;
+  }
+}
+
+/* ─── Mobile: cap dropdown height, keep the keyboard visible ── */
+/* @breakpoint-sm = 640px */
+@media (max-width: 639px) {
+  .ds-predictive-search__dropdown {
+    display: flex;
+    flex-direction: column;
+    max-height: 50vh;
+    max-height: 50dvh; /* iOS Safari: track the on-screen keyboard/toolbar */
+  }
+
+  /* Results scroll inside the capped panel; footer stays pinned */
+  .ds-predictive-search__results,
+  .ds-predictive-search__loading,
+  .ds-predictive-search__empty {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  .ds-predictive-search__footer {
+    flex-shrink: 0;
   }
 }
 
@@ -287,8 +329,8 @@
 }
 
 .ds-predictive-search__view-all:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: -2px;
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 /* ─── Screen reader only ──────────────────────────────────── */

@@ -39,6 +39,16 @@ export function DividerSpacings() {
   );
 }
 
+export function DividerLabeled() {
+  return (
+    <Preview stack>
+      <Text>Express checkout</Text>
+      <Divider label="OR" spacing="lg" />
+      <Text>Pay with card</Text>
+    </Preview>
+  );
+}
+
 export function DividerVertical() {
   return (
     <Preview>

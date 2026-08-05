@@ -30,13 +30,67 @@
   color: var(--color-foreground-secondary);
 }
 
+.ds-star-rating__label {
+  color: var(--color-foreground);
+}
+
+/* ─── Interactive mode (radiogroup) ─────────────────────── */
+/* Stars are visually identical to display mode — the button chrome is
+   stripped entirely. Hover preview fill is driven by component state. */
+.ds-star-rating__radio {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  border-radius: var(--radius-sm);
+  color: inherit;
+}
+
+.ds-star-rating__radio:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.ds-star-rating--interactive .ds-star-rating__star-fill,
+.ds-star-rating--interactive .ds-star-rating__star-bg {
+  transition: fill var(--transition-fast);
+}
+
+/* 44px hit areas. Stars sit flush against each other, so the extension is
+   guarded to coarse pointers only — overlapping invisible targets would
+   fight precise mouse hover previews. */
+@media (pointer: coarse) {
+  .ds-star-rating__radio::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: max(100%, var(--size-hit-area));
+    height: max(100%, var(--size-hit-area));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-star-rating--interactive .ds-star-rating__star-fill,
+  .ds-star-rating--interactive .ds-star-rating__star-bg {
+    transition: none;
+  }
+}
+
 /* ─── Size: sm ──────────────────────────────────────────── */
 .ds-star-rating--sm .ds-star-rating__star {
   width: var(--font-size-sm);
   height: var(--font-size-sm);
 }
 
-.ds-star-rating--sm .ds-star-rating__count {
+.ds-star-rating--sm .ds-star-rating__count,
+.ds-star-rating--sm .ds-star-rating__label {
   font-size: var(--font-size-xs);
 }
 
@@ -46,7 +100,8 @@
   height: var(--size-icon);
 }
 
-.ds-star-rating--md .ds-star-rating__count {
+.ds-star-rating--md .ds-star-rating__count,
+.ds-star-rating--md .ds-star-rating__label {
   font-size: var(--font-size-sm);
 }
 
@@ -56,6 +111,7 @@
   height: var(--spacing-5);
 }
 
-.ds-star-rating--lg .ds-star-rating__count {
+.ds-star-rating--lg .ds-star-rating__count,
+.ds-star-rating--lg .ds-star-rating__label {
   font-size: var(--font-size-base);
 }

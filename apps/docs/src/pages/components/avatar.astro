@@ -1,0 +1,55 @@
+---
+import ComponentPage from '../../layouts/ComponentPage.astro';
+import { AvatarSizes, AvatarImage, AvatarFallbackTones, AvatarShapes } from '../../components/AvatarGallery';
+---
+
+<ComponentPage
+  title="Avatar"
+  description="A user or entity image with graceful fallback to initials. Falls back when no image is provided or when it fails to load. Common ecommerce uses: account menus, review authors, order history, support chat."
+  installCode="import { Avatar } from '@ds/components';"
+  props={[
+    {
+      headers: ['Prop', 'Type', 'Default', 'Description'],
+      rows: [
+        ['<code>name</code>', '<code>string</code>', '<em>required</em>', 'Person or entity name — drives initials fallback, image alt text, and the deterministic fallback tone'],
+        ['<code>src</code>', '<code>string</code>', '—', 'Image URL — falls back to initials when omitted or on load error'],
+        ['<code>size</code>', "<code>'sm' | 'md' | 'lg'</code>", "<code>'md'</code>", 'Fibonacci control heights: 34 / 42 / 55px'],
+        ['<code>shape</code>', "<code>'circle' | 'square'</code>", "<code>'circle'</code>", 'Circle via <code>--radius-full</code>, square via <code>--radius-md</code>'],
+      ],
+    },
+  ]}
+  accessibility={[
+    'Image mode: the <code>&lt;img&gt;</code> receives <code>alt={name}</code> — <code>name</code> is required by the types so an avatar image can never ship without alt text',
+    'Fallback mode: the root receives <code>role="img"</code> + <code>aria-label={name}</code>; the initials are <code>aria-hidden</code>',
+    'All fallback tone pairs meet WCAG 1.4.3 AA (4.5:1) in light and dark mode — pairs reuse the Badge-audited semantic combos',
+    'Initials use optical centering (<code>text-box: trim-both cap alphabetic</code>) with a fallback nudge',
+  ]}
+>
+  <h2>Sizes</h2>
+  <p>Sizes reuse the Fibonacci control heights: sm 34px, md 42px, lg 55px.</p>
+  <AvatarSizes client:load />
+  <pre><code>{`<Avatar name="Ada Lovelace" size="sm" />
+<Avatar name="Ada Lovelace" size="md" />   {/* default */}
+<Avatar name="Ada Lovelace" size="lg" />`}</code></pre>
+
+  <h2>Image with fallback</h2>
+  <p>The second avatar points at a broken URL and falls back to initials automatically.</p>
+  <AvatarImage client:load />
+  <pre><code>{`<Avatar name="Ada Lovelace" src="/ada.jpg" />
+<Avatar name="Grace Hopper" src="/does-not-exist.jpg" />   {/* → "GH" */}`}</code></pre>
+
+  <h2>Fallback tones</h2>
+  <p>
+    The fallback background rotates through five muted semantic tones, keyed
+    deterministically by name hash — the same name always gets the same tone.
+  </p>
+  <AvatarFallbackTones client:load />
+  <pre><code>{`<Avatar name="Ada Lovelace" />
+<Avatar name="Grace Hopper" />
+<Avatar name="Alan Turing" />`}</code></pre>
+
+  <h2>Shapes</h2>
+  <AvatarShapes client:load />
+  <pre><code>{`<Avatar name="Ada Lovelace" />                 {/* circle (default) */}
+<Avatar name="Mason Supply" shape="square" />`}</code></pre>
+</ComponentPage>

@@ -56,6 +56,26 @@ describe('Badge', () => {
     expect(screen.getByRole('status')).toHaveAttribute('aria-label', '1 notification');
   });
 
+  /* ─── Status dot ─────────────────────────────────────────────── */
+
+  it('renders a status dot when dot is true', () => {
+    const { container } = render(<Badge variant="success" dot>In stock</Badge>);
+    const dot = container.querySelector('.ds-badge__dot');
+    expect(dot).toBeInTheDocument();
+    expect(dot).toHaveAttribute('aria-hidden', 'true');
+    expect(container.querySelector('.ds-badge--dot')).toBeInTheDocument();
+  });
+
+  it('does not render a dot by default', () => {
+    const { container } = render(<Badge variant="success">In stock</Badge>);
+    expect(container.querySelector('.ds-badge__dot')).not.toBeInTheDocument();
+  });
+
+  it('keeps the label as accessible content with dot', () => {
+    render(<Badge variant="warning" dot>Low stock</Badge>);
+    expect(screen.getByRole('status')).toHaveTextContent('Low stock');
+  });
+
   /* ─── Semantic roles (WCAG) ──────────────────────────────────── */
 
   it('applies role="status" to status variants', () => {
@@ -87,6 +107,7 @@ describe('Badge', () => {
         <Badge>New</Badge>
         <Badge variant="success">In stock</Badge>
         <Badge variant="destructive">Out of stock</Badge>
+        <Badge variant="success" dot>In stock</Badge>
         <Badge count={5} />
       </div>,
     );

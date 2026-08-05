@@ -37,6 +37,28 @@ describe('Heading', () => {
     render(<Heading ref={ref}>Title</Heading>);
     expect(ref.current).toBeInstanceOf(HTMLHeadingElement);
   });
+
+  it('maps sizes to the fluid display scale when display is set', () => {
+    render(
+      <div>
+        <Heading as="h1" display>Hero</Heading>
+        <Heading as="h2" size="3xl" display>Campaign</Heading>
+        <Heading as="h3" size="2xl" display>Editorial</Heading>
+        <Heading as="h4" size="xl" display>Kicker</Heading>
+      </div>,
+    );
+    // Rank-preserving mapping: 4xl→2xl, 3xl→xl, 2xl→lg, xl→md
+    expect(screen.getByRole('heading', { level: 1 })).toHaveClass('ds-heading--display-2xl');
+    expect(screen.getByRole('heading', { level: 2 })).toHaveClass('ds-heading--display-xl');
+    expect(screen.getByRole('heading', { level: 3 })).toHaveClass('ds-heading--display-lg');
+    expect(screen.getByRole('heading', { level: 4 })).toHaveClass('ds-heading--display-md');
+  });
+
+  it('drops the normal size class in display mode', () => {
+    render(<Heading as="h1" display>Hero</Heading>);
+    const heading = screen.getByRole('heading', { level: 1 });
+    expect(heading).not.toHaveClass('ds-heading--4xl');
+  });
 });
 
 describe('Text', () => {
@@ -55,6 +77,27 @@ describe('Text', () => {
   it('applies size class', () => {
     render(<Text size="sm">Helper</Text>);
     expect(screen.getByText('Helper')).toHaveClass('ds-text--sm');
+  });
+
+  it('supports the xs and xl sizes', () => {
+    render(
+      <div>
+        <Text size="xs">Fine print</Text>
+        <Text size="xl">Lead</Text>
+      </div>,
+    );
+    expect(screen.getByText('Fine print')).toHaveClass('ds-text--xs');
+    expect(screen.getByText('Lead')).toHaveClass('ds-text--xl');
+  });
+
+  it('applies the line clamp class', () => {
+    render(<Text lineClamp={2}>Clamped copy</Text>);
+    expect(screen.getByText('Clamped copy')).toHaveClass('ds-text--clamp-2');
+  });
+
+  it('does not apply a clamp class by default', () => {
+    render(<Text>Unclamped</Text>);
+    expect(screen.getByText('Unclamped').className).toBe('ds-text ds-text--base');
   });
 
   it('applies weight, muted, and truncate classes', () => {

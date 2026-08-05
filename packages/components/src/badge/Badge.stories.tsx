@@ -24,6 +24,23 @@ export const Destructive: Story = { args: { variant: 'destructive', children: 'O
 export const Outline: Story = { args: { variant: 'outline', children: 'Archive' } };
 export const Small: Story = { args: { size: 'sm', children: 'New' } };
 
+/* ─── Status dot ───────────────────────────────────────────────── */
+
+export const WithDot: Story = {
+  args: { variant: 'success', dot: true, children: 'In stock' },
+};
+
+export const StatusDots: Story = {
+  render: () => (
+    <div style={{ display: 'flex', gap: 'var(--spacing-2)', flexWrap: 'wrap', alignItems: 'center' }}>
+      <Badge variant="success" dot>In stock</Badge>
+      <Badge variant="warning" dot>Low stock</Badge>
+      <Badge variant="destructive" dot>Out of stock</Badge>
+      <Badge variant="outline" dot>Discontinued</Badge>
+    </div>
+  ),
+};
+
 /* ─── Notification count ───────────────────────────────────────── */
 
 export const NotificationCount: Story = {

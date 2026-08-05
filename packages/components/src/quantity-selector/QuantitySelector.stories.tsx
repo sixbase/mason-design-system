@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
+import { Text } from '../typography/Typography';
 import { QuantitySelector } from './QuantitySelector';
 
 const meta: Meta<typeof QuantitySelector> = {
@@ -36,4 +37,16 @@ export const WithLimits: Story = {
 
 export const Disabled: Story = {
   render: () => <Controlled value={2} disabled />,
+};
+
+export const TypedEntry: Story = {
+  render: () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)' }}>
+      <Text as="span" size="sm" muted>
+        Click the value and type a quantity — it clamps to min 1 / max 20 on blur or Enter.
+        Arrow Up/Down step, Home/End jump to the bounds.
+      </Text>
+      <Controlled min={1} max={20} value={5} />
+    </div>
+  ),
 };

@@ -1,0 +1,184 @@
+/* ─── Root wrapper ───────────────────────────────────────── */
+.ds-switch-root {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  font-family: var(--font-family-body);
+}
+
+.ds-switch-root--disabled {
+  opacity: var(--opacity-medium);
+  cursor: not-allowed;
+}
+
+/* ─── Field row (track + label side-by-side) ─────────────── */
+.ds-switch-field {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+/* ─── Track ──────────────────────────────────────────────── */
+.ds-switch-track {
+  /* Golden-ratio track: width = height × φ (Fibonacci pairs 26/42, 16/26) */
+  --switch-track-height:  var(--spacing-phi-13);
+  --switch-track-width:   var(--spacing-phi-21);
+  --switch-track-padding: var(--spacing-phi-1);
+  --switch-bg:            var(--color-border-strong);
+
+  position: relative;
+  flex-shrink: 0;
+  width: var(--switch-track-width);
+  height: var(--switch-track-height);
+  padding: 0;
+  background-color: var(--switch-bg);
+  border: none;
+  border-radius: var(--radius-full);
+  outline: none;
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+/* Sizes */
+.ds-switch-track--sm {
+  --switch-track-height: var(--spacing-phi-8);
+  --switch-track-width:  var(--spacing-phi-13);
+}
+
+/* 44px hit area — invisible, centered on the track */
+.ds-switch-track::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, var(--size-hit-area));
+  height: max(100%, var(--size-hit-area));
+  transform: translate(-50%, -50%);
+}
+
+/* Hover */
+.ds-switch-track:hover:not([data-disabled]) {
+  background-color: var(--color-foreground-subtle);
+}
+
+/* Active (pressed) */
+.ds-switch-track:active:not([data-disabled]) {
+  transform: scale(var(--scale-press));
+}
+
+/* Focus */
+.ds-switch-track:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
+/* Checked */
+.ds-switch-track[data-state="checked"] {
+  background-color: var(--color-primary);
+}
+
+.ds-switch-track[data-state="checked"]:hover:not([data-disabled]) {
+  background-color: var(--color-primary-hover);
+}
+
+.ds-switch-track[data-state="checked"]:active:not([data-disabled]) {
+  background-color: var(--color-primary-active);
+}
+
+/* Error state */
+.ds-switch-track--error {
+  background-color: var(--color-destructive-subtle);
+}
+
+.ds-switch-track--error[data-state="checked"] {
+  background-color: var(--color-destructive);
+}
+
+.ds-switch-track--error:hover:not([data-disabled]) {
+  background-color: var(--color-destructive-subtle);
+}
+
+.ds-switch-track--error[data-state="checked"]:hover:not([data-disabled]) {
+  background-color: var(--color-destructive-hover);
+}
+
+.ds-switch-track--error:focus-visible {
+  box-shadow: var(--focus-ring-error);
+}
+
+/* Disabled */
+.ds-switch-track[data-disabled] {
+  cursor: not-allowed;
+}
+
+/* ─── Thumb ──────────────────────────────────────────────── */
+.ds-switch-thumb {
+  display: block;
+  width: calc(var(--switch-track-height) - var(--switch-track-padding) * 2);
+  height: calc(var(--switch-track-height) - var(--switch-track-padding) * 2);
+  background-color: var(--color-background-surface);
+  border-radius: var(--radius-full);
+  transform: translateX(var(--switch-track-padding));
+  transition: transform var(--transition-fast);
+  will-change: transform;
+}
+
+.ds-switch-thumb[data-state="checked"] {
+  transform: translateX(
+    calc(var(--switch-track-width) - var(--switch-track-height) + var(--switch-track-padding))
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-switch-thumb {
+    transition: none;
+  }
+
+  .ds-switch-track {
+    transition: none;
+  }
+}
+
+/* ─── Label ──────────────────────────────────────────────── */
+.ds-switch-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-foreground);
+  line-height: var(--line-height-snug);
+  cursor: pointer;
+  user-select: none;
+  text-box-trim: both;
+  text-box-edge: cap alphabetic;
+}
+
+.ds-switch-root--disabled .ds-switch-label {
+  cursor: not-allowed;
+}
+
+/* Optical centering fallback for browsers without text-box-trim */
+@supports not (text-box-trim: both) {
+  .ds-switch-label {
+    transform: translateY(0.05em);
+  }
+}
+
+/* ─── Hint / error ───────────────────────────────────────── */
+.ds-switch-hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-foreground-secondary);
+  line-height: var(--line-height-normal);
+  padding-left: calc(var(--spacing-phi-21) + var(--spacing-2));
+}
+
+.ds-switch-error {
+  font-size: var(--font-size-xs);
+  color: var(--color-destructive);
+  line-height: var(--line-height-normal);
+  padding-left: calc(var(--spacing-phi-21) + var(--spacing-2));
+}
+
+.ds-switch-root--sm .ds-switch-hint,
+.ds-switch-root--sm .ds-switch-error {
+  padding-left: calc(var(--spacing-phi-13) + var(--spacing-2));
+}

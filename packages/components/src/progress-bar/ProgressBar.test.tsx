@@ -106,6 +106,55 @@ describe('ProgressBar', () => {
     expect(container.firstChild).not.toHaveClass('ds-progress-bar--success');
   });
 
+  /* ─── Indeterminate ────────────────────────────────────────────── */
+
+  describe('indeterminate', () => {
+    it('renders a div-based progressbar with the indeterminate classes', () => {
+      const { container } = render(<ProgressBar indeterminate label="Loading" />);
+      const bar = screen.getByRole('progressbar');
+      expect(bar.tagName).toBe('DIV');
+      expect(container.firstChild).toHaveClass('ds-progress-bar--indeterminate');
+      expect(
+        container.querySelector('.ds-progress-bar__indeterminate-fill'),
+      ).toBeInTheDocument();
+    });
+
+    it('exposes aria-valuetext="Loading" and no aria-valuenow', () => {
+      render(<ProgressBar indeterminate label="Loading" />);
+      const bar = screen.getByRole('progressbar');
+      expect(bar).toHaveAttribute('aria-valuetext', 'Loading');
+      expect(bar).not.toHaveAttribute('aria-valuenow');
+    });
+
+    it('falls back to aria-label="Loading" when no label is given', () => {
+      render(<ProgressBar indeterminate />);
+      expect(screen.getByRole('progressbar')).toHaveAttribute('aria-label', 'Loading');
+    });
+
+    it('ignores showValue when indeterminate', () => {
+      const { container } = render(<ProgressBar indeterminate showValue label="Loading" />);
+      expect(container.querySelector('.ds-progress-bar__value-text')).toBeNull();
+    });
+
+    it('does not resolve the success variant when indeterminate', () => {
+      const { container } = render(
+        <ProgressBar indeterminate value={100} variant="success" label="Loading" />,
+      );
+      expect(container.firstChild).toHaveClass('ds-progress-bar--default');
+      expect(container.firstChild).not.toHaveClass('ds-progress-bar--success');
+    });
+
+    it('has no accessibility violations (indeterminate)', async () => {
+      const { container } = render(
+        <div>
+          <ProgressBar indeterminate label="Loading products" />
+          <ProgressBar indeterminate />
+        </div>,
+      );
+      expect(await axe(container)).toHaveNoViolations();
+    });
+  });
+
   /* ─── Accessibility ────────────────────────────────────────────── */
 
   it('has no accessibility violations', async () => {

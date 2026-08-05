@@ -1,14 +1,46 @@
 /* ─── Carousel ──────────────────────────────────────────── */
 .ds-carousel {
+  /*
+   * Component tokens.
+   *
+   * Slide width presets — the % of the carousel viewport one slide occupies
+   * at each breakpoint (base / tablet ≥768px / desktop ≥1024px). Values are
+   * unchanged from the original implementation; they intentionally leave a
+   * sliver of the next slide visible as a scroll affordance:
+   *   sm  70% → 45% → 33.333%  (~1.4 → 2.2 → 3 slides in view)
+   *   md  85% → 65% → 50%      (~1.2 → 1.5 → 2 slides in view)
+   *   lg  95% → 80% → 66.666%  (~1   → 1.25 → 1.5 slides in view)
+   */
+  --carousel-slide-sm: 70%;
+  --carousel-slide-sm-tablet: 45%;
+  --carousel-slide-sm-desktop: 33.333%;
+  --carousel-slide-md: 85%;
+  --carousel-slide-md-tablet: 65%;
+  --carousel-slide-md-desktop: 50%;
+  --carousel-slide-lg: 95%;
+  --carousel-slide-lg-tablet: 80%;
+  --carousel-slide-lg-desktop: 66.666%;
+  --carousel-control-size: var(--size-control-sm);
+
+  position: relative;
   overflow: hidden;
 }
 
 .ds-carousel__track {
+  /* Positioning context so slide offsetLeft resolves against the track. */
+  position: relative;
   display: flex;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   padding-bottom: var(--spacing-2);
+}
+
+/* The track is keyboard-focusable (arrow keys scroll by one slide). Inset
+   ring so it isn't clipped by the root's overflow: hidden. */
+.ds-carousel__track:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring-inset);
 }
 
 /* Gap variants */
@@ -34,51 +66,188 @@
 
 /* sm: narrow slides */
 .ds-carousel__slide--sm {
-  flex-basis: 70%;
+  flex-basis: var(--carousel-slide-sm);
 }
 
+/* @breakpoint-md = 768px */
 @media (min-width: 768px) {
   .ds-carousel__slide--sm {
-    flex-basis: 45%;
+    flex-basis: var(--carousel-slide-sm-tablet);
   }
 }
 
+/* @breakpoint-lg = 1024px */
 @media (min-width: 1024px) {
   .ds-carousel__slide--sm {
-    flex-basis: 33.333%;
+    flex-basis: var(--carousel-slide-sm-desktop);
   }
 }
 
 /* md: default slides */
 .ds-carousel__slide--md {
-  flex-basis: 85%;
+  flex-basis: var(--carousel-slide-md);
 }
 
+/* @breakpoint-md = 768px */
 @media (min-width: 768px) {
   .ds-carousel__slide--md {
-    flex-basis: 65%;
+    flex-basis: var(--carousel-slide-md-tablet);
   }
 }
 
+/* @breakpoint-lg = 1024px */
 @media (min-width: 1024px) {
   .ds-carousel__slide--md {
-    flex-basis: 50%;
+    flex-basis: var(--carousel-slide-md-desktop);
   }
 }
 
 /* lg: wide slides */
 .ds-carousel__slide--lg {
-  flex-basis: 95%;
+  flex-basis: var(--carousel-slide-lg);
 }
 
+/* @breakpoint-md = 768px */
 @media (min-width: 768px) {
   .ds-carousel__slide--lg {
-    flex-basis: 80%;
+    flex-basis: var(--carousel-slide-lg-tablet);
   }
 }
 
+/* @breakpoint-lg = 1024px */
 @media (min-width: 1024px) {
   .ds-carousel__slide--lg {
-    flex-basis: 66.666%;
+    flex-basis: var(--carousel-slide-lg-desktop);
+  }
+}
+
+/* ─── Prev/next controls ────────────────────────────────── */
+.ds-carousel__control {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--carousel-control-size);
+  height: var(--carousel-control-size);
+  padding: 0;
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background-color: var(--color-background-surface);
+  color: var(--color-foreground);
+  box-shadow: var(--elevation-card);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast),
+    opacity var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.ds-carousel__control--prev {
+  left: var(--spacing-2);
+}
+
+.ds-carousel__control--next {
+  right: var(--spacing-2);
+}
+
+/* Invisible hit-area extender — guarantees a ≥44px touch target
+   without inflating the visible button. */
+.ds-carousel__control::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, var(--size-hit-area));
+  height: max(100%, var(--size-hit-area));
+  transform: translate(-50%, -50%);
+}
+
+.ds-carousel__control:not(:disabled):hover {
+  background-color: var(--color-secondary);
+}
+
+.ds-carousel__control:not(:disabled):active {
+  transform: translateY(-50%) scale(var(--scale-press));
+}
+
+.ds-carousel__control:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.ds-carousel__control:disabled {
+  opacity: var(--opacity-medium);
+  cursor: default;
+}
+
+/* ─── Dot indicators ────────────────────────────────────── */
+.ds-carousel__indicators {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-1);
+  margin-top: var(--spacing-2);
+}
+
+.ds-carousel__indicator {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--spacing-6);
+  height: var(--spacing-6);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-full);
+  background: transparent;
+  cursor: pointer;
+}
+
+.ds-carousel__indicator::before {
+  content: '';
+  width: var(--spacing-2);
+  height: var(--spacing-2);
+  border-radius: var(--radius-full);
+  background-color: var(--color-foreground-subtle);
+  transition: background-color var(--transition-fast);
+}
+
+.ds-carousel__indicator--active::before {
+  background-color: var(--color-foreground);
+}
+
+.ds-carousel__indicator:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* Dots sit adjacent, so overlapping pseudo-element hit areas would steal
+   taps from each other. On coarse pointers each dot instead gets a real
+   ≥44px box, which also spaces the row out to full touch-target pitch. */
+@media (pointer: coarse) {
+  .ds-carousel__indicator {
+    width: var(--size-hit-area);
+    height: var(--size-hit-area);
+  }
+}
+
+/* ─── Reduced motion ────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .ds-carousel__track {
+    scroll-behavior: auto;
+  }
+
+  .ds-carousel__control,
+  .ds-carousel__indicator::before {
+    transition: none;
+  }
+
+  .ds-carousel__control:not(:disabled):active {
+    transform: translateY(-50%);
   }
 }

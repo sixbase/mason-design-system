@@ -1,0 +1,112 @@
+/* ─── Avatar component tokens ────────────────────────────── */
+.ds-avatar {
+  --avatar-radius: var(--radius-full);
+  --avatar-fallback-bg: var(--color-background-subtle);
+  --avatar-fallback-fg: var(--color-foreground-secondary);
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: var(--avatar-radius);
+  background-color: var(--avatar-fallback-bg);
+  color: var(--avatar-fallback-fg);
+  font-family: var(--font-family-body);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--letter-spacing-wide);
+  line-height: var(--line-height-none);
+  user-select: none;
+}
+
+/* ─── Shape ──────────────────────────────────────────────── */
+.ds-avatar--square {
+  --avatar-radius: var(--radius-md);
+}
+
+/* ─── Sizes (Fibonacci control heights) ──────────────────── */
+.ds-avatar--sm {
+  width: var(--size-control-sm);
+  height: var(--size-control-sm);
+  font-size: var(--font-size-tight-xs);
+}
+
+.ds-avatar--md {
+  width: var(--size-control-md);
+  height: var(--size-control-md);
+  font-size: var(--font-size-tight-sm);
+}
+
+.ds-avatar--lg {
+  width: var(--size-control-lg);
+  height: var(--size-control-lg);
+  font-size: var(--font-size-tight-base);
+}
+
+/* ─── Image ──────────────────────────────────────────────── */
+.ds-avatar__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ─── Initials — optical centering ───────────────────────── */
+/*
+ * Trim leading above cap-height and below baseline so flex
+ * centering aligns the visible ink, not the em box.
+ * (`text-box` shorthand — the longhand value `both` is invalid.)
+ * Supported: Chrome 133+, Safari 18.2+. Degrades gracefully.
+ */
+.ds-avatar__initials {
+  text-box: trim-both cap alphabetic;
+}
+
+@supports not (text-box: trim-both cap alphabetic) {
+  .ds-avatar__initials {
+    transform: translateY(0.05em);
+  }
+}
+
+/* ─── Fallback tones ─────────────────────────────────────── */
+/*
+ * Muted semantic-token backgrounds, keyed by name hash in the
+ * component. Foreground pairs reuse the Badge-audited combos:
+ * every pair meets WCAG AA (4.5:1) in light and dark mode.
+ * TONE_COUNT in Avatar.tsx must match the count here.
+ */
+.ds-avatar--tone-0 {
+  --avatar-fallback-bg: var(--color-background-subtle);
+  --avatar-fallback-fg: var(--color-foreground-secondary);
+}
+
+/* sage.700 on sage.50 → 7.72:1 ✅ AAA */
+.ds-avatar--tone-1 {
+  --avatar-fallback-bg: var(--color-success-subtle);
+  --avatar-fallback-fg: var(--color-success-foreground);
+}
+
+/* slate.700 on slate.50 → 8.06:1 ✅ AAA */
+.ds-avatar--tone-2 {
+  --avatar-fallback-bg: var(--color-info-subtle);
+  --avatar-fallback-fg: var(--color-info-foreground);
+}
+
+/* amber.700 on amber.50 → 6.44:1 ✅ AA */
+.ds-avatar--tone-3 {
+  --avatar-fallback-bg: var(--color-warning-subtle);
+  --avatar-fallback-fg: var(--color-warning-foreground);
+}
+
+/* brick.600 on brick.50 → 6.08:1 ✅ AA */
+.ds-avatar--tone-4 {
+  --avatar-fallback-bg: var(--color-destructive-subtle);
+  --avatar-fallback-fg: var(--color-destructive);
+}
+
+/* Dark mode: brick.500 fails on the 12% mix — lift to brick.400
+   (5.63:1 ✅ AA), same correction the Badge destructive variant uses. */
+:is(.dark, [data-theme="dark"]) .ds-avatar--tone-4 {
+  --avatar-fallback-fg: var(--color-destructive-hover);
+}

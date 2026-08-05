@@ -55,6 +55,53 @@ describe('Divider', () => {
     expect(container.querySelector('[data-testid="my-divider"]')).toBeInTheDocument();
   });
 
+  /* ─── Labeled ("OR" pattern) ─────────────────────────────── */
+
+  describe('label', () => {
+    it('renders the label text between two rule lines', () => {
+      const { container } = render(<Divider label="OR" />);
+      expect(screen.getByText('OR')).toBeInTheDocument();
+      expect(container.querySelectorAll('.ds-divider__line')).toHaveLength(2);
+    });
+
+    it('renders as a div with role="separator" when labeled', () => {
+      render(<Divider label="OR" />);
+      const el = screen.getByRole('separator');
+      expect(el.tagName).toBe('DIV');
+      expect(el).toHaveAttribute('aria-orientation', 'horizontal');
+      expect(el).toHaveClass('ds-divider--labeled');
+    });
+
+    it('keeps spacing and variant classes when labeled', () => {
+      render(<Divider label="OR" variant="subtle" spacing="lg" />);
+      const el = screen.getByRole('separator');
+      expect(el).toHaveClass('ds-divider--subtle', 'ds-divider--spacing-lg');
+    });
+
+    it('ignores label for vertical orientation', () => {
+      render(<Divider orientation="vertical" label="OR" />);
+      expect(screen.queryByText('OR')).not.toBeInTheDocument();
+      expect(screen.getByRole('separator')).not.toHaveClass('ds-divider--labeled');
+    });
+
+    it('still renders a plain hr when no label is given', () => {
+      const { container } = render(<Divider />);
+      expect(container.querySelector('hr')).toBeInTheDocument();
+      expect(container.querySelector('.ds-divider--labeled')).not.toBeInTheDocument();
+    });
+
+    it('has no accessibility violations (labeled)', async () => {
+      const { container } = render(
+        <div>
+          <p>Express checkout</p>
+          <Divider label="OR" />
+          <p>Pay by card</p>
+        </div>,
+      );
+      expect(await axe(container)).toHaveNoViolations();
+    });
+  });
+
   /* ─── Accessibility ──────────────────────────────────────── */
 
   it('has no accessibility violations (horizontal)', async () => {

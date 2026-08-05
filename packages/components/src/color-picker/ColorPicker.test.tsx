@@ -67,9 +67,114 @@ describe('ColorPicker', () => {
     expect(ref.current).toBeInstanceOf(HTMLDivElement);
   });
 
+  describe('roving tabindex', () => {
+    it('makes the selected swatch the only tab stop', () => {
+      render(<ColorPicker options={options} value="brushed-brass" aria-label="Finish" />);
+      expect(screen.getByLabelText('Brushed Brass')).toHaveAttribute('tabindex', '0');
+      expect(screen.getByLabelText('Carbon Black')).toHaveAttribute('tabindex', '-1');
+      expect(screen.getByLabelText('Matte White')).toHaveAttribute('tabindex', '-1');
+    });
+
+    it('falls back to the first swatch when nothing is selected', () => {
+      render(<ColorPicker options={options} aria-label="Finish" />);
+      expect(screen.getByLabelText('Carbon Black')).toHaveAttribute('tabindex', '0');
+      expect(screen.getByLabelText('Brushed Brass')).toHaveAttribute('tabindex', '-1');
+    });
+  });
+
+  describe('arrow-key navigation', () => {
+    it('ArrowRight selects and focuses the next swatch', async () => {
+      const user = userEvent.setup();
+      const onChange = vi.fn();
+      render(
+        <ColorPicker options={options} value="carbon-black" onChange={onChange} aria-label="Finish" />,
+      );
+      screen.getByLabelText('Carbon Black').focus();
+      await user.keyboard('{ArrowRight}');
+      expect(onChange).toHaveBeenCalledWith('brushed-brass');
+      expect(screen.getByLabelText('Brushed Brass')).toHaveFocus();
+    });
+
+    it('ArrowDown behaves like ArrowRight', async () => {
+      const user = userEvent.setup();
+      const onChange = vi.fn();
+      render(
+        <ColorPicker options={options} value="carbon-black" onChange={onChange} aria-label="Finish" />,
+      );
+      screen.getByLabelText('Carbon Black').focus();
+      await user.keyboard('{ArrowDown}');
+      expect(onChange).toHaveBeenCalledWith('brushed-brass');
+    });
+
+    it('ArrowLeft selects and focuses the previous swatch', async () => {
+      const user = userEvent.setup();
+      const onChange = vi.fn();
+      render(
+        <ColorPicker options={options} value="brushed-brass" onChange={onChange} aria-label="Finish" />,
+      );
+      screen.getByLabelText('Brushed Brass').focus();
+      await user.keyboard('{ArrowLeft}');
+      expect(onChange).toHaveBeenCalledWith('carbon-black');
+      expect(screen.getByLabelText('Carbon Black')).toHaveFocus();
+    });
+
+    it('wraps from the last swatch to the first', async () => {
+      const user = userEvent.setup();
+      const onChange = vi.fn();
+      render(
+        <ColorPicker options={options} value="matte-white" onChange={onChange} aria-label="Finish" />,
+      );
+      screen.getByLabelText('Matte White').focus();
+      await user.keyboard('{ArrowRight}');
+      expect(onChange).toHaveBeenCalledWith('carbon-black');
+      expect(screen.getByLabelText('Carbon Black')).toHaveFocus();
+    });
+
+    it('wraps from the first swatch to the last', async () => {
+      const user = userEvent.setup();
+      const onChange = vi.fn();
+      render(
+        <ColorPicker options={options} value="carbon-black" onChange={onChange} aria-label="Finish" />,
+      );
+      screen.getByLabelText('Carbon Black').focus();
+      await user.keyboard('{ArrowUp}');
+      expect(onChange).toHaveBeenCalledWith('matte-white');
+    });
+  });
+
+  describe('showLabel', () => {
+    it('displays the selected option name next to the group', () => {
+      render(
+        <ColorPicker options={options} value="brushed-brass" showLabel aria-label="Finish" />,
+      );
+      expect(screen.getByText('Brushed Brass')).toBeInTheDocument();
+    });
+
+    it('does not render a label text when nothing is selected', () => {
+      const { container } = render(
+        <ColorPicker options={options} showLabel aria-label="Finish" />,
+      );
+      expect(container.querySelector('.ds-color-picker-label')).not.toBeInTheDocument();
+    });
+
+    it('does not render label text by default', () => {
+      const { container } = render(
+        <ColorPicker options={options} value="brushed-brass" aria-label="Finish" />,
+      );
+      expect(container.querySelector('.ds-color-picker-label')).not.toBeInTheDocument();
+    });
+  });
+
   it('has no accessibility violations', async () => {
     const { container } = render(
       <ColorPicker options={options} value="carbon-black" aria-label="Finish" />,
+    );
+    expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it('has no accessibility violations with showLabel', async () => {
+    const { container } = render(
+      <ColorPicker options={options} value="carbon-black" showLabel aria-label="Finish" />,
     );
     expect(await axe(container)).toHaveNoViolations();
   });

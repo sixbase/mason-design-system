@@ -1,0 +1,212 @@
+/* ─── Root wrapper ───────────────────────────────────────── */
+.ds-radio-group-root {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  font-family: var(--font-family-body);
+}
+
+.ds-radio-group-root--disabled {
+  opacity: var(--opacity-medium);
+  cursor: not-allowed;
+}
+
+/* ─── Group label ────────────────────────────────────────── */
+.ds-radio-group-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-foreground);
+  line-height: var(--line-height-snug);
+}
+
+/* ─── Items container ────────────────────────────────────── */
+.ds-radio-group-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.ds-radio-group-items[data-orientation="horizontal"] {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--spacing-4);
+}
+
+/* ─── Item ───────────────────────────────────────────────── */
+.ds-radio-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+/* Field row (circle + label side-by-side) */
+.ds-radio-item-field {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+/* ─── Radio circle ───────────────────────────────────────── */
+.ds-radio-item-circle {
+  --radio-border-color: var(--color-border);
+  --radio-bg:           var(--color-background-surface);
+
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  background-color: var(--radio-bg);
+  border: 1.5px solid var(--radio-border-color);
+  border-radius: var(--radius-full);
+  outline: none;
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+/* Sizes */
+.ds-radio-item-circle--sm {
+  width: var(--size-checkbox-sm);
+  height: var(--size-checkbox-sm);
+}
+
+.ds-radio-item-circle--md {
+  width: var(--size-checkbox-md);
+  height: var(--size-checkbox-md);
+}
+
+/* 44px hit area — invisible, centered on the circle */
+.ds-radio-item-circle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, var(--size-hit-area));
+  height: max(100%, var(--size-hit-area));
+  transform: translate(-50%, -50%);
+  border-radius: var(--radius-full);
+}
+
+/* Hover */
+.ds-radio-item-circle:hover:not([data-disabled]) {
+  border-color: var(--color-border-strong);
+}
+
+/* Active (pressed) */
+.ds-radio-item-circle:active:not([data-disabled]) {
+  border-color: var(--color-primary);
+  transform: scale(var(--scale-press));
+}
+
+.ds-radio-item-circle[data-state="checked"]:active:not([data-disabled]) {
+  background-color: var(--color-primary-active);
+  border-color: var(--color-primary-active);
+  transform: scale(var(--scale-press));
+}
+
+/* Focus */
+.ds-radio-item-circle:focus-visible {
+  border-color: var(--color-primary);
+  box-shadow: var(--focus-ring);
+}
+
+/* Checked */
+.ds-radio-item-circle[data-state="checked"] {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.ds-radio-item-circle[data-state="checked"]:hover:not([data-disabled]) {
+  background-color: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+/* Error state */
+.ds-radio-item-circle--error {
+  border-color: var(--color-destructive);
+}
+
+.ds-radio-item-circle--error:focus-visible {
+  box-shadow: var(--focus-ring-error);
+}
+
+/* Disabled */
+.ds-radio-item-circle[data-disabled] {
+  cursor: not-allowed;
+}
+
+/* ─── Dot indicator ──────────────────────────────────────── */
+.ds-radio-item-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ds-radio-item-indicator::after {
+  content: '';
+  display: block;
+  background-color: var(--color-primary-foreground);
+  border-radius: var(--radius-full);
+}
+
+.ds-radio-item-circle--sm .ds-radio-item-indicator::after {
+  width: var(--spacing-1);
+  height: var(--spacing-1);
+}
+
+.ds-radio-item-circle--md .ds-radio-item-indicator::after {
+  width: var(--spacing-2);
+  height: var(--spacing-2);
+}
+
+/* ─── Item label ─────────────────────────────────────────── */
+.ds-radio-item-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-foreground);
+  line-height: var(--line-height-snug);
+  cursor: pointer;
+  user-select: none;
+  text-box-trim: both;
+  text-box-edge: cap alphabetic;
+}
+
+.ds-radio-group-root--disabled .ds-radio-item-label {
+  cursor: not-allowed;
+}
+
+/* Optical centering fallback for browsers without text-box-trim */
+@supports not (text-box-trim: both) {
+  .ds-radio-item-label {
+    transform: translateY(0.05em);
+  }
+}
+
+/* ─── Item description ───────────────────────────────────── */
+.ds-radio-item-description {
+  font-size: var(--font-size-xs);
+  color: var(--color-foreground-secondary);
+  line-height: var(--line-height-normal);
+  padding-left: calc(var(--size-checkbox-md) + var(--spacing-2));
+}
+
+.ds-radio-item--sm .ds-radio-item-description {
+  padding-left: calc(var(--size-checkbox-sm) + var(--spacing-2));
+}
+
+/* ─── Group hint / error ─────────────────────────────────── */
+.ds-radio-group-hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-foreground-secondary);
+  line-height: var(--line-height-normal);
+}
+
+.ds-radio-group-error {
+  font-size: var(--font-size-xs);
+  color: var(--color-destructive);
+  line-height: var(--line-height-normal);
+}

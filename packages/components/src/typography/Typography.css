@@ -8,10 +8,10 @@
   text-box-trim: both;
   text-box-edge: cap alphabetic;
 
-  /* Optimal reading width: 65ch ≈ 65 characters per line.
-     Only applies to block-level renderings (p, div) — inline
-     elements (span, label) ignore max-width automatically. */
-  max-width: 65ch;
+  /* Optimal reading width: --measure-reading (65ch ≈ 65 characters
+     per line). Only applies to block-level renderings (p, div) —
+     inline elements (span, label) ignore max-width automatically. */
+  max-width: var(--measure-reading);
 }
 
 /* ─── Heading levels ───────────────────────────────────────── */
@@ -48,12 +48,29 @@
   font-size: var(--font-size-xl);
 }
 
+/* ─── Display scale (editorial/hero) ──────────────────────── */
+/*
+ * Fluid clamp()-based φ scale for campaign/hero headings.
+ * Applied via <Heading display>. Rank-preserving mapping from
+ * heading sizes: xl→display-md, 2xl→display-lg, 3xl→display-xl,
+ * 4xl→display-2xl. Class names match the display token names.
+ */
+.ds-heading--display-md  { font-size: var(--font-size-display-md); }
+.ds-heading--display-lg  { font-size: var(--font-size-display-lg); }
+.ds-heading--display-xl  { font-size: var(--font-size-display-xl); }
+.ds-heading--display-2xl { font-size: var(--font-size-display-2xl); }
+
 /* ─── Weight modifiers (heading) ──────────────────────────── */
 .ds-heading--normal   { font-weight: var(--font-weight-normal); }
 .ds-heading--medium   { font-weight: var(--font-weight-medium); }
 .ds-heading--bold     { font-weight: var(--font-weight-bold); }
 
 /* ─── Body sizes ───────────────────────────────────────────── */
+.ds-text--xl {
+  font-size: var(--font-size-xl);
+  line-height: var(--line-height-snug);
+}
+
 .ds-text--lg {
   font-size: var(--font-size-lg);
   line-height: var(--line-height-snug);
@@ -66,6 +83,11 @@
 
 .ds-text--sm {
   font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+
+.ds-text--xs {
+  font-size: var(--font-size-xs);
   line-height: var(--line-height-normal);
 }
 
@@ -112,12 +134,39 @@
   white-space: nowrap;
 }
 
+/* ─── Line clamp ───────────────────────────────────────────── */
+/*
+ * Multi-line truncation via <Text lineClamp={1|2|3}>.
+ * -webkit-line-clamp is supported in every evergreen browser;
+ * the @supports fallback below caps height for anything older
+ * so unclamped text can't blow out a card layout.
+ */
+.ds-text--clamp-1,
+.ds-text--clamp-2,
+.ds-text--clamp-3 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ds-text--clamp-1 { -webkit-line-clamp: 1; line-clamp: 1; }
+.ds-text--clamp-2 { -webkit-line-clamp: 2; line-clamp: 2; }
+.ds-text--clamp-3 { -webkit-line-clamp: 3; line-clamp: 3; }
+
+@supports not (-webkit-line-clamp: 1) {
+  /* Approximate cap: n lines × the loosest body line-height token.
+     No ellipsis, but the box height stays bounded. */
+  .ds-text--clamp-1 { max-height: calc(1em * var(--line-height-normal)); }
+  .ds-text--clamp-2 { max-height: calc(2em * var(--line-height-normal)); }
+  .ds-text--clamp-3 { max-height: calc(3em * var(--line-height-normal)); }
+}
+
 /* ─── Reading width utility ───────────────────────────────── */
 /* Apply to any body/paragraph text outside the Text component.
    65ch ≈ 65 characters — the typographic sweet spot for
    comfortable reading (Bringhurst, 45–75ch range). */
 .ds-readable-width {
-  max-width: 65ch;
+  max-width: var(--measure-reading);
 }
 
 /* ─── Optical centering fallback ─────────────────────────── */

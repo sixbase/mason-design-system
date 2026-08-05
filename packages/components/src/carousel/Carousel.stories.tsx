@@ -8,6 +8,10 @@ const meta: Meta<typeof Carousel> = {
   tags: ['autodocs'],
   argTypes: {
     gap: { control: 'select', options: ['sm', 'md', 'lg'] },
+    label: { control: 'text' },
+    controls: { control: 'boolean' },
+    indicators: { control: 'boolean' },
+    loop: { control: 'boolean' },
   },
 };
 export default meta;
@@ -40,7 +44,43 @@ const ProductSlideContent = ({ name, price, src }: (typeof products)[number]) =>
 
 export const Default: Story = {
   render: (args) => (
-    <Carousel {...args} aria-label="Featured products">
+    <Carousel {...args} label="Featured products">
+      {products.map((product) => (
+        <CarouselSlide key={product.name}>
+          <ProductSlideContent {...product} />
+        </CarouselSlide>
+      ))}
+    </Carousel>
+  ),
+};
+
+export const WithControls: Story = {
+  render: () => (
+    <Carousel controls label="Featured products">
+      {products.map((product) => (
+        <CarouselSlide key={product.name}>
+          <ProductSlideContent {...product} />
+        </CarouselSlide>
+      ))}
+    </Carousel>
+  ),
+};
+
+export const WithIndicators: Story = {
+  render: () => (
+    <Carousel indicators label="Featured products">
+      {products.map((product) => (
+        <CarouselSlide key={product.name}>
+          <ProductSlideContent {...product} />
+        </CarouselSlide>
+      ))}
+    </Carousel>
+  ),
+};
+
+export const ControlsAndIndicatorsLooping: Story = {
+  render: () => (
+    <Carousel controls indicators loop label="Featured products">
       {products.map((product) => (
         <CarouselSlide key={product.name}>
           <ProductSlideContent {...product} />

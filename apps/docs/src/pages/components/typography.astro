@@ -1,6 +1,6 @@
 ---
 import ComponentPage from '../../layouts/ComponentPage.astro';
-import { HeadingGallery, TextGallery, InlineGallery } from '../../components/TypographyGallery';
+import { HeadingGallery, DisplayHeadingGallery, TextGallery, LineClampGallery, InlineGallery } from '../../components/TypographyGallery';
 ---
 
 <ComponentPage
@@ -13,8 +13,10 @@ import { HeadingGallery, TextGallery, InlineGallery } from '../../components/Typ
       headers: ['Prop', 'Type', 'Default', 'What it does'],
       rows: [
         ['<code>as</code>', "<code>'h1' | 'h2' | 'h3' | 'h4'</code>", "<code>'h2'</code>", 'HTML element + visual size'],
+        ['<code>size</code>', "<code>'xl' | '2xl' | '3xl' | '4xl'</code>", 'mapped from <code>as</code>', 'Visual size, decoupled from the semantic level'],
+        ['<code>display</code>', '<code>boolean</code>', '<code>false</code>', 'Fluid editorial/hero scale — see mapping below'],
         ['<code>muted</code>', '<code>boolean</code>', '<code>false</code>', 'Lighter color'],
-        ['<code>truncate</code>', '<code>boolean</code>', '<code>false</code>', 'Cuts off with … if too long'],
+        ['<code>truncate</code>', '<code>boolean</code>', '<code>false</code>', 'Single-line ellipsis if too long'],
       ],
     },
     {
@@ -22,10 +24,11 @@ import { HeadingGallery, TextGallery, InlineGallery } from '../../components/Typ
       headers: ['Prop', 'Type', 'Default', 'What it does'],
       rows: [
         ['<code>as</code>', "<code>'p' | 'span' | 'div' | 'label' | 'strong' | 'em'</code>", "<code>'p'</code>", 'HTML element to render'],
-        ['<code>size</code>', "<code>'sm' | 'base' | 'lg'</code>", "<code>'base'</code>", 'Font size'],
+        ['<code>size</code>', "<code>'xs' | 'sm' | 'base' | 'lg' | 'xl'</code>", "<code>'base'</code>", 'Font size'],
         ['<code>weight</code>', "<code>'normal' | 'medium' | 'semibold' | 'bold'</code>", '—', 'Font weight'],
         ['<code>muted</code>', '<code>boolean</code>', '<code>false</code>', 'Lighter color'],
-        ['<code>truncate</code>', '<code>boolean</code>', '<code>false</code>', 'Cuts off with … if too long'],
+        ['<code>truncate</code>', '<code>boolean</code>', '<code>false</code>', 'Single-line ellipsis if too long'],
+        ['<code>lineClamp</code>', '<code>1 | 2 | 3</code>', '—', 'Multi-line truncation with ellipsis'],
       ],
     },
   ]}
@@ -40,16 +43,54 @@ import { HeadingGallery, TextGallery, InlineGallery } from '../../components/Typ
 
 <Heading as="h2" muted>Muted heading</Heading>`}</code></pre>
 
+  <h2>Display headings</h2>
+  <p>
+    The <code>display</code> prop switches a heading from the product-UI scale (√φ steps) to the
+    fluid, <code>clamp()</code>-based display scale (φ steps) for editorial and hero use —
+    campaign headlines, hero sections, lookbook titles. Sizes scale smoothly with the viewport;
+    no breakpoint jumps.
+  </p>
+  <p>Each heading size maps to the display token of the same rank:</p>
+  <table>
+    <thead>
+      <tr><th>size</th><th>Normal token</th><th>Display token</th><th>Desktop size</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>xl</code></td><td><code>--font-size-xl</code></td><td><code>--font-size-display-md</code></td><td>fluid → 26px</td></tr>
+      <tr><td><code>2xl</code></td><td><code>--font-size-2xl</code></td><td><code>--font-size-display-lg</code></td><td>fluid → 42px</td></tr>
+      <tr><td><code>3xl</code></td><td><code>--font-size-3xl</code></td><td><code>--font-size-display-xl</code></td><td>fluid → 68px</td></tr>
+      <tr><td><code>4xl</code></td><td><code>--font-size-4xl</code></td><td><code>--font-size-display-2xl</code></td><td>fluid → 110px</td></tr>
+    </tbody>
+  </table>
+  <DisplayHeadingGallery client:load />
+  <pre><code>{`<Heading as="h1" display>Hero headline</Heading>       {/* display-2xl */}
+<Heading as="h2" display>Campaign title</Heading>      {/* display-xl */}
+<Heading as="h2" size="2xl" display>Subhead</Heading>  {/* display-lg */}`}</code></pre>
+
   <h2>Text</h2>
   <p>General body copy. Use <code>size</code> to control how big it is, <code>weight</code> to control boldness.</p>
   <TextGallery client:load />
-  <pre><code>{`<Text size="lg">Lead paragraph</Text>
+  <pre><code>{`<Text size="xl">Standout intro</Text>
+<Text size="lg">Lead paragraph</Text>
 <Text size="base">Body copy</Text>        {/* default */}
 <Text size="sm">Secondary text</Text>
+<Text size="xs">Fine print</Text>
 
 <Text weight="semibold">Emphasized</Text>
 <Text muted>Subdued text</Text>
 <Text truncate>Long text that gets cut off...</Text>`}</code></pre>
+
+  <h2>Line clamp</h2>
+  <p>
+    <code>lineClamp</code> truncates after 1, 2, or 3 lines with an ellipsis — for product card
+    descriptions, search results, and anywhere copy of unknown length has a fixed budget. Use
+    <code>truncate</code> instead when you want a single line.
+  </p>
+  <LineClampGallery client:load />
+  <pre><code>{`<Text lineClamp={2}>
+  A long product description that gets cut
+  after two lines with an ellipsis…
+</Text>`}</code></pre>
 
   <h2>Caption & Code</h2>
   <p><code>Caption</code> is extra-small muted text for timestamps and metadata. <code>Code</code> is inline monospace for variable names or short snippets.</p>

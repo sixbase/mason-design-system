@@ -9,16 +9,24 @@
 .ds-highlights {
   display: grid;
   grid-template-columns: 1fr;             /* phones: single column */
-  column-gap: var(--spacing-4);           /* 16px between cards in a row */
-  row-gap: var(--spacing-phi-21);         /* 42px when stacked */
+  column-gap: var(--spacing-4);           /* 16px between cards in a row —
+                                             fixed: the text insets below
+                                             derive from this gutter */
+  /* Fluid row gap: 26px → 42px with the viewport. Both endpoints are φ-scale
+     steps (phi-13 × φ ≈ phi-21), so the row gap keeps its golden-ratio
+     character while stacked mobile cards sit one φ step tighter. The desktop
+     value is unchanged at 42px (was --spacing-phi-21). */
+  row-gap: var(--spacing-fluid-md);
 }
 
+/* @breakpoint-sm = 640px */
 @media (min-width: 640px) {
   .ds-highlights {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
+/* @breakpoint-lg = 1024px */
 @media (min-width: 1024px) {
   .ds-highlights {
     grid-template-columns: repeat(3, 1fr);
@@ -33,7 +41,7 @@
 }
 
 .ds-highlights__media {
-  aspect-ratio: 4 / 5;
+  aspect-ratio: var(--aspect-portrait);
   width: 100%;
   overflow: hidden;
   border-radius: var(--radius-3xl);       /* 34px */

@@ -20,6 +20,7 @@
 
 /* ─── Swatch button ─────────────────────────────────────── */
 .ds-color-picker__btn {
+  position: relative;
   width: var(--color-picker-size);
   height: var(--color-picker-size);
   border-radius: var(--radius-full);
@@ -27,6 +28,23 @@
   cursor: pointer;
   padding: 0;
   transition: border-color var(--transition-fast);
+}
+
+/* ─── Touch hit area ────────────────────────────────────── */
+/* Swatches stay 24–40px visually; the interactive zone expands
+   to --size-hit-area (44px). Guarded by pointer: coarse because
+   adjacent swatches sit closer than 44px and their zones would
+   overlap for precise pointers. */
+@media (pointer: coarse) {
+  .ds-color-picker__btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: max(100%, var(--size-hit-area));
+    height: max(100%, var(--size-hit-area));
+  }
 }
 
 .ds-color-picker__btn:hover {
@@ -41,4 +59,18 @@
 .ds-color-picker__btn:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
+}
+
+/* ─── Selected-label layout (showLabel) ─────────────────── */
+.ds-color-picker-root {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  font-family: var(--font-family-body);
+}
+
+.ds-color-picker-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-foreground-secondary);
+  line-height: var(--line-height-snug);
 }

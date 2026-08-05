@@ -62,6 +62,35 @@ export const Large: Story = {
   render: () => <Controlled size="lg" />,
 };
 
+function ControlledWithLabel(props: Partial<React.ComponentProps<typeof ColorPicker>>) {
+  const [value, setValue] = useState('carbon-black');
+  return (
+    <ColorPicker
+      {...props}
+      options={finishes}
+      value={value}
+      onChange={setValue}
+      showLabel
+      aria-label="Cabinet pull finish"
+    />
+  );
+}
+
+export const WithSelectedLabel: Story = {
+  render: () => <ControlledWithLabel />,
+};
+
+export const KeyboardNavigation: Story = {
+  render: () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)' }}>
+      <Text as="span" size="sm" muted>
+        Tab into the group, then use arrow keys — Left/Right/Up/Down move and select.
+      </Text>
+      <ControlledWithLabel />
+    </div>
+  ),
+};
+
 export const AllSizes: Story = {
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-6)' }}>

@@ -16,7 +16,24 @@ export interface HeadingProps extends HTMLAttributes<HTMLHeadingElement> {
   /** Font weight override. Defaults to semibold. */
   weight?: HeadingWeight;
   muted?: boolean;
+  /** Single-line ellipsis truncation. */
   truncate?: boolean;
+  /**
+   * Editorial/hero register: swaps the product-UI type scale (√φ steps)
+   * for the fluid display scale (φ steps, clamp()-based). Each size maps
+   * to the display token of the same rank:
+   *
+   * | size  | normal token       | display token               |
+   * |-------|--------------------|-----------------------------|
+   * | `xl`  | `--font-size-xl`   | `--font-size-display-md`    |
+   * | `2xl` | `--font-size-2xl`  | `--font-size-display-lg`    |
+   * | `3xl` | `--font-size-3xl`  | `--font-size-display-xl`    |
+   * | `4xl` | `--font-size-4xl`  | `--font-size-display-2xl`   |
+   *
+   * A display `h1` (size 4xl) therefore renders at the full hero scale
+   * (fluid 79 → 110px).
+   */
+  display?: boolean;
 }
 
 /**
@@ -36,14 +53,37 @@ const defaultSizeMap: Record<HeadingLevel, HeadingSize> = {
   h4: 'xl',
 };
 
+/**
+ * Rank-preserving map from heading sizes to the fluid display scale.
+ * The display scale steps by φ (26 → 42 → 68 → 110px at desktop), so
+ * each heading size trades its √φ-scale token for the same-rank
+ * display token. See the `display` prop docs for the full table.
+ */
+const displaySizeMap: Record<HeadingSize, 'md' | 'lg' | 'xl' | '2xl'> = {
+  xl: 'md',
+  '2xl': 'lg',
+  '3xl': 'xl',
+  '4xl': '2xl',
+};
+
 export const Heading = forwardRef<HTMLHeadingElement, HeadingProps>(function Heading(
-  { as: Tag = 'h2', size, weight, muted = false, truncate = false, className, children, ...props },
+  {
+    as: Tag = 'h2',
+    size,
+    weight,
+    muted = false,
+    truncate = false,
+    display = false,
+    className,
+    children,
+    ...props
+  },
   ref,
 ) {
   const resolvedSize = size ?? defaultSizeMap[Tag];
   const classes = [
     'ds-heading',
-    `ds-heading--${resolvedSize}`,
+    display ? `ds-heading--display-${displaySizeMap[resolvedSize]}` : `ds-heading--${resolvedSize}`,
     weight && `ds-heading--${weight}`,
     muted && 'ds-heading--muted',
     truncate && 'ds-heading--truncate',
@@ -63,16 +103,23 @@ Heading.displayName = 'Heading';
 
 // ─── Text ─────────────────────────────────────────────────────
 
-export type TextSize = 'sm' | 'base' | 'lg';
+export type TextSize = 'xs' | 'sm' | 'base' | 'lg' | 'xl';
 export type TextWeight = 'normal' | 'medium' | 'semibold' | 'bold';
 export type TextElement = 'p' | 'span' | 'div' | 'label' | 'strong' | 'em';
+export type TextLineClamp = 1 | 2 | 3;
 
 export interface TextProps extends HTMLAttributes<HTMLElement> {
   as?: TextElement;
   size?: TextSize;
   weight?: TextWeight;
   muted?: boolean;
+  /** Single-line ellipsis truncation. Mutually exclusive with `lineClamp`. */
   truncate?: boolean;
+  /**
+   * Multi-line truncation: clamps to 1–3 lines with an ellipsis.
+   * Mutually exclusive with `truncate` (which is single-line).
+   */
+  lineClamp?: TextLineClamp;
   children?: ReactNode;
 }
 
@@ -92,6 +139,7 @@ export const Text = forwardRef<HTMLElement, TextProps>(function Text(
     weight,
     muted = false,
     truncate = false,
+    lineClamp,
     className,
     children,
     ...props
@@ -104,6 +152,7 @@ export const Text = forwardRef<HTMLElement, TextProps>(function Text(
     weight && `ds-text--${weight}`,
     muted && 'ds-text--muted',
     truncate && 'ds-text--truncate',
+    lineClamp && `ds-text--clamp-${lineClamp}`,
     className,
   ]
     .filter(Boolean)

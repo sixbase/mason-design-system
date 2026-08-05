@@ -2031,3 +2031,87 @@ Also replaced Footer.css hardcoded `1280px` with `var(--size-content-xl)`.
 **Decision:** Wrapped the positional pseudo-classes in `:where()` so every variant rule sits at (0,1,0); the mobile rule, last in the file, now wins by cascade order alone. `!important` deleted — the codebase is back to zero.
 **Rationale:** `:where()` is the purpose-built tool for keeping utility-tier CSS flat. Cascade order is the design; `!important` was the workaround.
 **Status:** Active
+
+---
+
+### Responsive Foundation Tokens (Fluid Spacing, Aspect Ratio, Elevation, Safe Area, Interaction)
+
+**Date/Phase:** 2026-07-06 — Token foundation upgrade
+**Context:** Several responsive/interaction values lived outside the token system: section rhythm was fixed-per-breakpoint while type had gone fluid; aspect ratios, the 0.98 press scale, and the 65ch reading width were raw values repeated across components (`scale(0.98)` in 5 components, `65ch` in 4); shadows had no semantic layer; safe-area insets and touch-hit minimums had no tokens at all.
+**Options considered:** (a) Leave as component-level conventions (keeps repeating magic numbers); (b) per-component tokens (fragments a shared physical constant into N names); (c) foundation tokens in `tokens.json`, emitted by `build-css.mjs` — one name per concept, φ-derived where a scale is involved.
+**Decision:** Option (c). Added: **fluid spacing** `--spacing-fluid-sm/md/lg/xl` — `clamp()` between adjacent phi-scale steps (16→26, 26→42, 42→68, 68→110px) interpolated across 375→1200px viewports, same technique as the fluid type scale, so each token grows by exactly ×φ from phone to desktop; **aspect ratios** `--aspect-square/portrait/landscape/video/golden/golden-portrait`; **semantic elevation** `--elevation-card/dropdown/sticky/modal/toast` emitted as `var(--shadow-*)` references (never copied values); **safe area** `--safe-area-top/right/bottom/left` = `env(safe-area-inset-*, 0px)`; **interaction** `--scale-press` (0.98), `--size-hit-area` (44px invisible minimum hit zone — distinct from `--size-touch-target`, the 36px visual icon-button size), `--size-swipe-threshold` (50px, JS-consumable via the tokens JSON export); **reading measure** `--measure-reading` (65ch). Also upgraded the **display type scale to fluid**: `display-md/lg/xl/2xl` now `clamp()` from 72% of the desktop value at 375px up to the φ-scale max at 1200px (`display-xs/sm` stay fixed for legibility, mirroring `xs`/`sm` on the default scale).
+**Rationale:** Fluid spacing completes the no-breakpoint responsive story the type scale started, with φ preserved at both clamp endpoints. Elevation-as-reference keeps a single source of truth for shadow values. Naming the press scale, hit area, and reading measure converts today's repeated magic numbers into greppable, documented decisions. No existing token names or values changed except the display fluid upgrade — verified no component consumes `--font-size-display-*` yet (docs pages only).
+**Status:** Active — component consumption sweep landed 2026-07-06: all `scale(0.98)`, `65ch`, and raw `aspect-ratio` values in `packages/components/src` replaced with `--scale-press`, `--measure-reading`, and `--aspect-*`; Drawer panel → `--elevation-toast`, Select/PredictiveSearch dropdowns → `--elevation-dropdown` (Modal/Header were converted when the tokens landed). Value-preserving only — Card (rests at `shadow-sm`, not the `shadow-md` that `--elevation-card` maps to), Toast (`shadow-lg` vs `--elevation-toast`'s `2xl`), and CookieConsent (`shadow-xl`, no matching semantic tier) were deliberately left on shadow primitives; aligning them to the elevation table is a visual change needing its own decision.
+
+---
+
+### ProductCard Goes Container-Query — First Container-Query Component in the System
+
+**Date/Phase:** 2026-07-06 — Ecommerce component robustness sweep
+**Context:** ProductCard's internals (insets, type steps, corner radius) only adapted at viewport breakpoints, but the card lives in grids of arbitrary column counts — a 4-up desktop grid cell can be narrower than a 2-up mobile cell, so viewport queries target the wrong thing.
+**Options considered:** (1) More viewport breakpoints per grid context (fragile, page-level knowledge leaking into the component); (2) size-prop proliferation (`sm`/`xs` variants chosen manually per grid); (3) CSS container queries — the card adapts to its own cell width.
+**Decision:** Option 3. `.ds-product-card` declares `container: product-card / inline-size`; `@container product-card (max-width: 200px)` tightens insets (`--spacing-phi-3/-5`), corner (`--radius-2xl`), and type; `(min-width: 320px)` relaxes type up to `--font-size-base`, mirroring the `lg` variant. The 220px standalone card sits between both thresholds so the storefront-aligned reference appearance (34px editorial corner, 4:5 `--aspect-portrait` ratio, phi insets, mobile steps at `max-width: 767px`) is untouched. The viewport mobile rule stays last in the file so it wins ties by cascade order.
+**Rationale:** Container queries make the card correct in ANY grid without page-level overrides — the component owns its responsiveness the same way it owns its styles. `inline-size` containment is safe because card width always comes from the width token or the parent grid, never from content. Browsers without support simply keep the reference appearance. Pattern to reuse: name the container after the component (`container: <component> / inline-size`), pick query thresholds that leave the component's default fixed width inside the "reference" band, and keep viewport rules after container rules when both may match.
+**Status:** Active
+
+---
+
+### Touch Hit-Area Pattern: Centered Pseudo-Element, Coarse-Pointer Guard When Adjacent
+
+**Date/Phase:** 2026-07-06 — Ecommerce component robustness sweep
+**Context:** VariantSelector options (34px sm height), StarRating stars, and ProductCard action-slot buttons are below the 44px touch minimum. `--size-hit-area` (44px) existed but nothing consumed it with a shared pattern.
+**Decision:** Invisible hit extension via pseudo-element on a `position: relative` control: `::after` (or `::before` when `::after` is taken), absolutely centered, `width/height: max(100%, var(--size-hit-area))`. Guarded by `@media (pointer: coarse)` wherever controls sit adjacent (variant options, star radios) so desktop hover targeting stays precise; unguarded for isolated controls (ProductCard `actionSlot`). Slotted content gets the pattern through `:where(button, a)` so specificity stays flat.
+**Rationale:** Zero visual change, zero layout change, token-driven, and the coarse-pointer guard prevents overlapping invisible targets from stealing mouse hovers between neighbors.
+**Status:** Active
+
+---
+
+### Unavailable Color Swatches: Diagonal Slash via aria-label Attribute Selector (ColorPicker API Gap)
+
+**Date/Phase:** 2026-07-06 — Ecommerce component robustness sweep
+**Context:** Unavailable color swatches in VariantSelector had no visual marker at all (only the "(out of stock)" aria-label suffix); button options used opacity + text strikethrough. Accessibility rule: unavailability must not be communicated by opacity alone. ColorPicker has no `unavailable` option flag, and ColorPicker was out of scope for this sweep.
+**Decision:** VariantSelector.css draws a rotated 2px `::after` slash (`--color-border-strong`) on `.ds-color-picker__btn[aria-label$="(out of stock)"]`. Both halves of the contract live in VariantSelector (it writes the suffix in `ColorOptionGroup` and matches it in its own CSS), so the coupling is component-local.
+**Rationale:** Works today without touching ColorPicker; a test pins the selector contract. **Flagged gap:** ColorPicker should grow a proper `unavailable?: boolean` on `ColorOption` so the slash can move into ColorPicker itself and the attribute-selector hack can be deleted. Second flagged gap from the same sweep: dark-mode `--color-destructive` (#C45040 on #131010) measures ~4.1:1 — below AA for normal-size sale prices; needs a lighter dark-mode destructive text step in tokens.
+**Status:** Active — pending ColorPicker API + dark destructive token follow-ups
+
+---
+
+### Component Library Expansion — 16 New Components (Wave 2)
+
+**Date/Phase:** 2026-07-06 — System-wide responsive overhaul
+**Context:** The library covered core ecommerce surfaces but lacked standard form controls (switch, radios, textarea), overlay primitives (tooltip, popover, dropdown menu), and several commerce staples (price-range slider, checkout stepper, sale countdown, dismissible filter tags).
+**Decision:** Added: Switch, RadioGroup, Textarea, Tooltip, Popover, DropdownMenu, Slider (single + dual-thumb range), Stepper, Spinner, Tag, Avatar, SkipLink, Countdown, SegmentedControl, plus the previously-missing LayoutGrid React wrapper (fixing the system's own 4-file-rule violation) and Grid/Container doc pages. All follow the 4-file rule, label/hint/error form conventions, 44px hit areas, reduced-motion guards, and story-parity docs pages. New Radix deps: react-switch, react-radio-group, react-slider, react-tooltip, react-popover, react-dropdown-menu.
+**Notable API decisions within the wave:** QuantitySelector standardized on the APG **spinbutton** pattern (editable input, +/- buttons `tabIndex=-1`); SegmentedControl is a **radiogroup**, not tabs (it selects a value, doesn't switch panels); `Heading display` maps sizes **rank-preserving** (xl→display-md … 4xl→display-2xl) because literal suffix mapping can't cover 3xl/4xl; indeterminate ProgressBar renders a **div track** (attribute-less native `<progress>` can't be animation-styled cross-browser); Drawer `size` has **no default** so legacy 640px width is preserved; Tag vs Badge: Badge displays status, Tag is interactive/removable.
+**Status:** Active
+
+---
+
+### Mobile Navigation: Header Composes Drawer; Skip Link Ships in Header
+
+**Date/Phase:** 2026-07-06 — System-wide responsive overhaul
+**Context:** Below 768px the Header simply hid its nav — there was no mobile navigation at all.
+**Options considered:** (a) Bespoke hamburger menu markup in Header; (b) compose the existing Drawer component; (c) a new dedicated MobileNav component.
+**Decision:** Option (b). Hamburger (44px hit area) below 768px opens Drawer side="left" containing the same nav links as 44px-tall rows. `aria-expanded` on the trigger; `aria-controls` applied only while the portal content is mounted. Controlled/uncontrolled via `menuOpen`/`onMenuOpenChange`. A skip-to-content link (sr-only until focus) is Header's first focusable element (`skipHref` prop, default `#main-content`); a standalone SkipLink component also exists for non-Header pages. Header also gained `sticky` (uses `--z-index-sticky` + `--elevation-sticky`) and a visual cart-count pill.
+**Rationale:** Drawer already owns focus trap, dismissal, animation, and reduced-motion; duplicating that in Header would drift. Radix modal behavior hides the inert desktop nav, so duplicate `aria-label="Main"` landmarks stay axe-clean.
+**Status:** Active
+
+---
+
+### Mobile Overlay Ergonomics: Bottom Sheet Is a Drawer Variant; Modal Gets fullScreenOnMobile
+
+**Date/Phase:** 2026-07-06 — System-wide responsive overhaul
+**Context:** Phones need sheet-style overlays (thumb-reachable, notch-safe); the system had only centered modals and side drawers.
+**Decision:** Bottom sheet = `Drawer side="bottom"` (slides up, `--radius-2xl` top corners, `max-height: 85dvh`, visual-only drag handle, `--safe-area-bottom` padding) — not a new component. Modal gained `fullScreenOnMobile` (below 640px: inset 0, 100dvh, no radius, safe-area padding; scale animation swapped for fade). All overlay content areas use `max(spacing-token, var(--safe-area-*))` on their anchored edges.
+**Rationale:** A sheet is positionally a drawer; a separate component would duplicate the Radix Dialog wiring. Safe-area handling belongs to the overlay components, not to pages.
+**Status:** Active
+
+---
+
+### Table Mobile Strategy: responsive="stack" Card Layout with Conditional ARIA Roles
+
+**Date/Phase:** 2026-07-06 — System-wide responsive overhaul
+**Context:** Table's only small-screen behavior was forced horizontal scroll — unusable for order history and spec tables on phones.
+**Options considered:** (a) Scroll only (status quo); (b) hide low-priority columns; (c) stack rows into label/value cards below 640px.
+**Decision:** New `responsive="stack"` opt-in (default remains `"scroll"`). Below 640px each row becomes a bordered card; each cell renders its column header as a label on a **1fr / 1.618fr golden split**, injected via `data-label` (header text flows Table→context→Row→cloned Cells). Markup stays a semantic `<table>`; explicit ARIA table roles are applied **only in stack mode** to survive the CSS `display` overrides; `<thead>` is sr-hidden, not `display:none`. Scroll mode's region is now keyboard-focusable (`tabIndex=0`), and sortable headers are real buttons with `aria-sort` + `onSort`.
+**Rationale:** CSS-only responsive (per playbook law) — full DOM renders, display changes at the breakpoint. Golden split keeps the stacked cards on the system's proportional foundation.
+**Status:** Active

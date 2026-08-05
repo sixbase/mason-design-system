@@ -1,0 +1,176 @@
+/* ─── Stepper component tokens ────────────────────────────── */
+.ds-stepper {
+  --stepper-indicator-size: var(--size-control-sm); /* 34px — Fibonacci */
+  --stepper-connector-width: var(--border-width-md);
+  --stepper-connector-color: var(--color-border);
+  --stepper-connector-gap: var(--spacing-2);
+
+  font-family: var(--font-family-body);
+}
+
+/* ─── Ordered list ────────────────────────────────────────── */
+.ds-stepper__list {
+  display: flex;
+  align-items: flex-start;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* ─── Step ────────────────────────────────────────────────── */
+.ds-stepper__step {
+  position: relative;
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+/* Connector line — from this indicator's edge to the next step */
+.ds-stepper__step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: calc(var(--stepper-indicator-size) / 2);
+  left: calc(50% + var(--stepper-indicator-size) / 2 + var(--stepper-connector-gap));
+  width: calc(100% - var(--stepper-indicator-size) - var(--stepper-connector-gap) * 2);
+  border-top: var(--stepper-connector-width) solid var(--stepper-connector-color);
+  transition: border-color var(--transition-normal);
+}
+
+/* Completed connector — filled to show progress */
+.ds-stepper__step--completed:not(:last-child)::after {
+  border-color: var(--color-primary);
+}
+
+/* ─── Step content (non-clickable) & button (clickable) ───── */
+.ds-stepper__content,
+.ds-stepper__button {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-2);
+  max-width: 100%;
+}
+
+.ds-stepper__button {
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  outline: none;
+}
+
+/* 44px hit area — pseudo-element extends the click target
+   to at least --size-hit-area in both dimensions */
+.ds-stepper__button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, var(--size-hit-area));
+  height: max(100%, var(--size-hit-area));
+  transform: translate(-50%, -50%);
+}
+
+.ds-stepper__button:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
+/* ─── Indicator circle ────────────────────────────────────── */
+.ds-stepper__indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--stepper-indicator-size);
+  height: var(--stepper-indicator-size);
+  border: var(--border-width-md) solid var(--color-border);
+  border-radius: var(--radius-full);
+  background-color: var(--color-background-surface);
+  color: var(--color-foreground-muted);
+  font-family: var(--font-family-numeric);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--font-size-tight-sm);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+/* Active — outlined in primary */
+.ds-stepper__step--active .ds-stepper__indicator {
+  border: var(--border-width-lg) solid var(--color-primary);
+  color: var(--color-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Completed — filled with check icon */
+.ds-stepper__step--completed .ds-stepper__indicator {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+/* Clickable completed steps — hover feedback */
+.ds-stepper__button:hover .ds-stepper__indicator {
+  background-color: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+.ds-stepper__button:hover .ds-stepper__label {
+  color: var(--color-foreground);
+}
+
+/* ─── Label ───────────────────────────────────────────────── */
+.ds-stepper__label {
+  font-size: var(--font-size-sm);
+  color: var(--color-foreground-secondary);
+  line-height: var(--line-height-snug);
+  text-align: center;
+  overflow-wrap: break-word;
+  max-width: 100%;
+}
+
+.ds-stepper__step--active .ds-stepper__label {
+  color: var(--color-foreground);
+  font-weight: var(--font-weight-medium);
+}
+
+.ds-stepper__step--completed .ds-stepper__label {
+  color: var(--color-foreground);
+}
+
+/* ─── Screen-reader only ──────────────────────────────────── */
+.ds-stepper__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ─── Compact mobile pattern (< 640px) ────────────────────── */
+/* Hide labels except for the active step — dots and connectors
+   remain, keeping the row narrow on small checkout screens. */
+@media (max-width: 639px) {
+  .ds-stepper__step:not(.ds-stepper__step--active) .ds-stepper__label {
+    display: none;
+  }
+}
+
+/* ─── Reduced motion ──────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .ds-stepper__indicator,
+  .ds-stepper__step:not(:last-child)::after {
+    transition: none;
+  }
+}

@@ -3,6 +3,9 @@
   display: flex;
   align-items: baseline;
   gap: var(--spacing-2);
+  /* Narrow containers (tight product cards, mobile summaries): the compare
+     price wraps below the sale price instead of overflowing. */
+  flex-wrap: wrap;
 }
 
 /* Price and compare use <Text> primitive — only layout-specific styles here */
@@ -14,8 +17,17 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Sale price (the non-strikethrough one when a comparePrice is present) */
+/* Sale price (the non-strikethrough one when a comparePrice is present).
+   Contrast: --color-destructive #A03830 on --color-background #FAF9F7 is
+   ~6.4:1 (≥ 4.5:1 WCAG AA). Dark-mode #C45040 on #131010 measures ~4.1:1 —
+   flagged as a token gap (needs a lighter dark-mode destructive text step);
+   do not "fix" here with a one-off value. */
 .ds-price-display:has(.ds-price-display__compare) .ds-price-display__price {
+  color: var(--color-destructive);
+}
+
+/* Explicit sale emphasis — same treatment without requiring a comparePrice */
+.ds-price-display--emphasis-sale .ds-price-display__price {
   color: var(--color-destructive);
 }
 

@@ -28,6 +28,24 @@ export const SpacingSm: Story = { args: { spacing: 'sm' } };
 export const SpacingMd: Story = { args: { spacing: 'md' } };
 export const SpacingLg: Story = { args: { spacing: 'lg' } };
 
+/* ─── Labeled ("OR" pattern) ───────────────────────────────── */
+
+export const WithLabel: Story = { args: { label: 'OR' } };
+
+export const CheckoutOrPattern: Story = {
+  render: () => (
+    <div style={{ maxWidth: '400px' }}>
+      <p>Express checkout</p>
+      <Divider label="OR" spacing="lg" />
+      <p>Pay with card</p>
+    </div>
+  ),
+};
+
+export const LabeledSubtle: Story = {
+  args: { label: 'Continue as guest', variant: 'subtle', spacing: 'lg' },
+};
+
 /* ─── Vertical ─────────────────────────────────────────────── */
 
 export const Vertical: Story = {

@@ -146,6 +146,24 @@ function EcommerceButtons() {
   );
 }
 
+function PositionButton({ label }: { label: string }) {
+  const { toast } = useToast();
+  return (
+    <Button
+      variant="secondary"
+      size="sm"
+      onClick={() =>
+        toast({
+          title: label,
+          description: 'On touch, swipe me toward the nearest screen edge.',
+        })
+      }
+    >
+      {label}
+    </Button>
+  );
+}
+
 // ─── Exported gallery sections ────────────────────────────
 
 export function ToastVariants() {
@@ -185,6 +203,21 @@ export function ToastStacking() {
         <StackButtons />
       </Preview>
     </ToastProvider>
+  );
+}
+
+export function ToastPositions() {
+  const positions = ['top-right', 'top-center', 'bottom-right', 'bottom-center'] as const;
+  return (
+    <Preview>
+      <div style={{ display: 'flex', gap: 'var(--spacing-3)', flexWrap: 'wrap' }}>
+        {positions.map((position) => (
+          <ToastProvider key={position} position={position}>
+            <PositionButton label={position} />
+          </ToastProvider>
+        ))}
+      </div>
+    </Preview>
   );
 }
 

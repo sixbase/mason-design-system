@@ -15,6 +15,7 @@ import { InputStates } from '../../components/InputGallery';
         ['<code>hint</code>', '<code>string</code>', '—', 'Helper text below the field'],
         ['<code>error</code>', '<code>string</code>', '—', 'Error message — turns border red, hides hint'],
         ['<code>disabled</code>', '<code>boolean</code>', '<code>false</code>', 'Grays out the field, blocks typing'],
+        ['<code>readOnly</code>', '<code>boolean</code>', '<code>false</code>', 'Subtle background; value is selectable and focusable but not editable (native attribute)'],
         ['<code>required</code>', '<code>boolean</code>', '<code>false</code>', 'Adds * to label, marks field as required'],
         ['<code>leadingAdornment</code>', '<code>ReactNode</code>', '—', 'Icon or element before the text'],
         ['<code>trailingAdornment</code>', '<code>ReactNode</code>', '—', 'Icon or element after the text'],
@@ -25,6 +26,7 @@ import { InputStates } from '../../components/InputGallery';
     'Label is always linked to the input — never use a placeholder as a label substitute',
     'Error messages use <code>role="alert"</code> so screen readers announce them immediately',
     'Hint and error are wired up via <code>aria-describedby</code> automatically',
+    'On touch devices the field font-size is at least 1rem to prevent iOS auto-zoom',
   ]}
 >
   <h2>All states</h2>
@@ -46,6 +48,10 @@ import { InputStates } from '../../components/InputGallery';
 
   <h2>Disabled</h2>
   <pre><code>{`<Input label="Username" defaultValue="jane_smith" disabled />`}</code></pre>
+
+  <h2>Read-only</h2>
+  <p>Use <code>readOnly</code> for values the user can copy but not change — order numbers, prefilled emails. The field keeps focus behavior so the value stays selectable.</p>
+  <pre><code>{`<Input label="Order number" defaultValue="MS-1042" readOnly />`}</code></pre>
 
   <h2>With icon</h2>
   <pre><code>{`<Input

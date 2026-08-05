@@ -120,6 +120,28 @@ export function VariantSelectorGallery() {
       </section>
 
       <section className="demo-section">
+        <Heading as="h2">With Unavailable Colors</Heading>
+        <Text>Out-of-stock color swatches get a diagonal strikethrough — unavailability is never communicated by opacity alone. Still clickable per Shopify convention.</Text>
+        <div className="demo-preview" style={{ maxWidth: '360px' }}>
+          <InteractiveDemo
+            options={[
+              {
+                name: 'Color',
+                type: 'color',
+                values: [
+                  { label: 'Carbon Black', value: 'carbon-black', colorHex: '#1A1A1A' },
+                  { label: 'Bone White', value: 'bone-white', colorHex: '#F5F0E8', available: false },
+                  { label: 'Navy Blue', value: 'navy-blue', colorHex: '#1B2A4A' },
+                  { label: 'Forest Green', value: 'forest-green', colorHex: '#2D4A2D', available: false },
+                ],
+              },
+            ]}
+            initialValues={{ Color: 'carbon-black' }}
+          />
+        </div>
+      </section>
+
+      <section className="demo-section">
         <Heading as="h2">Button-Only Options</Heading>
         <Text>When there are no color options — just text-based selectors.</Text>
         <div className="demo-preview" style={{ maxWidth: '360px' }}>

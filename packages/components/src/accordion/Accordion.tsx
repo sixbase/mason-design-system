@@ -19,7 +19,14 @@ export type AccordionProps = ComponentPropsWithoutRef<typeof AccordionPrimitive.
 };
 
 export interface AccordionItemProps
-  extends ComponentPropsWithoutRef<typeof AccordionPrimitive.Item> {}
+  extends ComponentPropsWithoutRef<typeof AccordionPrimitive.Item> {
+  /**
+   * Disables this item: the trigger cannot be activated and the item
+   * renders at reduced opacity. Radix marks the trigger `disabled` +
+   * `data-disabled`; we additionally expose `aria-disabled` on the item.
+   */
+  disabled?: boolean;
+}
 
 export interface AccordionTriggerProps
   extends ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger> {
@@ -79,9 +86,23 @@ Accordion.displayName = 'Accordion';
 // ─── Item ─────────────────────────────────────────────────
 
 export const AccordionItem = forwardRef<HTMLDivElement, AccordionItemProps>(
-  function AccordionItem({ className, ...props }, ref) {
-    const classes = ['ds-accordion__item', className].filter(Boolean).join(' ');
-    return <AccordionPrimitive.Item ref={ref} className={classes} {...props} />;
+  function AccordionItem({ className, disabled, ...props }, ref) {
+    const classes = [
+      'ds-accordion__item',
+      disabled && 'ds-accordion__item--disabled',
+      className,
+    ]
+      .filter(Boolean)
+      .join(' ');
+    return (
+      <AccordionPrimitive.Item
+        ref={ref}
+        className={classes}
+        disabled={disabled}
+        aria-disabled={disabled || undefined}
+        {...props}
+      />
+    );
   },
 );
 AccordionItem.displayName = 'AccordionItem';

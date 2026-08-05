@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { StarRating } from './StarRating';
 
@@ -36,6 +37,24 @@ export const WithoutCount: Story = {
 
 export const SingleReview: Story = {
   args: { rating: 5, reviewCount: 1 },
+};
+
+export const WithLabel: Story = {
+  args: { rating: 4.5, reviewCount: 128, label: 'Customer rating' },
+};
+
+function InteractiveDemo() {
+  const [rating, setRating] = useState(0);
+  return <StarRating rating={rating} onRate={setRating} label="Your rating" />;
+}
+
+/**
+ * Passing `onRate` turns the rating into a radiogroup: click or use arrow
+ * keys to select 1–5 stars. Hover previews the fill; 44px hit areas apply
+ * on touch devices.
+ */
+export const Interactive: Story = {
+  render: () => <InteractiveDemo />,
 };
 
 export const AllSizes: Story = {

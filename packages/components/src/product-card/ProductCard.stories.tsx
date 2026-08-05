@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { ProductCard } from './ProductCard';
 import { Badge } from '../badge/Badge';
+import { Button } from '../button/Button';
 
 const meta: Meta<typeof ProductCard> = {
   title: 'Components/ProductCard',
@@ -60,6 +61,75 @@ export const WithHoverImage: Story = {
       hoverImage="https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=400&h=500&fit=crop"
       style={{ width: 220 }}
     />
+  ),
+};
+
+export const WithActionSlot: Story = {
+  render: () => (
+    <ProductCard
+      name="Classic Cotton T-Shirt"
+      price={3200}
+      image="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=500&fit=crop"
+      actionSlot={
+        <Button variant="secondary" size="sm" iconOnly aria-label="Add to wishlist">
+          ♡
+        </Button>
+      }
+      style={{ width: 220 }}
+    />
+  ),
+};
+
+export const WithFooterSlot: Story = {
+  render: () => (
+    <ProductCard
+      name="Classic Cotton T-Shirt"
+      price={3200}
+      image="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=500&fit=crop"
+      footerSlot={
+        <Button variant="secondary" size="sm" fullWidth>
+          Quick add
+        </Button>
+      }
+      style={{ width: 220 }}
+    />
+  ),
+};
+
+/**
+ * The card is a container-query component: internals adapt to the grid
+ * cell width, not the viewport. Narrow cells (< 200px) tighten insets and
+ * type; wide cells (≥ 320px) relax type up to base size.
+ */
+export const ContainerAdaptive: Story = {
+  render: () => (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: '160px 220px 360px',
+        gap: 'var(--spacing-4)',
+        alignItems: 'start',
+      }}
+    >
+      <ProductCard
+        name="Narrow Cell (160px)"
+        price={3200}
+        image="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=500&fit=crop"
+        fluid
+      />
+      <ProductCard
+        name="Reference Cell (220px)"
+        price={3200}
+        image="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=500&fit=crop"
+        fluid
+      />
+      <ProductCard
+        name="Wide Cell (360px)"
+        price={3200}
+        image="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&h=500&fit=crop"
+        fluid
+      />
+    </div>
   ),
 };
 

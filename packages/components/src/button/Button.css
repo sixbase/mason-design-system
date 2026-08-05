@@ -4,6 +4,7 @@
   --button-radius: var(--radius-md);
   --button-font-weight: var(--font-weight-medium);
   --button-font-family: var(--font-family-body);
+  --button-press-scale: var(--scale-press);
   --button-transition: color var(--transition-fast),
     background-color var(--transition-fast),
     border-color var(--transition-fast),
@@ -80,7 +81,7 @@
 .ds-button--primary:active:not(:disabled) {
   background-color: var(--color-primary-active);
   border-color: var(--color-primary-active);
-  transform: scale(0.98);
+  transform: scale(var(--button-press-scale));
 }
 
 /* ─── Variant: secondary ────────────────────────────────── */
@@ -97,7 +98,7 @@
 
 .ds-button--secondary:active:not(:disabled) {
   background-color: var(--color-secondary-active);
-  transform: scale(0.98);
+  transform: scale(var(--button-press-scale));
 }
 
 /* ─── Variant: ghost ────────────────────────────────────── */
@@ -113,7 +114,7 @@
 
 .ds-button--ghost:active:not(:disabled) {
   background-color: var(--color-secondary-active);
-  transform: scale(0.98);
+  transform: scale(var(--button-press-scale));
 }
 
 /* ─── Variant: destructive ──────────────────────────────── */
@@ -131,7 +132,7 @@
 .ds-button--destructive:active:not(:disabled) {
   background-color: var(--color-destructive-active);
   border-color: var(--color-destructive-active);
-  transform: scale(0.98);
+  transform: scale(var(--button-press-scale));
 }
 
 /* ─── Disabled state ────────────────────────────────────── */
@@ -173,13 +174,33 @@
   width: 100%;
 }
 
+/* ─── Touch hit area ─────────────────────────────────────── */
+/* Coarse pointers only: sm (34px) and md (42px) buttons get an
+   invisible ≥44px tap zone via a centered pseudo-element. The
+   ::after belongs to the button's own hit-test box — it paints
+   nothing and never covers siblings visually. Fine pointers
+   (desktop, dense UIs) keep exact visual bounds. lg is 55px
+   and already exceeds the minimum. */
+@media (pointer: coarse) {
+  .ds-button--sm::after,
+  .ds-button--md::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, var(--size-hit-area));
+    height: max(100%, var(--size-hit-area));
+    transform: translate(-50%, -50%);
+  }
+}
+
 /* ─── Optical centering fallback ─────────────────────────── */
 @supports not (text-box-trim: both) {
   .ds-button {
     transform: translateY(0.05em);
   }
   .ds-button:active:not(:disabled) {
-    transform: translateY(0.05em) scale(0.98);
+    transform: translateY(0.05em) scale(var(--button-press-scale));
   }
 }
 

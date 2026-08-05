@@ -154,6 +154,113 @@ describe('Toast', () => {
     expect(results).toHaveNoViolations();
   });
 
+  describe('positions', () => {
+    it('renders top-center container and motion class', () => {
+      render(
+        <ToastProvider position="top-center">
+          <ToastTrigger options={{ description: 'Centered on top', duration: 0 }} />
+        </ToastProvider>,
+      );
+
+      fireEvent.click(screen.getByText('Show toast'));
+      const toast = screen.getByRole('status');
+      expect(toast.className).toContain('ds-toast--enter-top');
+      expect(document.querySelector('.ds-toast-container--top-center')).toBeInTheDocument();
+    });
+
+    it('defaults to bottom-right container', () => {
+      render(
+        <ToastProvider>
+          <ToastTrigger options={{ description: 'Default position', duration: 0 }} />
+        </ToastProvider>,
+      );
+
+      fireEvent.click(screen.getByText('Show toast'));
+      expect(document.querySelector('.ds-toast-container--bottom-right')).toBeInTheDocument();
+    });
+  });
+
+  describe('swipe to dismiss', () => {
+    // jsdom has no PointerEvent constructor and fireEvent's fallback
+    // drops pointer/coordinate props — dispatch a plain Event with the
+    // properties assigned so React's synthetic event can read them.
+    function firePointer(
+      el: Element,
+      type: 'pointerdown' | 'pointermove' | 'pointerup' | 'pointercancel',
+      init: { pointerId: number; pointerType: string; clientX: number; clientY: number },
+    ) {
+      const event = new Event(type, { bubbles: true, cancelable: true });
+      Object.assign(event, init);
+      fireEvent(el, event);
+    }
+
+    function renderSwipeToast(position?: 'top-right' | 'bottom-right' | 'bottom-center' | 'top-center') {
+      render(
+        <ToastProvider position={position}>
+          <ToastTrigger options={{ description: 'Swipeable toast', duration: 0 }} />
+        </ToastProvider>,
+      );
+      fireEvent.click(screen.getByText('Show toast'));
+      return screen.getByRole('status');
+    }
+
+    it('dismisses when swiped right past the threshold (right positions)', () => {
+      const toast = renderSwipeToast('bottom-right');
+
+      firePointer(toast, 'pointerdown', { pointerId: 1, pointerType: 'touch', clientX: 0, clientY: 0 });
+      firePointer(toast, 'pointermove', { pointerId: 1, pointerType: 'touch', clientX: 80, clientY: 0 });
+      firePointer(toast, 'pointerup', { pointerId: 1, pointerType: 'touch', clientX: 80, clientY: 0 });
+
+      expect(screen.queryByText('Swipeable toast')).not.toBeInTheDocument();
+    });
+
+    it('returns to rest when released below the threshold', () => {
+      const toast = renderSwipeToast('bottom-right');
+
+      firePointer(toast, 'pointerdown', { pointerId: 1, pointerType: 'touch', clientX: 0, clientY: 0 });
+      firePointer(toast, 'pointermove', { pointerId: 1, pointerType: 'touch', clientX: 20, clientY: 0 });
+      firePointer(toast, 'pointerup', { pointerId: 1, pointerType: 'touch', clientX: 20, clientY: 0 });
+
+      expect(screen.getByText('Swipeable toast')).toBeInTheDocument();
+    });
+
+    it('dismisses top-center toasts on upward swipe only', () => {
+      const toast = renderSwipeToast('top-center');
+
+      // Downward swipe is clamped — toast stays
+      firePointer(toast, 'pointerdown', { pointerId: 1, pointerType: 'touch', clientX: 0, clientY: 0 });
+      firePointer(toast, 'pointermove', { pointerId: 1, pointerType: 'touch', clientX: 0, clientY: 80 });
+      firePointer(toast, 'pointerup', { pointerId: 1, pointerType: 'touch', clientX: 0, clientY: 80 });
+      expect(screen.getByText('Swipeable toast')).toBeInTheDocument();
+
+      // Upward swipe past threshold dismisses
+      firePointer(toast, 'pointerdown', { pointerId: 2, pointerType: 'touch', clientX: 0, clientY: 100 });
+      firePointer(toast, 'pointermove', { pointerId: 2, pointerType: 'touch', clientX: 0, clientY: 20 });
+      firePointer(toast, 'pointerup', { pointerId: 2, pointerType: 'touch', clientX: 0, clientY: 20 });
+      expect(screen.queryByText('Swipeable toast')).not.toBeInTheDocument();
+    });
+
+    it('ignores mouse pointers', () => {
+      const toast = renderSwipeToast('bottom-right');
+
+      firePointer(toast, 'pointerdown', { pointerId: 1, pointerType: 'mouse', clientX: 0, clientY: 0 });
+      firePointer(toast, 'pointermove', { pointerId: 1, pointerType: 'mouse', clientX: 200, clientY: 0 });
+      firePointer(toast, 'pointerup', { pointerId: 1, pointerType: 'mouse', clientX: 200, clientY: 0 });
+
+      expect(screen.getByText('Swipeable toast')).toBeInTheDocument();
+    });
+
+    it('cancelled swipes never dismiss', () => {
+      const toast = renderSwipeToast('bottom-right');
+
+      firePointer(toast, 'pointerdown', { pointerId: 1, pointerType: 'touch', clientX: 0, clientY: 0 });
+      firePointer(toast, 'pointermove', { pointerId: 1, pointerType: 'touch', clientX: 120, clientY: 0 });
+      firePointer(toast, 'pointercancel', { pointerId: 1, pointerType: 'touch', clientX: 120, clientY: 0 });
+
+      expect(screen.getByText('Swipeable toast')).toBeInTheDocument();
+    });
+  });
+
   it('respects maxToasts limit', () => {
     function MultiTrigger() {
       const { toast } = useToast();

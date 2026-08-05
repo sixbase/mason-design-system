@@ -1,6 +1,6 @@
 ---
 import ComponentPage from '../../layouts/ComponentPage.astro';
-import { AccordionDefault, AccordionMultiple, AccordionSizes, AccordionWithCheckbox, AccordionBordered } from '../../components/AccordionGallery';
+import { AccordionDefault, AccordionDisabledItem, AccordionMultiple, AccordionSizes, AccordionWithCheckbox, AccordionBordered } from '../../components/AccordionGallery';
 ---
 
 <ComponentPage
@@ -27,7 +27,7 @@ import { AccordionDefault, AccordionMultiple, AccordionSizes, AccordionWithCheck
       headers: ['Prop', 'Type', 'Default', 'Description'],
       rows: [
         ['<code>value</code>', '<code>string</code>', '—', 'Unique identifier for this item'],
-        ['<code>disabled</code>', '<code>boolean</code>', '<code>false</code>', 'Prevent opening this item'],
+        ['<code>disabled</code>', '<code>boolean</code>', '<code>false</code>', 'Prevent opening this item — trigger is disabled, item renders at reduced opacity with <code>aria-disabled</code>'],
       ],
     },
     {
@@ -48,6 +48,8 @@ import { AccordionDefault, AccordionMultiple, AccordionSizes, AccordionWithCheck
     'Each trigger has <code>aria-expanded</code> and <code>aria-controls</code>',
     'Content regions have <code>role="region"</code> with <code>aria-labelledby</code>',
     'Checkbox variant: checkbox and trigger are independent — checking doesn\'t expand, expanding doesn\'t check',
+    'Triggers have a guaranteed ≥44px tap zone (<code>min-height: var(--size-hit-area)</code>) at every size',
+    'Disabled items: trigger is natively <code>disabled</code>, item carries <code>aria-disabled</code> and renders at <code>--opacity-medium</code>',
   ]}
 >
   <h2>Single (collapsible)</h2>
@@ -63,6 +65,14 @@ import { AccordionDefault, AccordionMultiple, AccordionSizes, AccordionWithCheck
     <AccordionContent>We accept returns…</AccordionContent>
   </AccordionItem>
 </Accordion>`}</code></pre>
+
+  <h2>Disabled item</h2>
+  <p>Pass <code>disabled</code> on an <code>AccordionItem</code> to prevent it opening — for sections that aren't available yet. Sibling items stay fully interactive.</p>
+  <AccordionDisabledItem client:load />
+  <pre><code>{`<AccordionItem value="preorders" disabled>
+  <AccordionTrigger>Pre-orders (coming soon)</AccordionTrigger>
+  <AccordionContent>…</AccordionContent>
+</AccordionItem>`}</code></pre>
 
   <h2>Multiple</h2>
   <p>Multiple items can be open simultaneously. Use <code>defaultValue</code> to pre-expand items.</p>

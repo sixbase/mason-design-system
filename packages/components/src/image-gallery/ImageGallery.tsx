@@ -18,9 +18,24 @@ export interface ImageGalleryProps extends HTMLAttributes<HTMLDivElement> {
   defaultIndex?: number;
   /** Thumbnail position on desktop */
   thumbnailPosition?: 'bottom' | 'left';
+  /**
+   * Native `loading` behavior for the main image. Defaults to `'eager'` —
+   * the gallery is typically the above-the-fold PDP hero, so it should not
+   * lazy-load. Pass `'lazy'` when the gallery renders below the fold.
+   * Thumbnails always lazy-load.
+   */
+  loading?: 'eager' | 'lazy';
 }
 
-const SWIPE_THRESHOLD = 50;
+/**
+ * Minimum horizontal pointer travel (px) to register a swipe.
+ *
+ * Mirrors the `--size-swipe-threshold` design token
+ * (`primitive.size.swipe-threshold` in `@ds/tokens` tokens.json = 50px).
+ * Pointer math needs the number synchronously in JS, so the value is kept
+ * as a documented constant — update it alongside the token if it changes.
+ */
+const SWIPE_THRESHOLD_PX = 50;
 
 export const ImageGallery = forwardRef<HTMLDivElement, ImageGalleryProps>(function ImageGallery(
   {
@@ -28,6 +43,7 @@ export const ImageGallery = forwardRef<HTMLDivElement, ImageGalleryProps>(functi
     aspectRatio = '4/5',
     defaultIndex = 0,
     thumbnailPosition = 'bottom',
+    loading = 'eager',
     className,
     ...props
   },
@@ -77,7 +93,7 @@ export const ImageGallery = forwardRef<HTMLDivElement, ImageGalleryProps>(functi
       if (pointerStartX.current === null) return;
       const delta = e.clientX - pointerStartX.current;
       pointerStartX.current = null;
-      if (Math.abs(delta) > SWIPE_THRESHOLD) {
+      if (Math.abs(delta) > SWIPE_THRESHOLD_PX) {
         goTo(delta < 0 ? activeIndex + 1 : activeIndex - 1);
       }
     },
@@ -110,6 +126,7 @@ export const ImageGallery = forwardRef<HTMLDivElement, ImageGalleryProps>(functi
           src={activeImage.src}
           alt={activeImage.alt}
           className="ds-image-gallery__img"
+          loading={loading}
           draggable={false}
         />
       </div>
@@ -143,6 +160,7 @@ export const ImageGallery = forwardRef<HTMLDivElement, ImageGalleryProps>(functi
                 src={img.thumbSrc ?? img.src}
                 alt=""
                 className="ds-image-gallery__thumb-img"
+                loading="lazy"
                 draggable={false}
               />
             </button>

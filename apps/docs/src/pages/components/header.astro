@@ -1,12 +1,12 @@
 ---
 import ComponentPage from '../../layouts/ComponentPage.astro';
-import { HeaderDefault, HeaderMinimal } from '../../components/HeaderGallery';
+import { HeaderDefault, HeaderMinimal, HeaderSticky } from '../../components/HeaderGallery';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
 <ComponentPage
   title="Header"
-  description="A responsive site header with logo, navigation links, theme toggle, and cart icon. Navigation collapses on mobile. Designed for e-commerce storefronts."
+  description="A responsive site header with logo, navigation links, theme toggle, and cart icon. Below 768px the nav moves into a slide-out drawer opened by a hamburger button. Designed for e-commerce storefronts."
   installCode="import { Header } from '@ds/components';"
   props={[
     {
@@ -17,8 +17,12 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
         ['<code>logoHref</code>', '<code>string</code>', "<code>'/'</code>", 'Logo link destination'],
         ['<code>navItems</code>', '<code>HeaderNavItem[]</code>', '<code>[]</code>', 'Main navigation links'],
         ['<code>cartHref</code>', '<code>string</code>', "<code>'/cart'</code>", 'Cart icon link destination'],
-        ['<code>cartCount</code>', '<code>number</code>', '<code>0</code>', 'Number of items in cart'],
+        ['<code>cartCount</code>', '<code>number</code>', '<code>0</code>', 'Number of items in cart — shows a visual badge on the cart icon when above zero'],
         ['<code>showThemeToggle</code>', '<code>boolean</code>', '<code>true</code>', 'Show dark/light theme toggle'],
+        ['<code>sticky</code>', '<code>boolean</code>', '<code>false</code>', 'Stick the header to the top of the viewport with an elevation shadow'],
+        ['<code>skipHref</code>', '<code>string</code>', "<code>'#main-content'</code>", 'Skip-to-content link target'],
+        ['<code>menuOpen</code>', '<code>boolean</code>', '—', 'Controlled open state for the mobile nav drawer (uncontrolled when omitted)'],
+        ['<code>onMenuOpenChange</code>', '<code>(open: boolean) =&gt; void</code>', '—', 'Called when the mobile nav drawer open state changes'],
       ],
     },
     {
@@ -31,11 +35,15 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     },
   ]}
   accessibility={[
-    'Navigation uses <code>&lt;nav aria-label="Main"&gt;</code> for landmark identification',
+    'A visually hidden skip-to-content link is the first focusable element and appears on keyboard focus',
+    'Navigation uses <code>&lt;nav aria-label="Main"&gt;</code> for landmark identification (desktop and drawer)',
+    'The mobile menu button exposes <code>aria-expanded</code> and <code>aria-controls</code>, with a 44px hit area',
     'Logo link has an <code>aria-label</code> for screen readers',
-    'Cart icon includes item count in its <code>aria-label</code> (e.g. "Shopping bag (3 items)")',
+    'Cart icon includes item count in its <code>aria-label</code> (e.g. "Shopping bag (3 items)"); the visual badge is <code>aria-hidden</code>',
     'Theme toggle button has <code>aria-label="Toggle dark mode"</code>',
+    'All icon buttons meet the 44px touch target size on coarse pointers',
     'All interactive elements have visible focus indicators',
+    'Transitions respect <code>prefers-reduced-motion: reduce</code>',
   ]}
 >
   <h2>Default</h2>
@@ -50,6 +58,30 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   ]}
   cartHref="/cart"
   cartCount={3}
+/>`}</code></pre>
+
+  <h2>Mobile navigation</h2>
+  <p>
+    Below 768px the nav links move into a left-side drawer opened by a
+    hamburger button with a 44px hit area. Resize the browser to see it in the
+    Default preview above. The drawer manages its own open state, or pass
+    <code>menuOpen</code> + <code>onMenuOpenChange</code> to control it.
+  </p>
+  <pre><code>{`<Header
+  logoSrc="/logo.svg"
+  navItems={navItems}
+  menuOpen={menuOpen}
+  onMenuOpenChange={setMenuOpen}
+/>`}</code></pre>
+
+  <h2>Sticky</h2>
+  <p>Pass <code>sticky</code> to pin the header to the top of the viewport with <code>--elevation-sticky</code>.</p>
+  <HeaderSticky client:load basePath={base} />
+  <pre><code>{`<Header
+  logoSrc="/logo.svg"
+  logoAlt="Brand Name"
+  navItems={navItems}
+  sticky
 />`}</code></pre>
 
   <h2>Minimal</h2>

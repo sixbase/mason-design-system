@@ -1,6 +1,6 @@
 ---
 import ComponentPage from '../../layouts/ComponentPage.astro';
-import { DividerDefault, DividerVariants, DividerSpacings, DividerVertical } from '../../components/DividerGallery';
+import { DividerDefault, DividerVariants, DividerSpacings, DividerLabeled, DividerVertical } from '../../components/DividerGallery';
 ---
 
 <ComponentPage
@@ -14,12 +14,14 @@ import { DividerDefault, DividerVariants, DividerSpacings, DividerVertical } fro
         ['<code>orientation</code>', "<code>'horizontal' | 'vertical'</code>", "<code>'horizontal'</code>", 'Direction of the divider'],
         ['<code>variant</code>', "<code>'default' | 'subtle'</code>", "<code>'default'</code>", 'Visual style — subtle uses reduced opacity'],
         ['<code>spacing</code>', "<code>'none' | 'sm' | 'md' | 'lg'</code>", "<code>'md'</code>", 'Margin above/below (horizontal) or left/right (vertical)'],
+        ['<code>label</code>', '<code>string</code>', '—', 'Centered text between two rule lines (the "OR" pattern). Horizontal only'],
       ],
     },
   ]}
   accessibility={[
     'Horizontal renders as native <code>&lt;hr&gt;</code> with built-in separator semantics',
     'Vertical renders as <code>&lt;div role="separator" aria-orientation="vertical"&gt;</code>',
+    'Labeled renders as <code>&lt;div role="separator" aria-orientation="horizontal"&gt;</code> — separator semantics preserved, rule lines hidden from assistive tech',
     'No focus styles needed — dividers are not interactive elements',
   ]}
 >
@@ -41,6 +43,11 @@ import { DividerDefault, DividerVariants, DividerSpacings, DividerVertical } fro
 <Divider spacing="sm" />     {/* 8px */}
 <Divider spacing="md" />     {/* 16px — default */}
 <Divider spacing="lg" />     {/* 32px */}`}</code></pre>
+
+  <h2>Labeled</h2>
+  <p>Pass <code>label</code> to render centered text between two rule lines — the classic "OR" pattern between express checkout and card payment. The label uses the shared <code>Text</code> component and stays at full contrast even with <code>variant="subtle"</code>.</p>
+  <DividerLabeled client:load />
+  <pre><code>{`<Divider label="OR" spacing="lg" />`}</code></pre>
 
   <h2>Vertical</h2>
   <p>Use <code>orientation="vertical"</code> to separate inline content. The divider stretches to fill its container height.</p>

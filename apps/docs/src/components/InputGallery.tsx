@@ -19,6 +19,9 @@ export function InputStates() {
       <div className="ds-gallery-input">
         <Input label="Username" defaultValue="jane_smith" disabled />
       </div>
+      <div className="ds-gallery-input">
+        <Input label="Order number" defaultValue="MS-1042" readOnly hint="Read-only — selectable but not editable" />
+      </div>
     </Preview>
   );
 }

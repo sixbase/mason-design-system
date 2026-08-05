@@ -4,6 +4,8 @@
   --variant-selector-group-gap: var(--spacing-3);
   --variant-selector-option-radius: var(--radius-md);
   --variant-selector-option-font-weight: var(--font-weight-medium);
+  /* Label truncation cap — sm default; md relaxes to 16ch below */
+  --variant-selector-option-label-max: 12ch;
   --variant-selector-transition: color var(--transition-fast),
     background-color var(--transition-fast),
     border-color var(--transition-fast),
@@ -84,18 +86,18 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 12ch;
+  max-width: var(--variant-selector-option-label-max);
 }
 
 /* ─── Size: md (default) ─────────────────────────────────── */
+.ds-variant-selector--md {
+  --variant-selector-option-label-max: 16ch;
+}
+
 .ds-variant-selector--md .ds-variant-selector__option {
   height: var(--size-control-md);
   padding: 0 var(--spacing-4);
   font-size: var(--font-size-sm);
-}
-
-.ds-variant-selector--md .ds-variant-selector__option-label {
-  max-width: 16ch;
 }
 
 /* ─── Interactive states ─────────────────────────────────── */
@@ -106,7 +108,7 @@
 
 .ds-variant-selector__option:active:not(:disabled) {
   background-color: var(--color-secondary-active);
-  transform: scale(0.98);
+  transform: scale(var(--scale-press));
 }
 
 /* ─── Focus ──────────────────────────────────────────────── */
@@ -173,8 +175,63 @@
     transform: translateY(0.05em);
   }
   .ds-variant-selector__option:active:not(:disabled) {
-    transform: translateY(0.05em) scale(0.98);
+    transform: translateY(0.05em) scale(var(--scale-press));
   }
+}
+
+/* ─── Touch hit areas ────────────────────────────────────── */
+/* Options sit adjacent (8px gaps), so the invisible 44px extension is
+   guarded to coarse pointers — on desktop it would overlap neighbors and
+   confuse precise hover targeting. Buttons are already position: relative. */
+@media (pointer: coarse) {
+  .ds-variant-selector__option::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: max(100%, var(--size-hit-area));
+    height: max(100%, var(--size-hit-area));
+  }
+
+  /* Swatches too — ::before because ::after is the unavailable slash below */
+  .ds-variant-selector .ds-color-picker__btn {
+    position: relative;
+  }
+
+  .ds-variant-selector .ds-color-picker__btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: max(100%, var(--size-hit-area));
+    height: max(100%, var(--size-hit-area));
+  }
+}
+
+/* ─── Unavailable color swatches — diagonal strikethrough ── */
+/* ColorPicker API gap: it has no `unavailable` option flag, and this
+   component encodes unavailability only in the aria-label suffix it writes
+   itself in ColorOptionGroup ("(out of stock)"). Until ColorPicker grows a
+   proper prop, match on that attribute here — both halves of the contract
+   live in this component. The slash makes unavailability visible without
+   relying on opacity alone. */
+.ds-variant-selector .ds-color-picker__btn[aria-label$="(out of stock)"] {
+  position: relative;
+}
+
+.ds-variant-selector .ds-color-picker__btn[aria-label$="(out of stock)"]::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: var(--spacing-phi-1); /* 2px */
+  border-radius: var(--radius-full);
+  background-color: var(--color-border-strong);
+  transform: translate(-50%, -50%) rotate(-45deg);
+  pointer-events: none;
 }
 
 /* ─── Reduced motion ─────────────────────────────────────── */

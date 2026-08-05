@@ -1,6 +1,6 @@
 ---
 import ComponentPage from '../../layouts/ComponentPage.astro';
-import { PriceDisplayDefault, PriceDisplayWithCompare, PriceDisplaySizes } from '../../components/PriceDisplayGallery';
+import { PriceDisplayDefault, PriceDisplayWithCompare, PriceDisplaySaleEmphasis, PriceDisplayNarrowWrap, PriceDisplaySizes } from '../../components/PriceDisplayGallery';
 ---
 
 <ComponentPage
@@ -14,12 +14,14 @@ import { PriceDisplayDefault, PriceDisplayWithCompare, PriceDisplaySizes } from 
         ['<code>price</code>', '<code>string</code>', '—', 'Current / sale price (pre-formatted, e.g. "$48.00")'],
         ['<code>comparePrice</code>', '<code>string</code>', '—', 'Original price shown with strikethrough'],
         ['<code>size</code>', "<code>'sm' | 'md' | 'lg'</code>", "<code>'md'</code>", 'Size variant'],
+        ['<code>emphasis</code>', "<code>'none' | 'sale'</code>", "<code>'none'</code>", 'Sale emphasis — renders the price in the destructive color even without a compare price'],
       ],
     },
   ]}
   accessibility={[
     'Compare price includes a <code>&lt;span class="ds-sr-only"&gt;Original price:&lt;/span&gt;</code> for screen readers',
     'Strikethrough is visual only — screen readers get the semantic context from the hidden label',
+    'Sale color <code>var(--color-destructive)</code> measures ~6.4:1 against the light background (WCAG AA)',
   ]}
 >
   <h2>Default</h2>
@@ -30,6 +32,16 @@ import { PriceDisplayDefault, PriceDisplayWithCompare, PriceDisplaySizes } from 
   <p>Show the original price with a strikethrough when an item is on sale.</p>
   <PriceDisplayWithCompare client:load />
   <pre><code>{`<PriceDisplay price="$89.00" comparePrice="$112.00" />`}</code></pre>
+
+  <h2>Sale emphasis</h2>
+  <p>Force the sale treatment without a compare price — e.g. when the original price renders elsewhere. With <code>emphasis="none"</code> (default), the sale color still applies automatically when <code>comparePrice</code> is present.</p>
+  <PriceDisplaySaleEmphasis client:load />
+  <pre><code>{`<PriceDisplay price="$38.00" emphasis="sale" />`}</code></pre>
+
+  <h2>Narrow containers</h2>
+  <p>The row wraps instead of overflowing when the container is too narrow for both prices.</p>
+  <PriceDisplayNarrowWrap client:load />
+  <pre><code>{`<PriceDisplay price="$1,238.00" comparePrice="$1,560.00" />`}</code></pre>
 
   <h2>Sizes</h2>
   <PriceDisplaySizes client:load />

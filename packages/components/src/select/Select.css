@@ -24,6 +24,7 @@
   --select-bg: var(--color-background-surface);
   --select-radius: var(--radius-md);
 
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
@@ -67,6 +68,33 @@
   height: var(--size-control-lg);
   padding: 0 var(--spacing-4);
   font-size: var(--font-size-base);
+}
+
+/* ─── Touch hit area ─────────────────────────────────────── */
+/* sm (34px) and md (42px) triggers keep their visual height; the
+   interactive zone expands to --size-hit-area (44px). Unguarded —
+   adjacent form controls sit further apart than the ~5px expansion. */
+.ds-select-trigger--sm::after,
+.ds-select-trigger--md::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: max(100%, var(--size-hit-area));
+  height: max(100%, var(--size-hit-area));
+}
+
+/* ─── iOS zoom guard ─────────────────────────────────────── */
+/* iOS Safari auto-zooms when a focused control's font-size is below
+   1rem. --font-size-base is fluid and dips below 1rem on small
+   viewports, so the guard uses --font-size-tight-base (fixed 1rem). */
+@media (pointer: coarse) {
+  .ds-select-trigger--sm,
+  .ds-select-trigger--md,
+  .ds-select-trigger--lg {
+    font-size: var(--font-size-tight-base);
+  }
 }
 
 /* Hover */
@@ -125,7 +153,7 @@
   background-color: var(--color-background-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--elevation-dropdown);
   overflow: hidden;
   z-index: var(--z-index-overlay);
   /* Match trigger width */
@@ -147,8 +175,13 @@
 }
 
 /* ─── Viewport ───────────────────────────────────────────── */
+/* Radix caps the content at the available viewport height (minus
+   collisionPadding) and makes this viewport scrollable; contain the
+   scroll so momentum scrolling doesn't chain to the page on touch. */
 .ds-select-viewport {
   padding: var(--spacing-1);
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ─── Item ───────────────────────────────────────────────── */

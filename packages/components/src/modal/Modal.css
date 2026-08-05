@@ -33,7 +33,7 @@
   background-color: var(--color-background-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-2xl);
+  box-shadow: var(--elevation-modal);
 
   width: calc(100% - var(--spacing-8));
   max-height: calc(100vh - var(--spacing-16));
@@ -78,6 +78,52 @@
 .ds-modal__content--md { max-width: var(--size-modal-md); }
 .ds-modal__content--lg { max-width: var(--size-modal-lg); }
 
+/* ─── Full-screen on mobile ───────────────────────────────── */
+/* @breakpoint-sm = 640px */
+@media (max-width: 639px) {
+  .ds-modal__content--full-screen-mobile {
+    inset: 0;
+    transform: none;
+    width: 100%;
+    max-width: 100%;
+    height: 100vh;
+    height: 100dvh; /* iOS Safari: track the dynamic toolbar */
+    max-height: none;
+    border: none;
+    border-radius: 0;
+
+    /* Centered scale animation doesn't apply to an inset-0 sheet — fade instead */
+    animation: ds-modal-overlay-in var(--transition-normal) forwards;
+  }
+
+  .ds-modal__content--full-screen-mobile[data-state='closed'] {
+    animation: ds-modal-overlay-out var(--transition-fast) forwards;
+  }
+
+  /* Section padding respects device safe areas (notch, home indicator) */
+  .ds-modal__content--full-screen-mobile .ds-modal__header {
+    padding-top: max(var(--spacing-6), var(--safe-area-top));
+    padding-left: max(var(--spacing-6), var(--safe-area-left));
+    padding-right: max(var(--spacing-6), var(--safe-area-right));
+  }
+
+  .ds-modal__content--full-screen-mobile .ds-modal__body {
+    padding-left: max(var(--spacing-6), var(--safe-area-left));
+    padding-right: max(var(--spacing-6), var(--safe-area-right));
+  }
+
+  .ds-modal__content--full-screen-mobile .ds-modal__footer {
+    padding-left: max(var(--spacing-6), var(--safe-area-left));
+    padding-right: max(var(--spacing-6), var(--safe-area-right));
+    padding-bottom: max(var(--spacing-6), var(--safe-area-bottom));
+  }
+
+  .ds-modal__content--full-screen-mobile .ds-modal__close {
+    top: max(var(--spacing-4), var(--safe-area-top));
+    right: max(var(--spacing-4), var(--safe-area-right));
+  }
+}
+
 /* ─── Close button ────────────────────────────────────────── */
 .ds-modal__close {
   position: absolute;
@@ -102,6 +148,18 @@
   text-box-edge: cap alphabetic;
 }
 
+/* Invisible hit-area extender — guarantees a ≥44px touch target
+   without inflating the visible button */
+.ds-modal__close::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, var(--size-hit-area));
+  height: max(100%, var(--size-hit-area));
+  transform: translate(-50%, -50%);
+}
+
 .ds-modal__close:hover {
   background-color: var(--color-secondary);
   color: var(--color-foreground);
@@ -109,7 +167,7 @@
 
 .ds-modal__close:active {
   background-color: var(--color-secondary-active);
-  transform: scale(0.98);
+  transform: scale(var(--scale-press));
 }
 
 .ds-modal__close:focus-visible {
@@ -156,6 +214,18 @@
     transform: translateY(0.05em);
   }
   .ds-modal__close:active {
-    transform: translateY(0.05em) scale(0.98);
+    transform: translateY(0.05em) scale(var(--scale-press));
+  }
+}
+
+/* ─── Reduced motion ──────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .ds-modal__overlay,
+  .ds-modal__overlay[data-state='closed'],
+  .ds-modal__content,
+  .ds-modal__content[data-state='closed'],
+  .ds-modal__content--full-screen-mobile,
+  .ds-modal__content--full-screen-mobile[data-state='closed'] {
+    animation: none;
   }
 }

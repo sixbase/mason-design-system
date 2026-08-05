@@ -1,6 +1,6 @@
 ---
 import ComponentPage from '../../layouts/ComponentPage.astro';
-import { DrawerDefault, DrawerLeftSide, DrawerCustomWidth, DrawerScrollable } from '../../components/DrawerGallery';
+import { DrawerDefault, DrawerLeftSide, DrawerBottomSheet, DrawerSizes, DrawerCustomWidth, DrawerScrollable } from '../../components/DrawerGallery';
 ---
 
 <ComponentPage
@@ -13,8 +13,11 @@ import { DrawerDefault, DrawerLeftSide, DrawerCustomWidth, DrawerScrollable } fr
     'Escape key closes the drawer',
     'Background content is hidden from screen readers via <code>aria-hidden</code>',
     'Title is rendered as a visually hidden <code>Dialog.Title</code> and exposed via <code>aria-label</code>',
+    'Optional <code>description</code> prop is announced on open via <code>aria-describedby</code>; omitted entirely when not provided (no redundant text)',
     'The panel has <code>role="dialog"</code> and <code>aria-modal="true"</code>',
     'Body scroll is locked while the drawer is open',
+    'Close button has a 44px minimum touch target',
+    'Slide animations are disabled under <code>prefers-reduced-motion</code>',
   ]}
 >
   <h2>Default</h2>
@@ -39,6 +42,26 @@ import { DrawerDefault, DrawerLeftSide, DrawerCustomWidth, DrawerScrollable } fr
 >
   <nav>...</nav>
 </Drawer>`}</code></pre>
+
+  <h2>Bottom sheet</h2>
+  <p>Use <code>side="bottom"</code> for mobile-first actions like filter/sort panels. The sheet slides up, caps at 85dvh, shows a drag-handle affordance, and pads its bottom edge for the device safe area. It is always full-width — <code>size</code> and <code>width</code> are ignored.</p>
+  <DrawerBottomSheet client:load />
+  <pre><code>{`<Drawer
+  open={open}
+  onOpenChange={setOpen}
+  side="bottom"
+  title="Filter and sort"
+  description="Refine the product list by category and price"
+>
+  ...
+</Drawer>`}</code></pre>
+
+  <h2>Size presets</h2>
+  <p>For left/right drawers, <code>size</code> maps to the shared modal width tokens: <code>sm</code> (400px), <code>md</code> (520px), <code>lg</code> (680px). Without a <code>size</code>, the drawer keeps its default <code>var(--size-content-sm)</code> width.</p>
+  <DrawerSizes client:load />
+  <pre><code>{`<Drawer size="sm" ... />  {/* --size-modal-sm, 400px */}
+<Drawer size="md" ... />  {/* --size-modal-md, 520px */}
+<Drawer size="lg" ... />  {/* --size-modal-lg, 680px */}`}</code></pre>
 
   <h2>Custom width</h2>
   <p>Pass any CSS value to <code>width</code>. On mobile (&lt;768px), the drawer always becomes full-width regardless of the width prop.</p>

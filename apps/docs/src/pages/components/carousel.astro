@@ -1,11 +1,11 @@
 ---
 import ComponentPage from '../../layouts/ComponentPage.astro';
-import { CarouselDefault, CarouselSizes } from '../../components/CarouselGallery';
+import { CarouselDefault, CarouselSizes, CarouselWithControls } from '../../components/CarouselGallery';
 ---
 
 <ComponentPage
   title="Carousel"
-  description="A horizontally scrollable container with scroll-snap alignment. Compose with <code>CarouselSlide</code> to create image galleries, product rows, or any horizontal scrolling content."
+  description="A horizontally scrollable container with scroll-snap alignment. Compose with <code>CarouselSlide</code> to create image galleries, product rows, or any horizontal scrolling content. Optional prev/next controls and dot indicators."
   installCode="import { Carousel, CarouselSlide } from '@ds/components';"
   props={[
     {
@@ -14,6 +14,10 @@ import { CarouselDefault, CarouselSizes } from '../../components/CarouselGallery
       rows: [
         ['<code>children</code>', '<code>ReactNode</code>', '—', 'CarouselSlide elements'],
         ['<code>gap</code>', "<code>'sm' | 'md' | 'lg'</code>", "<code>'md'</code>", 'Gap between slides'],
+        ['<code>label</code>', '<code>string</code>', '—', 'Accessible name for the carousel region (recommended)'],
+        ['<code>controls</code>', '<code>boolean</code>', '<code>false</code>', 'Prev/next buttons that scroll by one slide'],
+        ['<code>indicators</code>', '<code>boolean</code>', '<code>false</code>', 'Dot buttons that reflect and jump to the scroll position'],
+        ['<code>loop</code>', '<code>boolean</code>', '<code>false</code>', 'Prev/next wrap around instead of disabling at the ends'],
       ],
     },
     {
@@ -22,18 +26,23 @@ import { CarouselDefault, CarouselSizes } from '../../components/CarouselGallery
       rows: [
         ['<code>children</code>', '<code>ReactNode</code>', '—', 'Slide content'],
         ['<code>size</code>', "<code>'sm' | 'md' | 'lg'</code>", "<code>'md'</code>", 'Responsive slide width preset'],
+        ['<code>index</code> / <code>count</code>', '<code>number</code>', 'auto', 'Injected automatically by Carousel for the "N of M" slide label'],
       ],
     },
   ]}
   accessibility={[
-    'Scrollable via touch, trackpad, or mouse drag',
+    'Root renders as a <code>role="region"</code> with <code>aria-roledescription="carousel"</code> — always pass <code>label</code>',
+    'Each slide is a <code>role="group"</code> with <code>aria-roledescription="slide"</code> and an automatic "N of M" label',
+    'The scroll track is keyboard focusable; <kbd>←</kbd> / <kbd>→</kbd> scroll by one slide',
+    'Prev/next buttons and indicator dots have ≥44px touch targets and disable at the ends unless <code>loop</code> is set',
+    'Programmatic scrolling switches to instant (non-smooth) under <code>prefers-reduced-motion</code>',
     'Scroll-snap ensures slides align cleanly on release',
     'Content inside slides should include appropriate <code>alt</code> text for images',
   ]}
 >
   <h2>Default</h2>
   <CarouselDefault client:load />
-  <pre><code>{`<Carousel>
+  <pre><code>{`<Carousel label="Featured products">
   <CarouselSlide>
     <img src="..." alt="Slide 1" />
   </CarouselSlide>
@@ -45,8 +54,19 @@ import { CarouselDefault, CarouselSizes } from '../../components/CarouselGallery
   </CarouselSlide>
 </Carousel>`}</code></pre>
 
+  <h2>Controls and indicators</h2>
+  <p>
+    Opt-in prev/next buttons and dot indicators. Buttons disable at the ends
+    unless <code>loop</code> is set; dots track the scroll position and jump
+    to a slide on click.
+  </p>
+  <CarouselWithControls client:load />
+  <pre><code>{`<Carousel controls indicators label="Featured products">
+  <CarouselSlide>...</CarouselSlide>
+</Carousel>`}</code></pre>
+
   <h2>Slide sizes</h2>
-  <p>Control how many slides are visible at once with the <code>size</code> prop on each slide.</p>
+  <p>Control how many slides are visible at once with the <code>size</code> prop on each slide. Widths are exposed as <code>--carousel-slide-*</code> component tokens.</p>
   <CarouselSizes client:load />
   <pre><code>{`<CarouselSlide size="sm">...</CarouselSlide>  {/* 70% → 45% → 33% */}
 <CarouselSlide size="md">...</CarouselSlide>  {/* 85% → 65% → 50% (default) */}

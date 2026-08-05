@@ -136,6 +136,37 @@ export function ModalConfirmation() {
   );
 }
 
+export function ModalFullScreenMobile() {
+  return (
+    <Modal>
+      <ModalTrigger asChild>
+        <Button>Open size guide</Button>
+      </ModalTrigger>
+      <ModalContent fullScreenOnMobile>
+        <ModalHeader>
+          <ModalTitle>Size guide</ModalTitle>
+          <ModalDescription>
+            Below 640px this modal fills the screen and its padding respects
+            device safe areas. Resize the viewport to see it.
+          </ModalDescription>
+        </ModalHeader>
+        <ModalBody>
+          <div className="ds-gallery-stack">
+            <Input label="Chest (cm)" defaultValue="96" />
+            <Input label="Waist (cm)" defaultValue="81" />
+          </div>
+        </ModalBody>
+        <ModalFooter>
+          <ModalClose asChild>
+            <Button variant="secondary">Close</Button>
+          </ModalClose>
+          <Button>Find my size</Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  );
+}
+
 export function ModalControlled() {
   const [open, setOpen] = useState(false);
   return (

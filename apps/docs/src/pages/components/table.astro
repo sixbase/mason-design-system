@@ -1,11 +1,19 @@
 ---
 import ComponentPage from '../../layouts/ComponentPage.astro';
-import { TableDefault, TableStriped, TableSmall, TableSorted, TableEmpty } from '../../components/TableGallery';
+import {
+  TableDefault,
+  TableStriped,
+  TableSmall,
+  TableResponsiveStack,
+  TableSortable,
+  TableSorted,
+  TableEmpty,
+} from '../../components/TableGallery';
 ---
 
 <ComponentPage
   title="Table"
-  description="Data display for size charts, product specs, and comparison tables. Responsive with horizontal scroll and CSS-only scroll shadow indicators."
+  description="Data display for size charts, product specs, and comparison tables. Responsive with a keyboard-accessible horizontal scroll region (CSS-only scroll shadows) or an opt-in stacked card layout on mobile."
   installCode="import { Table } from '@ds/components';"
   props={[
     {
@@ -14,6 +22,7 @@ import { TableDefault, TableStriped, TableSmall, TableSorted, TableEmpty } from 
         ['<code>variant</code>', "<code>'default' | 'striped'</code>", "<code>'default'</code>", 'Row style — borders or alternating backgrounds'],
         ['<code>size</code>', "<code>'sm' | 'md'</code>", "<code>'md'</code>", 'Cell padding density'],
         ['<code>stickyHeader</code>', '<code>boolean</code>', '<code>false</code>', 'Sticky header on vertical scroll'],
+        ['<code>responsive</code>', "<code>'scroll' | 'stack'</code>", "<code>'scroll'</code>", 'Mobile strategy — horizontal scroll region, or rows stacked as labelled cards below 640px'],
       ],
     },
     {
@@ -22,8 +31,8 @@ import { TableDefault, TableStriped, TableSmall, TableSorted, TableEmpty } from 
         ['<code>Table.Header</code>', '<code>&lt;thead&gt;</code>', 'Table header section'],
         ['<code>Table.Body</code>', '<code>&lt;tbody&gt;</code>', 'Table body section'],
         ['<code>Table.Row</code>', '<code>&lt;tr&gt;</code>', 'Table row'],
-        ['<code>Table.Head</code>', '<code>&lt;th&gt;</code>', 'Header cell — auto-applies <code>scope="col"</code>'],
-        ['<code>Table.Cell</code>', '<code>&lt;td&gt;</code>', 'Body cell'],
+        ['<code>Table.Head</code>', '<code>&lt;th&gt;</code>', 'Header cell — auto-applies <code>scope="col"</code>. Accepts <code>sorted</code>, <code>sortable</code>, and <code>onSort</code> for sortable columns'],
+        ['<code>Table.Cell</code>', '<code>&lt;td&gt;</code>', 'Body cell — receives <code>data-label</code> automatically in stack mode'],
         ['<code>Table.Empty</code>', '<code>&lt;tr&gt;</code>', 'Empty state row — requires <code>colSpan</code>'],
       ],
     },
@@ -31,7 +40,8 @@ import { TableDefault, TableStriped, TableSmall, TableSorted, TableEmpty } from 
   accessibility={[
     'Semantic <code>&lt;table&gt;</code>, <code>&lt;thead&gt;</code>, <code>&lt;tbody&gt;</code>, <code>&lt;th scope="col"&gt;</code>, <code>&lt;td&gt;</code>',
     'Scroll wrapper has <code>role="region"</code> with <code>aria-label</code> and <code>tabindex="0"</code> for keyboard scrolling',
-    'Sort indicator uses <code>aria-sort="ascending"</code> / <code>"descending"</code> on <code>&lt;th&gt;</code>',
+    'Sortable headers render a real <code>&lt;button type="button"&gt;</code> inside the <code>&lt;th&gt;</code> with <code>aria-sort</code> — keyboard operable, with a ≥44px hit area on touch devices',
+    'Stack mode keeps semantic table markup — explicit ARIA roles preserve row/cell semantics under the CSS display overrides, and the header row stays available to screen readers (visually hidden, not <code>display: none</code>)',
     'Meets WCAG 1.4.3 AA — all text has minimum 4.5:1 contrast',
     'Focus ring via <code>box-shadow: var(--focus-ring)</code> on scroll wrapper <code>:focus-visible</code>',
   ]}
@@ -66,8 +76,25 @@ import { TableDefault, TableStriped, TableSmall, TableSorted, TableEmpty } from 
   <TableSmall client:load />
   <pre><code>{`<Table size="sm">...</Table>`}</code></pre>
 
+  <h2>Responsive stack</h2>
+  <p>With <code>responsive="stack"</code>, rows render as cards below 640px and each cell shows its column header as a label (injected automatically as <code>data-label</code>). The markup stays a semantic table. Narrow the browser window to see the stacked layout.</p>
+  <TableResponsiveStack client:load />
+  <pre><code>{`<Table responsive="stack" variant="striped" aria-label="Size chart">
+  ...same sub-components as any table
+</Table>`}</code></pre>
+
+  <h2>Sortable headers</h2>
+  <p>Pass <code>onSort</code> (or <code>sortable</code>) and the header content renders inside a real button with <code>aria-sort</code>. Sorting logic stays in your data layer — the component only reports the click.</p>
+  <TableSortable client:load />
+  <pre><code>{`<Table.Head
+  sorted={sortKey === 'size' && direction}
+  onSort={() => handleSort('size')}
+>
+  Size
+</Table.Head>`}</code></pre>
+
   <h2>Sort indicators</h2>
-  <p>Visual sort direction on header cells. Sort logic is handled externally.</p>
+  <p>Visual sort direction on header cells without the button — for read-only indicators. Sort logic is handled externally.</p>
   <TableSorted client:load />
   <pre><code>{`<Table.Head sorted="asc">Size</Table.Head>
 <Table.Head sorted="desc">Waist</Table.Head>`}</code></pre>

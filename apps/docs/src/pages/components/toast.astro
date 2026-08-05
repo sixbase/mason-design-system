@@ -1,6 +1,6 @@
 ---
 import ComponentPage from '../../layouts/ComponentPage.astro';
-import { ToastVariants, ToastWithTitle, ToastWithAction, ToastStacking, ToastEcommerce } from '../../components/ToastGallery';
+import { ToastVariants, ToastWithTitle, ToastWithAction, ToastStacking, ToastPositions, ToastEcommerce } from '../../components/ToastGallery';
 ---
 
 <ComponentPage
@@ -20,7 +20,7 @@ toast({ description: 'Item added to cart', variant: 'success' });`}
     {
       headers: ['Prop', 'Type', 'Default', 'Description'],
       rows: [
-        ['<code>position</code>', "<code>'top-right' | 'bottom-right' | 'bottom-center'</code>", "<code>'bottom-right'</code>", 'Where toasts appear on screen (ToastProvider)'],
+        ['<code>position</code>', "<code>'top-right' | 'bottom-right' | 'bottom-center' | 'top-center'</code>", "<code>'bottom-right'</code>", 'Where toasts appear on screen (ToastProvider)'],
         ['<code>maxToasts</code>', '<code>number</code>', '<code>3</code>', 'Maximum visible toasts (ToastProvider)'],
       ],
     },
@@ -40,8 +40,11 @@ toast({ description: 'Item added to cart', variant: 'success' });`}
     'Error toasts use <code>role="alert"</code> with <code>aria-live="assertive"</code>',
     'All other variants use <code>role="status"</code> with <code>aria-live="polite"</code>',
     'Dismiss button includes <code>aria-label="Dismiss notification"</code>',
-    'Auto-dismiss pauses on hover and focus (keyboard users can read content)',
-    '<code>prefers-reduced-motion</code>: animations disabled, toasts appear/disappear instantly',
+    'Auto-dismiss pauses on hover, focus, and while a swipe is in progress',
+    'Swipe-to-dismiss on touch: drag a toast past 50px toward its nearest screen edge (right positions swipe right, top-center up, bottom-center down)',
+    '<code>prefers-reduced-motion</code>: animations disabled, toasts appear/disappear instantly — swiping still works but positions snap instead of animating',
+    'Viewport positions respect device safe areas (notches, home indicators) via <code>max(spacing, safe-area inset)</code>',
+    'Dismiss and action buttons get invisible ≥44px hit areas on touch devices',
     'Action button is fully keyboard accessible',
   ]}
 >
@@ -79,6 +82,13 @@ toast({ description: 'Session expiring soon.', variant: 'warning' });`}</code></
   <ToastStacking client:load />
   <pre><code>{`<ToastProvider maxToasts={3}>
   {/* toasts stack up to 3, oldest removed */}
+</ToastProvider>`}</code></pre>
+
+  <h2>Positions</h2>
+  <p>Four viewport positions, each inset by <code>max(spacing, safe-area)</code> so toasts clear notches and home indicators. On touch, swipe a toast toward its nearest screen edge to dismiss it.</p>
+  <ToastPositions client:load />
+  <pre><code>{`<ToastProvider position="top-center">
+  <App />
 </ToastProvider>`}</code></pre>
 
   <h2>Ecommerce context</h2>

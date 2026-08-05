@@ -1,0 +1,82 @@
+/* ─── Countdown ─────────────────────────────────────────── */
+
+/* 1. Component tokens */
+.ds-countdown {
+  --countdown-segment-gap: var(--spacing-2);
+  --countdown-value-font-size: var(--font-size-tight-xl);
+  --countdown-label-font-size: var(--font-size-tight-2xs);
+}
+
+/* 2. Base styles */
+.ds-countdown {
+  display: inline-flex;
+  font-family: var(--font-family-body);
+  color: var(--color-foreground);
+}
+
+.ds-countdown__display {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--countdown-segment-gap);
+}
+
+/* ─── Segment ──────────────────────────────────────────── */
+.ds-countdown__segment {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-1);
+}
+
+/* Digits render in the numeric (monospace) family with tabular
+   figures so segment width never jitters as values tick down. */
+.ds-countdown__value {
+  font-family: var(--font-family-numeric);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--countdown-value-font-size);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-none);
+}
+
+.ds-countdown__label {
+  font-size: var(--countdown-label-font-size);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-none);
+  letter-spacing: var(--letter-spacing-wider);
+  text-transform: uppercase;
+  color: var(--color-foreground-secondary);
+}
+
+/* Separator matches the value line so the colons sit on the
+   digit row, not centered against the stacked segment. */
+.ds-countdown__separator {
+  font-family: var(--font-family-numeric);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--countdown-value-font-size);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-none);
+  color: var(--color-foreground-muted);
+}
+
+/* ─── Sizes ────────────────────────────────────────────── */
+.ds-countdown--sm {
+  --countdown-segment-gap: var(--spacing-1);
+  --countdown-value-font-size: var(--font-size-tight-base);
+}
+
+/* md uses the component-token defaults */
+
+/* ─── Screen-reader announcement ───────────────────────── */
+/* The only content assistive tech reads. Visually hidden, but NOT
+   display:none / visibility:hidden — those silence live regions. */
+.ds-countdown__announcement {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border-width: 0;
+}

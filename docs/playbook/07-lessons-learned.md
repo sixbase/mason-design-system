@@ -475,6 +475,41 @@ The React DS side doesn't hit this because `<Text size="sm" weight="semibold">` 
 
 ---
 
+### iOS auto-zoom: the fluid `--font-size-base` dips below 1rem on phones {#ios-zoom-fluid-base}
+**Bug:** iOS Safari zooms the whole page when a focused form control's font-size is under 16px. Our fluid `--font-size-base` is `clamp(0.8611rem, …, 1rem)` — on phone widths it sits *below* 1rem, so even "base"-sized inputs triggered zoom.
+**Rule:** Form controls (Input, Textarea, Select trigger, QuantitySelector) pin `font-size` to `--font-size-tight-base` (fixed 1rem) under `@media (pointer: coarse)`. Any control using the fluid default scale needs the guard — including `lg` sizes.
+
+### Hit-area pattern selection: overlay vs min-height vs one-axis {#hit-area-selection}
+The 44px `--size-hit-area` convention (see decisions log) has three application modes, chosen by neighborhood:
+- **Isolated control** (alert dismiss, card action): centered `::after` sized `max(100%, var(--size-hit-area))`, unguarded.
+- **Adjacent controls** (quantity +/- , variant options, pagination, tag rows): same pseudo-element but wrapped in `@media (pointer: coarse)` so precise pointers keep exact bounds; widen the row-gap in the same query if wrapped rows would overlap zones.
+- **Flush-stacked full-width controls** (accordion triggers, tab triggers, sidebar links): grow the **real box** with `min-height: var(--size-hit-area)` — an invisible overlay would swallow the neighbor's edge.
+- **Inline text neighbors** (breadcrumb links): extend **one axis only** (height), never width.
+
+### Safe-area `max()` must be re-declared per breakpoint block {#safe-area-per-breakpoint}
+`padding-bottom: max(var(--spacing-8), var(--safe-area-bottom))` is wiped by any later breakpoint block that re-sets the padding shorthand. Every media query that touches the padding of a safe-area-aware edge must repeat the `max()` form.
+
+### Radix portals: style via passed-down BEM modifiers, and other portal gotchas {#radix-portal-gotchas}
+- Portal content escapes the DOM tree — ancestor selectors can't reach it. Pass a BEM modifier prop down instead (e.g. CollectionFilters' `panel--drawer`).
+- `aria-controls` must only be applied while the portal content is mounted, else it dangles.
+- No Description child? Pass `aria-describedby={undefined}` to Radix Content — suppresses the console warning without rendering a fake duplicated description.
+- (Existing rule still applies: portal roots declare `font-family` explicitly.)
+
+### Focus rings inside `overflow: hidden` need the inset ring {#focus-ring-inset-overflow}
+A scrollable track focused via `tabIndex=0` (Carousel) draws its `--focus-ring` box-shadow *outside* its box — an `overflow: hidden` ancestor clips it invisible. Use `--focus-ring-inset` on focusable elements whose painted edge touches a clipping ancestor.
+
+### Component reduced-motion overrides vs the global kill switch {#reduced-motion-off-screen}
+The global reduced-motion reset forces `animation-iteration-count: 1` — a looping animation runs once and *parks on its final keyframe*. For animations whose final frame is off-screen or mid-sweep (indeterminate progress, shimmer), the component must ship an explicit `prefers-reduced-motion` block with a sensible static state, not rely on the global reset.
+
+### `@ds/tokens/json` is not importable from `@ds/components` {#tokens-json-not-importable}
+The components tsconfig lacks `resolveJsonModule`, so JS-consumed token values (swipe threshold) can't be imported from the JSON export. Current convention: read the CSS custom property at runtime (`getComputedStyle`) with a documented fallback constant naming the token. If JS token consumption grows, enable `resolveJsonModule` as its own decision.
+
+### Overflow-fade standard: scroll-shadow backgrounds, not `:has()` masks {#scroll-shadow-standard}
+Tabs' original edge-fade used a `:has()` selector (Safari <17.4 breaks) and a mask that dimmed the active-tab indicator at the ends. The system standard is the Table technique — paired cover/shadow `background-attachment: local/scroll` gradients: pure CSS, edges appear only when content actually overflows in that direction, works everywhere.
+
+### 320px check: never pin a fixed-intrinsic control beside a fixed column {#fixed-intrinsic-320}
+CartLineItem pinned QuantitySelector (~104px intrinsic) into the grid column next to the fixed 80px image column — at 320px the remove button fell off-screen. Fix: span the control across columns on the next row. Corollary of the existing fluid-grid lesson: audit mobile grids at **320px**, not 375px.
+
 ## Recommendations for Next Build
 
 1. **Define token palette LAST.** Build a rough prototype first to understand brand direction. Lock token names before writing components — renaming causes ripple effects.

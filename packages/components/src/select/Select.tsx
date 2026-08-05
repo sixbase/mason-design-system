@@ -85,7 +85,12 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
         </RadixSelect.Trigger>
 
         <RadixSelect.Portal>
-          <RadixSelect.Content className="ds-select-content" position="popper" sideOffset={4}>
+          <RadixSelect.Content
+            className="ds-select-content"
+            position="popper"
+            sideOffset={4}
+            collisionPadding={8}
+          >
             <RadixSelect.ScrollUpButton className="ds-select-scroll-btn">
               <ChevronUp size="sm" />
             </RadixSelect.ScrollUpButton>

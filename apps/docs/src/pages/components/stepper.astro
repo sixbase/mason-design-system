@@ -1,0 +1,79 @@
+---
+import ComponentPage from '../../layouts/ComponentPage.astro';
+import { StepperDefault, StepperStates, StepperClickable, StepperOrderTracking } from '../../components/StepperGallery';
+---
+
+<ComponentPage
+  title="Stepper"
+  description="Checkout and order progress steps with ordered-list semantics. Completed steps show a check, the active step is announced with <code>aria-current='step'</code>, and completed steps can optionally be clickable for backwards navigation."
+  installCode="import { Stepper, Step } from '@ds/components';"
+  props={[
+    {
+      name: 'Stepper',
+      headers: ['Prop', 'Type', 'Default', 'Description'],
+      rows: [
+        ['<code>activeStep</code>', '<code>number</code>', '—', 'Zero-based index of the active step'],
+        ['<code>onStepClick</code>', '<code>(index: number) =&gt; void</code>', '—', 'Makes completed steps clickable for backwards navigation. Upcoming steps are never clickable.'],
+        ['<code>label</code>', '<code>string</code>', "<code>'Progress'</code>", 'Accessible name for the navigation landmark'],
+      ],
+    },
+    {
+      name: 'Step',
+      headers: ['Prop', 'Type', 'Default', 'Description'],
+      rows: [
+        ['<code>label</code>', '<code>string</code>', '—', 'Visible step label (e.g. "Shipping")'],
+        ['<code>state</code>', "<code>'completed' | 'active' | 'upcoming'</code>", '—', 'Injected by Stepper — set manually only for standalone use'],
+        ['<code>stepNumber</code>', '<code>number</code>', '—', 'Injected by Stepper (1-based)'],
+      ],
+    },
+  ]}
+  accessibility={[
+    'Rendered as an <code>&lt;ol&gt;</code> inside a <code>&lt;nav&gt;</code> landmark — screen readers announce position ("2 of 4") from list semantics',
+    'The active step carries <code>aria-current="step"</code>',
+    'Completed steps include visually hidden "(completed)" text; the check icon is <code>aria-hidden</code>',
+    'Clickable completed steps are real <code>&lt;button type="button"&gt;</code> elements with 44px hit areas via a pseudo-element',
+    'Upcoming steps are never rendered as buttons — nothing focusable that cannot be used',
+    'Color transitions respect <code>prefers-reduced-motion: reduce</code>',
+  ]}
+>
+  <h2>Default</h2>
+  <p>Four-step checkout with the second step active. Steps before <code>activeStep</code> render completed, later steps upcoming.</p>
+  <StepperDefault client:load />
+  <pre><code>{`<Stepper activeStep={1} label="Checkout progress">
+  <Step label="Cart" />
+  <Step label="Shipping" />
+  <Step label="Payment" />
+  <Step label="Review" />
+</Stepper>`}</code></pre>
+
+  <h2>States</h2>
+  <p>First step active (nothing completed) and last step active (everything before completed).</p>
+  <StepperStates client:load />
+  <pre><code>{`<Stepper activeStep={0} label="Checkout progress">…</Stepper>
+<Stepper activeStep={3} label="Checkout progress">…</Stepper>`}</code></pre>
+
+  <h2>Clickable completed steps</h2>
+  <p>Pass <code>onStepClick</code> to let shoppers navigate back to completed steps. Only completed steps become buttons — the active and upcoming steps are never clickable. Try clicking "Cart" or "Shipping".</p>
+  <StepperClickable client:load />
+  <pre><code>{`const [activeStep, setActiveStep] = useState(2);
+
+<Stepper activeStep={activeStep} onStepClick={setActiveStep} label="Checkout progress">
+  <Step label="Cart" />
+  <Step label="Shipping" />
+  <Step label="Payment" />
+  <Step label="Review" />
+</Stepper>`}</code></pre>
+
+  <h2>Order tracking</h2>
+  <p>The same component works for post-purchase order status.</p>
+  <StepperOrderTracking client:load />
+  <pre><code>{`<Stepper activeStep={2} label="Order progress">
+  <Step label="Ordered" />
+  <Step label="Shipped" />
+  <Step label="Out for delivery" />
+  <Step label="Delivered" />
+</Stepper>`}</code></pre>
+
+  <h2>Mobile behavior</h2>
+  <p>Below 640px, labels are hidden except for the active step — indicator dots and connector lines remain. This keeps the row narrow on small checkout screens while the active label still anchors context. Resize the window to see it.</p>
+</ComponentPage>

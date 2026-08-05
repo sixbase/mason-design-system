@@ -39,6 +39,8 @@
   max-width: var(--size-content-sm);
   margin: 0 auto;
   padding: var(--spacing-4) var(--spacing-6);
+  /* Keep actions clear of the home indicator on notched devices */
+  padding-bottom: max(var(--spacing-4), var(--safe-area-bottom));
   background-color: var(--color-background-surface);
   border-top: 1px solid var(--color-border);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
@@ -103,6 +105,7 @@
 @media (max-width: 639px) {
   .ds-cookie-consent__content {
     padding: var(--spacing-3) var(--spacing-4);
+    padding-bottom: max(var(--spacing-3), var(--safe-area-bottom));
     border-radius: 0;
   }
 

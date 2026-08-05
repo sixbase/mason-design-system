@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { useState } from 'react';
 import { Table } from './Table';
 
 const meta: Meta<typeof Table> = {
@@ -16,6 +17,10 @@ const meta: Meta<typeof Table> = {
     },
     stickyHeader: {
       control: 'boolean',
+    },
+    responsive: {
+      control: 'select',
+      options: ['scroll', 'stack'],
     },
   },
 };
@@ -184,6 +189,106 @@ export const StickyHeader: Story = {
         </Table>
       </div>
     );
+  },
+};
+
+export const ResponsiveStack: Story = {
+  parameters: {
+    viewport: { defaultViewport: 'mobile1' },
+    docs: {
+      description: {
+        story:
+          'With `responsive="stack"`, rows render as cards below the sm breakpoint (640px) and each cell shows its column header as a label. Markup stays a semantic table. Resize the viewport to see it.',
+      },
+    },
+  },
+  render: () => (
+    <Table responsive="stack" variant="striped" aria-label="Size chart (stacked on mobile)">
+      <Table.Header>
+        <Table.Row>
+          <Table.Head>Size</Table.Head>
+          <Table.Head>Chest (cm)</Table.Head>
+          <Table.Head>Waist (cm)</Table.Head>
+          <Table.Head>Hips (cm)</Table.Head>
+        </Table.Row>
+      </Table.Header>
+      <Table.Body>
+        {sizeChartData.map((row) => (
+          <Table.Row key={row.size}>
+            <Table.Cell>{row.size}</Table.Cell>
+            <Table.Cell>{row.chest}</Table.Cell>
+            <Table.Cell>{row.waist}</Table.Cell>
+            <Table.Cell>{row.hips}</Table.Cell>
+          </Table.Row>
+        ))}
+      </Table.Body>
+    </Table>
+  ),
+};
+
+export const SortableHeaders: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Pass `onSort` (or `sortable`) to render the header content in a real button with `aria-sort`. Sorting logic stays external.',
+      },
+    },
+  },
+  render: () => {
+    function SortableDemo() {
+      const [sortKey, setSortKey] = useState<'size' | 'chest'>('size');
+      const [direction, setDirection] = useState<'asc' | 'desc'>('asc');
+
+      const handleSort = (key: 'size' | 'chest') => {
+        if (key === sortKey) {
+          setDirection(direction === 'asc' ? 'desc' : 'asc');
+        } else {
+          setSortKey(key);
+          setDirection('asc');
+        }
+      };
+
+      const rows = [...sizeChartData].sort((a, b) => {
+        const compared =
+          sortKey === 'size'
+            ? a.size.localeCompare(b.size)
+            : Number(a.chest) - Number(b.chest);
+        return direction === 'asc' ? compared : -compared;
+      });
+
+      return (
+        <Table aria-label="Sortable size chart">
+          <Table.Header>
+            <Table.Row>
+              <Table.Head
+                sorted={sortKey === 'size' && direction}
+                onSort={() => handleSort('size')}
+              >
+                Size
+              </Table.Head>
+              <Table.Head
+                sorted={sortKey === 'chest' && direction}
+                onSort={() => handleSort('chest')}
+              >
+                Chest (cm)
+              </Table.Head>
+              <Table.Head>Waist (cm)</Table.Head>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
+            {rows.map((row) => (
+              <Table.Row key={row.size}>
+                <Table.Cell>{row.size}</Table.Cell>
+                <Table.Cell>{row.chest}</Table.Cell>
+                <Table.Cell>{row.waist}</Table.Cell>
+              </Table.Row>
+            ))}
+          </Table.Body>
+        </Table>
+      );
+    }
+    return <SortableDemo />;
   },
 };
 

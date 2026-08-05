@@ -21,9 +21,9 @@
   border-radius: var(--radius-lg);
 }
 
-/* Prose-width container for text demos — respects 65ch convention */
+/* Prose-width container for text demos — respects the reading-measure convention */
 .ds-demo-prose {
-  max-width: var(--size-content-prose, 65ch);
+  max-width: var(--measure-reading);
 }
 
 /* Section label — reusable for filter headers, group labels, etc. */
@@ -73,12 +73,16 @@
 
 /* ─── Gallery utilities — doc component previews ─────────── */
 
-.ds-gallery-card { width: 200px; }
-.ds-gallery-card--wide { width: 220px; }
+/* Fixed demo widths cap at 100% so they shrink on narrow screens
+   instead of overflowing the preview canvas */
+.ds-gallery-card { width: 200px; max-width: 100%; }
+.ds-gallery-card--wide { width: 220px; max-width: 100%; }
 .ds-gallery-input { max-width: 360px; width: 100%; }
-.ds-gallery-select { width: 220px; }
-.ds-gallery-select--wide { width: 240px; }
+.ds-gallery-select { width: 220px; max-width: 100%; }
+.ds-gallery-select--wide { width: 240px; max-width: 100%; }
 .ds-gallery-full { width: 100%; }
+/* Popover demos with showClose: keep body text clear of the corner close button */
+.ds-gallery-popover-body { padding-right: var(--spacing-8); }
 
 .ds-gallery-label {
   font-size: var(--font-size-xs);

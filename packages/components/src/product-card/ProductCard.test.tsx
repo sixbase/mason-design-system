@@ -83,9 +83,82 @@ describe('ProductCard', () => {
     expect(screen.getByTestId('card')).toHaveClass('ds-product-card--has-hover-image');
   });
 
+  it('renders actionSlot content in the image overlay', () => {
+    const { container } = render(
+      <ProductCard
+        name="Wishlist Item"
+        price={3200}
+        image="/item.jpg"
+        actionSlot={
+          <button type="button" aria-label="Add to wishlist" data-testid="wishlist">
+            ♥
+          </button>
+        }
+      />,
+    );
+    const overlay = container.querySelector('.ds-product-card__action');
+    expect(overlay).toBeInTheDocument();
+    expect(overlay).toContainElement(screen.getByTestId('wishlist'));
+    // Slot lives inside the image wrapper so it overlays the image
+    expect(container.querySelector('.ds-product-card__image-wrapper')).toContainElement(
+      overlay as HTMLElement,
+    );
+  });
+
+  it('renders footerSlot content after the card body', () => {
+    const { container } = render(
+      <ProductCard
+        name="Quick Add Item"
+        price={3200}
+        image="/item.jpg"
+        footerSlot={
+          <button type="button" data-testid="quick-add">
+            Quick add
+          </button>
+        }
+      />,
+    );
+    const footer = container.querySelector('.ds-product-card__footer');
+    expect(footer).toBeInTheDocument();
+    expect(footer).toContainElement(screen.getByTestId('quick-add'));
+  });
+
+  it('does not render slot wrappers when slots are omitted', () => {
+    const { container } = render(
+      <ProductCard name="Plain" price={3200} image="/plain.jpg" />,
+    );
+    expect(container.querySelector('.ds-product-card__action')).not.toBeInTheDocument();
+    expect(container.querySelector('.ds-product-card__footer')).not.toBeInTheDocument();
+  });
+
+  it('does not set an inline aspect-ratio style (token-driven via CSS)', () => {
+    const { container } = render(
+      <ProductCard name="Tokenized" price={3200} image="/t.jpg" />,
+    );
+    const imageEl = container.querySelector('.ds-card-image');
+    expect(imageEl).not.toHaveAttribute('style');
+  });
+
   it('has no accessibility violations', async () => {
     const { container } = render(
       <ProductCard name="Classic T-Shirt" price={3200} image="/tshirt.jpg" />,
+    );
+    expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it('has no accessibility violations with action and footer slots', async () => {
+    const { container } = render(
+      <ProductCard
+        name="Slotted"
+        price={3200}
+        image="/s.jpg"
+        actionSlot={
+          <button type="button" aria-label="Add to wishlist">
+            ♥
+          </button>
+        }
+        footerSlot={<button type="button">Quick add</button>}
+      />,
     );
     expect(await axe(container)).toHaveNoViolations();
   });

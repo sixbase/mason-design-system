@@ -1,0 +1,60 @@
+---
+import ComponentPage from '../../layouts/ComponentPage.astro';
+import { TooltipDefault, TooltipSides, TooltipLongContent, TooltipInstant } from '../../components/TooltipGallery';
+---
+
+<ComponentPage
+  title="Tooltip"
+  description="A small floating label shown on hover or keyboard focus. Built on Radix UI Tooltip with collision-aware positioning and a provider-wrapped convenience API — no app-level setup needed. Common ecommerce uses: icon-button labels, truncated text, shipping and stock hints."
+  installCode="import { Tooltip } from '@ds/components';"
+  props={[
+    {
+      headers: ['Prop', 'Type', 'Default', 'Description'],
+      rows: [
+        ['<code>content</code>', '<code>ReactNode</code>', '—', 'Tooltip text or content (required)'],
+        ['<code>children</code>', '<code>ReactNode</code>', '—', 'Trigger element — must accept a ref'],
+        ['<code>side</code>', "<code>'top' | 'right' | 'bottom' | 'left'</code>", "<code>'top'</code>", 'Preferred side — flips on collision'],
+        ['<code>align</code>', "<code>'start' | 'center' | 'end'</code>", "<code>'center'</code>", 'Alignment along the trigger edge'],
+        ['<code>delayDuration</code>', '<code>number</code>', '<code>262</code>', 'Open delay in ms (= <code>--transition-duration-slow</code>)'],
+        ['<code>open</code>', '<code>boolean</code>', '—', 'Controlled open state'],
+        ['<code>defaultOpen</code>', '<code>boolean</code>', '<code>false</code>', 'Initial open state (uncontrolled)'],
+        ['<code>onOpenChange</code>', '<code>(open: boolean) =&gt; void</code>', '—', 'Open state change handler'],
+      ],
+    },
+  ]}
+  accessibility={[
+    'Opens on hover and on keyboard focus; <kbd>Escape</kbd> dismisses',
+    'Content is announced to screen readers via Radix’s ARIA wiring',
+    'Tooltips never appear on touch devices — content must be supplementary, never the only way to access information',
+    'Positioning is collision-aware with <code>--spacing-4</code> viewport padding, so content never clips on small screens',
+  ]}
+>
+  <h2>Default</h2>
+  <TooltipDefault client:load />
+  <pre><code>{`<Tooltip content="Add to wishlist">
+  <Button variant="secondary" iconOnly aria-label="Add to wishlist">
+    <Heart size="sm" />
+  </Button>
+</Tooltip>`}</code></pre>
+
+  <h2>Sides</h2>
+  <TooltipSides client:load />
+  <pre><code>{`<Tooltip content="Tooltip on top" side="top">...</Tooltip>
+<Tooltip content="Tooltip on right" side="right">...</Tooltip>
+<Tooltip content="Tooltip on bottom" side="bottom">...</Tooltip>
+<Tooltip content="Tooltip on left" side="left">...</Tooltip>`}</code></pre>
+
+  <h2>Long content</h2>
+  <TooltipLongContent client:load />
+  <pre><code>{`{/* Wraps at a readable max-width (36ch) */}
+<Tooltip content="Free standard shipping applies to orders over $75...">
+  <Button variant="secondary">Shipping details</Button>
+</Tooltip>`}</code></pre>
+
+  <h2>Custom delay</h2>
+  <TooltipInstant client:load />
+  <pre><code>{`{/* Default delay is 262ms (--transition-duration-slow) */}
+<Tooltip content="No delay on this one" delayDuration={0}>
+  <Button variant="secondary">Hover me</Button>
+</Tooltip>`}</code></pre>
+</ComponentPage>

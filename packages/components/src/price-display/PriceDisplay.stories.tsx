@@ -7,6 +7,7 @@ const meta: Meta<typeof PriceDisplay> = {
   tags: ['autodocs'],
   argTypes: {
     size: { control: 'select', options: ['sm', 'md', 'lg'] },
+    emphasis: { control: 'select', options: ['none', 'sale'] },
   },
 };
 export default meta;
@@ -31,6 +32,20 @@ export const Large: Story = {
 
 export const LargeOnSale: Story = {
   args: { price: '$96.00', comparePrice: '$120.00', size: 'lg' },
+};
+
+/** Sale emphasis without a compare price — forces the destructive color. */
+export const SaleEmphasis: Story = {
+  args: { price: '$38.00', emphasis: 'sale' },
+};
+
+/** In narrow containers the compare price wraps instead of overflowing. */
+export const NarrowContainerWrap: Story = {
+  render: () => (
+    <div style={{ width: 'var(--spacing-phi-34)' }}>
+      <PriceDisplay price="$1,238.00" comparePrice="$1,560.00" />
+    </div>
+  ),
 };
 
 export const AllSizes: Story = {

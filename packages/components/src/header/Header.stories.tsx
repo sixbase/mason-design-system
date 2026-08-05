@@ -54,3 +54,30 @@ export const LogoOnly: Story = {
     showThemeToggle: false,
   },
 };
+
+export const Sticky: Story = {
+  args: {
+    logoSrc,
+    logoAlt: 'Mason Supply home',
+    navItems,
+    sticky: true,
+    cartCount: 2,
+  },
+  render: (args) => (
+    <div style={{ height: 'var(--size-content-lg)' }}>
+      <Header {...args} />
+    </div>
+  ),
+};
+
+export const MobileMenu: Story = {
+  args: {
+    logoSrc,
+    logoAlt: 'Mason Supply home',
+    navItems,
+    cartCount: 3,
+  },
+  parameters: {
+    viewport: { defaultViewport: 'mobile1' },
+  },
+};

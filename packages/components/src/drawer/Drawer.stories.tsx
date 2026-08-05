@@ -19,16 +19,25 @@ const meta: Meta<typeof Drawer> = {
   argTypes: {
     side: {
       control: 'select',
-      options: ['left', 'right'],
-      description: 'Which edge the drawer slides from',
+      options: ['left', 'right', 'bottom'],
+      description: 'Which edge the drawer slides from — `bottom` renders a bottom sheet',
+    },
+    size: {
+      control: 'select',
+      options: ['sm', 'md', 'lg'],
+      description: 'Width preset for left/right drawers (--size-modal-sm/md/lg)',
     },
     width: {
       control: 'text',
-      description: 'CSS width value (ignored on mobile)',
+      description: 'CSS width value (overrides size; ignored on mobile)',
     },
     title: {
       control: 'text',
       description: 'Accessible title (visually hidden)',
+    },
+    description: {
+      control: 'text',
+      description: 'Accessible description announced on open (visually hidden)',
     },
     open: { table: { disable: true } },
     onOpenChange: { table: { disable: true } },
@@ -114,6 +123,71 @@ export const CustomWidth: Story = {
             </p>
           </div>
         </Drawer>
+      </>
+    );
+  },
+};
+
+export const BottomSheet: Story = {
+  render: function BottomSheetStory() {
+    const [open, setOpen] = useState(false);
+    return (
+      <>
+        <Button onClick={() => setOpen(true)}>Open bottom sheet</Button>
+        <Drawer
+          open={open}
+          onOpenChange={setOpen}
+          side="bottom"
+          title="Filter and sort"
+          description="Refine the product list by category and price"
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)' }}>
+            <p style={{ margin: 0, fontWeight: 'var(--font-weight-semibold)' }}>
+              Sort by
+            </p>
+            {['Newest', 'Price: low to high', 'Price: high to low', 'Best selling'].map(
+              (option) => (
+                <Button key={option} variant="ghost" fullWidth>
+                  {option}
+                </Button>
+              ),
+            )}
+            <Button variant="primary" fullWidth onClick={() => setOpen(false)}>
+              Apply
+            </Button>
+          </div>
+        </Drawer>
+      </>
+    );
+  },
+};
+
+export const SizePresets: Story = {
+  render: function SizePresetsStory() {
+    const [openSize, setOpenSize] = useState<'sm' | 'md' | 'lg' | null>(null);
+    return (
+      <>
+        <div style={{ display: 'flex', gap: 'var(--spacing-3)' }}>
+          {(['sm', 'md', 'lg'] as const).map((size) => (
+            <Button key={size} variant="secondary" onClick={() => setOpenSize(size)}>
+              Open {size}
+            </Button>
+          ))}
+        </div>
+        {(['sm', 'md', 'lg'] as const).map((size) => (
+          <Drawer
+            key={size}
+            open={openSize === size}
+            onOpenChange={(open) => setOpenSize(open ? size : null)}
+            size={size}
+            title={`${size} drawer`}
+          >
+            <p style={{ margin: 0 }}>
+              This drawer uses the <code>{size}</code> width preset
+              (<code>--size-modal-{size}</code>).
+            </p>
+          </Drawer>
+        ))}
       </>
     );
   },

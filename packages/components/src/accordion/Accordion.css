@@ -32,6 +32,10 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  /* Touch target: triggers are stacked flush against each other, so the
+     tap zone must be real height (min-height), not a pseudo-element
+     overlay — an overlay would overlap the adjacent item's trigger. */
+  min-height: var(--size-hit-area);
   border: none;
   background: transparent;
   text-align: left;
@@ -60,6 +64,15 @@
 .ds-accordion__trigger[data-disabled] {
   color: var(--color-foreground-muted);
   cursor: not-allowed;
+}
+
+.ds-accordion__trigger[data-disabled]:hover {
+  text-decoration: none;
+}
+
+/* ─── Disabled item ─────────────────────────────────────── */
+.ds-accordion__item--disabled {
+  opacity: var(--opacity-medium);
 }
 
 .ds-accordion__trigger-text {

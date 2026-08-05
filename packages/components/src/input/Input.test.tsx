@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 import { describe, expect, it } from 'vitest';
 import { Input } from './Input';
@@ -68,6 +69,21 @@ describe('Input', () => {
     });
   });
 
+  describe('read-only state', () => {
+    it('sets the readonly attribute', () => {
+      render(<Input label="Order number" readOnly defaultValue="MS-1042" />);
+      expect(screen.getByRole('textbox')).toHaveAttribute('readonly');
+    });
+
+    it('keeps the value when typing is attempted', async () => {
+      const user = userEvent.setup();
+      render(<Input label="Order number" readOnly defaultValue="MS-1042" />);
+      const input = screen.getByRole('textbox');
+      await user.type(input, 'xyz');
+      expect(input).toHaveValue('MS-1042');
+    });
+  });
+
   describe('required', () => {
     it('marks input as required', () => {
       render(<Input required label="Name" />);
@@ -95,6 +111,7 @@ describe('Input', () => {
           <Input label="Name" required />
           <Input label="Postal code" error="Required field" />
           <Input label="Company" disabled />
+          <Input label="Order number" readOnly defaultValue="MS-1042" />
         </div>,
       );
       expect(await axe(container)).toHaveNoViolations();

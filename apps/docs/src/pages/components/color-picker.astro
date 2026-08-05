@@ -1,6 +1,6 @@
 ---
 import ComponentPage from '../../layouts/ComponentPage.astro';
-import { ColorPickerDefault, ColorPickerSizes } from '../../components/ColorPickerGallery';
+import { ColorPickerDefault, ColorPickerWithLabel, ColorPickerSizes } from '../../components/ColorPickerGallery';
 ---
 
 <ComponentPage
@@ -15,6 +15,7 @@ import { ColorPickerDefault, ColorPickerSizes } from '../../components/ColorPick
         ['<code>value</code>', '<code>string</code>', '—', 'Currently selected value'],
         ['<code>onChange</code>', '<code>(value: string) =&gt; void</code>', '—', 'Called when a color is selected'],
         ['<code>size</code>', "<code>'sm' | 'md' | 'lg'</code>", "<code>'md'</code>", 'Size of the swatches'],
+        ['<code>showLabel</code>', '<code>boolean</code>', '<code>false</code>', 'Show the selected option’s name next to the swatch group'],
       ],
     },
   ]}
@@ -22,7 +23,9 @@ import { ColorPickerDefault, ColorPickerSizes } from '../../components/ColorPick
     'Uses <code>role="radiogroup"</code> on the container and <code>role="radio"</code> on each swatch',
     'Each swatch has an <code>aria-label</code> with the color name (e.g. "Carbon Black")',
     '<code>aria-checked</code> indicates the selected swatch',
-    'Color is not the sole indicator — the active ring visually marks the selection',
+    'Roving tabindex — the group is a single tab stop; <kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd> move and select like a native radio group',
+    'Color is not the sole indicator — the active ring visually marks the selection, and <code>showLabel</code> can display the name as text',
+    'Swatches keep their visual size but expand to a 44px touch hit area on coarse pointers',
   ]}
 >
   <h2>Default</h2>
@@ -34,6 +37,11 @@ import { ColorPickerDefault, ColorPickerSizes } from '../../components/ColorPick
 ];
 
 <ColorPicker options={COLORS} value={value} onChange={setValue} />`}</code></pre>
+
+  <h2>With selected label</h2>
+  <p>Pass <code>showLabel</code> to display the selected option's name next to the group.</p>
+  <ColorPickerWithLabel client:load />
+  <pre><code>{`<ColorPicker options={COLORS} value={value} onChange={setValue} showLabel aria-label="Case color" />`}</code></pre>
 
   <h2>Sizes</h2>
   <p>Three swatch sizes to fit different contexts.</p>

@@ -84,6 +84,16 @@ describe('CartDrawer', () => {
     expect(checkoutLink).toHaveAttribute('href', '/checkout');
   });
 
+  it('renders checkout and continue-shopping as large (55px) controls', () => {
+    render(<CartDrawer {...defaultProps} />);
+    expect(
+      screen.getByRole('link', { name: 'Checkout' }).className,
+    ).toContain('ds-button--lg');
+    expect(
+      screen.getByRole('button', { name: 'Continue Shopping' }).className,
+    ).toContain('ds-button--lg');
+  });
+
   it('uses custom checkout URL', () => {
     render(<CartDrawer {...defaultProps} checkoutUrl="/custom-checkout" />);
     const checkoutLink = screen.getByRole('link', { name: 'Checkout' });

@@ -1,0 +1,104 @@
+/* ─── Textarea component tokens ───────────────────────────── */
+.ds-textarea-root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  width: 100%;
+  font-family: var(--font-family-body);
+}
+
+/* ─── Label ────────────────────────────────────────────────── */
+.ds-textarea-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-foreground);
+  line-height: var(--line-height-snug);
+}
+
+.ds-textarea-label--required::after {
+  content: ' *';
+  color: var(--color-destructive);
+}
+
+/* ─── Textarea field ───────────────────────────────────────── */
+.ds-textarea-field {
+  --textarea-border-color: var(--color-border);
+  --textarea-bg: var(--color-background-surface);
+  --textarea-radius: var(--radius-md);
+
+  display: block;
+  width: 100%;
+  padding: var(--spacing-2) var(--spacing-3);
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  color: var(--color-foreground);
+  line-height: var(--line-height-normal);
+  background-color: var(--textarea-bg);
+  border: 1px solid var(--textarea-border-color);
+  border-radius: var(--textarea-radius);
+  outline: none;
+  resize: vertical;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.ds-textarea-field::placeholder {
+  color: var(--color-foreground-secondary);
+}
+
+/* Auto-resize: grow with content, no manual handle */
+.ds-textarea-field--auto-resize {
+  field-sizing: content;
+  resize: none;
+  overflow: hidden;
+}
+
+/* Focus */
+.ds-textarea-field:focus {
+  border-color: var(--color-primary);
+  box-shadow: var(--focus-ring);
+}
+
+/* Hover (non-focused, non-disabled) */
+.ds-textarea-field:hover:not(:focus):not(:disabled):not([aria-invalid="true"]) {
+  border-color: var(--color-border-strong);
+}
+
+/* Error state */
+.ds-textarea-field[aria-invalid="true"] {
+  border-color: var(--color-destructive);
+}
+
+.ds-textarea-field[aria-invalid="true"]:focus {
+  box-shadow: var(--focus-ring-error);
+}
+
+/* Disabled */
+.ds-textarea-field:disabled {
+  opacity: var(--opacity-medium);
+  cursor: not-allowed;
+  resize: none;
+  background-color: var(--color-background-subtle);
+}
+
+/* iOS zoom guard: Safari zooms the page when a focused field is below 16px
+   (1rem). On touch devices, never let the textarea drop under that threshold. */
+@media (pointer: coarse) {
+  .ds-textarea-field {
+    font-size: max(1rem, var(--font-size-base));
+  }
+}
+
+/* ─── Helper text / error message ──────────────────────────── */
+.ds-textarea-hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-foreground-secondary);
+  line-height: var(--line-height-normal);
+}
+
+.ds-textarea-error {
+  font-size: var(--font-size-xs);
+  color: var(--color-destructive);
+  line-height: var(--line-height-normal);
+}

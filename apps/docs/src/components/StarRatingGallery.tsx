@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { StarRating } from '@ds/components';
 import { Preview } from './Preview';
 
@@ -27,6 +28,27 @@ export function StarRatingValues() {
       <StarRating rating={3} />
       <StarRating rating={1.5} />
       <StarRating rating={0} />
+    </Preview>
+  );
+}
+
+export function StarRatingWithLabel() {
+  return (
+    <Preview>
+      <StarRating rating={4.5} reviewCount={128} label="Customer rating" />
+    </Preview>
+  );
+}
+
+function InteractiveStarRating() {
+  const [rating, setRating] = useState(0);
+  return <StarRating rating={rating} onRate={setRating} label="Your rating" />;
+}
+
+export function StarRatingInteractive() {
+  return (
+    <Preview>
+      <InteractiveStarRating />
     </Preview>
   );
 }

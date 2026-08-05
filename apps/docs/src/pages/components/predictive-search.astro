@@ -34,8 +34,10 @@ import type { SearchResult, SearchResultType } from '@ds/components';`}
     '<code>aria-live="polite"</code> region announces result count when results load',
     'Full keyboard navigation: Arrow keys, Enter, Escape, Home, End',
     'Visually-hidden label associated with input via <code>htmlFor</code>',
-    'Clear button has <code>aria-label="Clear search"</code>',
+    'Clear button has <code>aria-label="Clear search"</code> and a 44px touch target on touch devices',
+    'Result options carry an <code>aria-label</code> with the full title and price, so truncated titles are still announced in full',
     'Loading state uses <code>aria-busy="true"</code> and <code>role="status"</code>',
+    'Below 640px the dropdown caps at 50dvh with touch scrolling, keeping the on-screen keyboard usable',
   ]}
 >
   <h2>Interactive demo</h2>

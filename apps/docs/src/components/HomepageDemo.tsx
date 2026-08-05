@@ -65,7 +65,7 @@ export function HomepageDemo({ basePath = '' }: { basePath?: string }) {
           </Text>
         </div>
 
-        <Carousel gap="md">
+        <Carousel gap="md" label="Featured products">
           {FEATURED.map((product) => (
             <CarouselSlide key={product.id} size="sm">
               <a

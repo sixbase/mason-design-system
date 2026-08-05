@@ -1,0 +1,125 @@
+/* ─── Slider component tokens ─────────────────────────────── */
+.ds-slider {
+  --slider-track-height: var(--spacing-1);
+  --slider-thumb-size: var(--size-checkbox-md); /* 21px — Fibonacci */
+  --slider-track-color: var(--color-border);
+  --slider-range-color: var(--color-primary);
+  --slider-radius: var(--radius-full);
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  width: 100%;
+  font-family: var(--font-family-body);
+}
+
+.ds-slider--disabled {
+  opacity: var(--opacity-medium);
+}
+
+/* ─── Header (label + value) ──────────────────────────────── */
+.ds-slider__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+}
+
+.ds-slider__label {
+  color: var(--color-foreground);
+}
+
+/* Values are pure numerals — numeric family with tabular figures.
+   Two-class specificity beats base .ds-text. */
+.ds-slider .ds-slider__value {
+  font-family: var(--font-family-numeric);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-foreground-secondary);
+}
+
+/* ─── Root — 44px tall for a comfortable touch target ─────── */
+.ds-slider__root {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: var(--size-hit-area);
+  touch-action: none;
+  user-select: none;
+  cursor: pointer;
+}
+
+.ds-slider__root[data-disabled] {
+  cursor: not-allowed;
+}
+
+/* ─── Track & range fill ──────────────────────────────────── */
+.ds-slider__track {
+  position: relative;
+  flex-grow: 1;
+  height: var(--slider-track-height);
+  background-color: var(--slider-track-color);
+  border-radius: var(--slider-radius);
+  overflow: hidden;
+}
+
+.ds-slider__range {
+  position: absolute;
+  height: 100%;
+  background-color: var(--slider-range-color);
+  border-radius: var(--slider-radius);
+}
+
+/* ─── Thumb ───────────────────────────────────────────────── */
+.ds-slider__thumb {
+  position: relative;
+  display: block;
+  width: var(--slider-thumb-size);
+  height: var(--slider-thumb-size);
+  background-color: var(--color-background-surface);
+  border: var(--border-width-lg) solid var(--color-primary);
+  border-radius: var(--slider-radius);
+  box-shadow: var(--shadow-sm);
+  outline: none;
+  cursor: grab;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+/* 44px hit area — pseudo-element extends the touch target
+   beyond the 21px visual thumb */
+.ds-slider__thumb::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--size-hit-area);
+  height: var(--size-hit-area);
+  transform: translate(-50%, -50%);
+  border-radius: var(--slider-radius);
+}
+
+.ds-slider__thumb:hover:not([data-disabled]) {
+  border-color: var(--color-primary-hover);
+}
+
+.ds-slider__thumb:active:not([data-disabled]) {
+  cursor: grabbing;
+  border-color: var(--color-primary-active);
+}
+
+.ds-slider__thumb:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
+.ds-slider__thumb[data-disabled] {
+  cursor: not-allowed;
+}
+
+/* ─── Reduced motion ──────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .ds-slider__thumb {
+    transition: none;
+  }
+}

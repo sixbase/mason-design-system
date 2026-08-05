@@ -1,0 +1,88 @@
+/* ─── Popover content ────────────────────────────────────── */
+.ds-popover {
+  --popover-bg: var(--color-background-surface);
+  --popover-radius: var(--radius-lg);
+  --popover-padding: var(--spacing-4);
+  --popover-max-width: 42ch;
+
+  /* Radix Portal content does not inherit font-family — declare explicitly */
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+  color: var(--color-foreground);
+
+  background-color: var(--popover-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--popover-radius);
+  box-shadow: var(--elevation-dropdown);
+  padding: var(--popover-padding);
+  z-index: var(--z-index-overlay);
+
+  /* Readable line length, capped by the collision-padded viewport (mobile safety) */
+  max-width: min(var(--popover-max-width), var(--radix-popover-content-available-width));
+  max-height: var(--radix-popover-content-available-height);
+  overflow-y: auto;
+
+  /* Animation */
+  transform-origin: var(--radix-popover-content-transform-origin);
+  animation: ds-popover-open var(--transition-duration-fast) var(--transition-easing-out);
+}
+
+.ds-popover:focus-visible {
+  outline: none;
+}
+
+@keyframes ds-popover-open {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-popover { animation: none; }
+}
+
+/* ─── Arrow ──────────────────────────────────────────────── */
+.ds-popover__arrow {
+  fill: var(--popover-bg);
+}
+
+/* ─── Close button ───────────────────────────────────────── */
+.ds-popover__close {
+  position: absolute;
+  top: var(--spacing-2);
+  right: var(--spacing-2);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-control-sm);
+  height: var(--size-control-sm);
+
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-foreground-subtle);
+  cursor: pointer;
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+
+  /* Optical centering: trim em-box to cap height + baseline */
+  text-box-trim: both;
+  text-box-edge: cap alphabetic;
+}
+
+.ds-popover__close:hover {
+  background-color: var(--color-secondary);
+  color: var(--color-foreground);
+}
+
+.ds-popover__close:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* ─── Optical centering fallback ─────────────────────────── */
+@supports not (text-box-trim: both) {
+  .ds-popover__close {
+    transform: translateY(0.05em);
+  }
+}

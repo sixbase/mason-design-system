@@ -57,7 +57,7 @@ export const Footer = forwardRef<HTMLElement, FooterProps>(
             </div>
 
             {columns.map((col) => (
-              <div key={col.heading} className="ds-footer__column">
+              <nav key={col.heading} className="ds-footer__column" aria-label={col.heading}>
                 <Heading as="h3" size="xl" className="ds-footer__heading">
                   {col.heading}
                 </Heading>
@@ -68,7 +68,7 @@ export const Footer = forwardRef<HTMLElement, FooterProps>(
                     </li>
                   ))}
                 </ul>
-              </div>
+              </nav>
             ))}
           </div>
 

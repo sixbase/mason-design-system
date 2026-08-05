@@ -5,7 +5,7 @@ import { FeatureBlockDefault, FeatureBlockReverse } from '../../components/Featu
 
 <ComponentPage
   title="Feature Block"
-  description="A side-by-side layout pairing an image with marketing text. Stacks vertically on mobile and sits side-by-side on tablet and up. Use <code>reverse</code> to alternate the image position for visual rhythm."
+  description="A side-by-side layout pairing an image with marketing text. Stacks vertically on mobile and sits side-by-side on tablet and up. Use <code>reverse</code> to alternate the image position for visual rhythm. The image sits in a fixed 4:3 frame (<code>--aspect-landscape</code>, overridable via <code>--feature-block-image-ratio</code>) so the layout never jumps while images load, and the column gap scales fluidly with the viewport (26→42px)."
   installCode="import { FeatureBlock } from '@ds/components';"
   props={[
     {

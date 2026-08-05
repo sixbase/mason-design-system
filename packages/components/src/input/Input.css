@@ -71,9 +71,16 @@
   box-shadow: var(--focus-ring);
 }
 
-/* Hover (non-focused, non-disabled) */
-.ds-input-field:hover:not(:focus):not(:disabled):not([aria-invalid="true"]) {
+/* Hover (non-focused, non-disabled, non-readonly) */
+.ds-input-field:hover:not(:focus):not(:disabled):not([readonly]):not([aria-invalid="true"]) {
   border-color: var(--color-border-strong);
+}
+
+/* Read-only — subtle background, otherwise behaves like a normal
+   field (focus ring unchanged, text remains selectable) */
+.ds-input-field[readonly] {
+  background-color: var(--color-background-subtle);
+  cursor: default;
 }
 
 /* Error state */
@@ -139,6 +146,18 @@
   font-size: var(--font-size-xs);
   color: var(--color-destructive);
   line-height: var(--line-height-normal);
+}
+
+/* ─── iOS zoom guard ─────────────────────────────────────── */
+/* iOS Safari auto-zooms when a focused input's font-size is below
+   1rem. --font-size-base is fluid and dips below 1rem on small
+   viewports, so the guard uses --font-size-tight-base (fixed 1rem). */
+@media (pointer: coarse) {
+  .ds-input-field--sm,
+  .ds-input-field--md,
+  .ds-input-field--lg {
+    font-size: var(--font-size-tight-base);
+  }
 }
 
 /* ─── Optical centering fallback ─────────────────────────── */

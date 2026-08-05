@@ -109,6 +109,89 @@ describe('Accordion', () => {
     expect(results).toHaveNoViolations();
   });
 
+  // ─── Disabled item ──────────────────────────────────────
+
+  describe('disabled item', () => {
+    it('applies the disabled modifier class', () => {
+      const { container } = render(
+        <Accordion type="single" collapsible>
+          <AccordionItem value="a" disabled>
+            <AccordionTrigger>Section A</AccordionTrigger>
+            <AccordionContent>Content A</AccordionContent>
+          </AccordionItem>
+        </Accordion>,
+      );
+      expect(container.querySelector('.ds-accordion__item--disabled')).toBeInTheDocument();
+    });
+
+    it('disables the trigger button', () => {
+      render(
+        <Accordion type="single" collapsible>
+          <AccordionItem value="a" disabled>
+            <AccordionTrigger>Section A</AccordionTrigger>
+            <AccordionContent>Content A</AccordionContent>
+          </AccordionItem>
+        </Accordion>,
+      );
+      expect(screen.getByText('Section A').closest('button')).toBeDisabled();
+    });
+
+    it('does not expand when a disabled trigger is clicked', async () => {
+      const user = userEvent.setup();
+      const { container } = render(
+        <Accordion type="single" collapsible>
+          <AccordionItem value="a" disabled>
+            <AccordionTrigger>Section A</AccordionTrigger>
+            <AccordionContent>Content A</AccordionContent>
+          </AccordionItem>
+        </Accordion>,
+      );
+
+      await user.click(screen.getByText('Section A'));
+      expect(container.querySelector('.ds-accordion__content')).toHaveAttribute(
+        'data-state',
+        'closed',
+      );
+    });
+
+    it('leaves sibling items interactive', async () => {
+      const user = userEvent.setup();
+      const { container } = render(
+        <Accordion type="single" collapsible>
+          <AccordionItem value="a" disabled>
+            <AccordionTrigger>Section A</AccordionTrigger>
+            <AccordionContent>Content A</AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="b">
+            <AccordionTrigger>Section B</AccordionTrigger>
+            <AccordionContent>Content B</AccordionContent>
+          </AccordionItem>
+        </Accordion>,
+      );
+
+      await user.click(screen.getByText('Section B'));
+      const contents = container.querySelectorAll('.ds-accordion__content');
+      expect(contents[1]).toHaveAttribute('data-state', 'open');
+    });
+
+    it('has no accessibility violations with a disabled item', async () => {
+      const { container } = render(
+        <Accordion type="single" collapsible>
+          <AccordionItem value="a" disabled>
+            <AccordionTrigger>Section A</AccordionTrigger>
+            <AccordionContent>Content A</AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="b">
+            <AccordionTrigger>Section B</AccordionTrigger>
+            <AccordionContent>Content B</AccordionContent>
+          </AccordionItem>
+        </Accordion>,
+      );
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+  });
+
   // ─── Checkbox variant ───────────────────────────────────
 
   describe('checkbox variant', () => {

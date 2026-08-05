@@ -34,6 +34,35 @@ export function AccordionDefault() {
   );
 }
 
+export function AccordionDisabledItem() {
+  return (
+    <Preview stack>
+      <div className="ds-gallery-full">
+        <Accordion type="single" collapsible>
+          <AccordionItem value="shipping">
+            <AccordionTrigger>Shipping & Delivery</AccordionTrigger>
+            <AccordionContent>
+              Free standard shipping on orders over $50.
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="preorders" disabled>
+            <AccordionTrigger>Pre-orders (coming soon)</AccordionTrigger>
+            <AccordionContent>
+              Pre-order details will be published closer to launch.
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="returns">
+            <AccordionTrigger>Returns & Exchanges</AccordionTrigger>
+            <AccordionContent>
+              We accept returns within 30 days of purchase.
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </div>
+    </Preview>
+  );
+}
+
 export function AccordionMultiple() {
   return (
     <Preview stack>

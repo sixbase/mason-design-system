@@ -4,9 +4,12 @@ import tokens from '../../../../../packages/tokens/src/tokens.json';
 
 const { spacing, radius, size } = tokens.primitive;
 
-// Split spacing into standard (numbered) and phi scales
-const standardSpacing = Object.entries(spacing).filter(([name]) => !name.startsWith('phi-'));
+// Split spacing into standard (numbered), phi, and fluid scales
+const standardSpacing = Object.entries(spacing).filter(
+  ([name]) => !name.startsWith('phi-') && !name.startsWith('fluid-')
+);
 const phiSpacing = Object.entries(spacing).filter(([name]) => name.startsWith('phi-'));
+const fluidSpacing = Object.entries(spacing).filter(([name]) => name.startsWith('fluid-'));
 
 // Usage annotations for standard spacing tokens
 const spacingUsage: Record<string, string> = {
@@ -37,6 +40,14 @@ const phiUsage: Record<string, string> = {
   'phi-34': 'Hero section padding, major editorial divisions',
   'phi-55': 'Full-screen hero vertical padding, splash page spacing',
   'phi-89': 'Maximum editorial spacing — full-viewport hero margins',
+};
+
+// Usage annotations for fluid spacing tokens
+const fluidUsage: Record<string, string> = {
+  'fluid-sm': '16px → 26px (phi-8 → phi-13) — within-section gaps that should breathe with the viewport',
+  'fluid-md': '26px → 42px (phi-13 → phi-21) — gaps between related sections on marketing pages',
+  'fluid-lg': '42px → 68px (phi-21 → phi-34) — major section breaks, hero-to-content spacing',
+  'fluid-xl': '68px → 110px (phi-34 → phi-55) — full-viewport hero padding, splash page rhythm',
 };
 
 // Content width tokens (filtered from size)
@@ -107,6 +118,27 @@ const radiusUsage: Record<string, string> = {
             <span class="token-size-info">{value}</span>
             <span class="token-bar" style={`width: ${value}; max-width: 100%;`} />
             <span class="token-usage">{phiUsage[name]}</span>
+          </span>
+        </div>
+      ))}
+    </div>
+
+    <h2>Fluid scale <span class="scale-badge scale-badge--muted">Section rhythm</span></h2>
+    <p class="section-desc">
+      Viewport-responsive spacing with <code>clamp()</code> — no breakpoints. Each step interpolates
+      between two adjacent φ-scale values: its minimum at a 375px viewport, its maximum (×φ) at 1200px.
+      Use for section and page-level rhythm that should breathe with the screen — hero padding,
+      gaps between marketing sections. <strong>Component internals keep the fixed standard scale.</strong>
+      The bars below resize live with the viewport.
+    </p>
+    <div class="token-table token-table--muted">
+      {fluidSpacing.map(([name, value]) => (
+        <div class="token-row">
+          <span class="token-name">
+            <code>--spacing-{name}</code>
+            <span class="token-size-info">{value}</span>
+            <span class="token-bar" style={`width: ${value}; max-width: 100%;`} />
+            <span class="token-usage">{fluidUsage[name]}</span>
           </span>
         </div>
       ))}

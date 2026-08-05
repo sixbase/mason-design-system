@@ -1,0 +1,74 @@
+---
+import ComponentPage from '../../layouts/ComponentPage.astro';
+import { PopoverDefault, PopoverWithClose, PopoverComposedClose, PopoverSides } from '../../components/PopoverGallery';
+---
+
+<ComponentPage
+  title="Popover"
+  description="A floating panel anchored to a trigger, for rich interactive content that doesn't warrant a modal. Built on Radix UI Popover: focus moves into the panel on open and returns to the trigger on close. Common ecommerce uses: size guides, shipping info, inline confirmations, mini forms."
+  installCode="import { Popover, PopoverTrigger, PopoverContent, PopoverClose, PopoverArrow } from '@ds/components';"
+  props={[
+    {
+      name: 'Popover',
+      headers: ['Prop', 'Type', 'Default', 'Description'],
+      rows: [
+        ['<code>open</code>', '<code>boolean</code>', '—', 'Controlled open state'],
+        ['<code>defaultOpen</code>', '<code>boolean</code>', '<code>false</code>', 'Initial open state (uncontrolled)'],
+        ['<code>onOpenChange</code>', '<code>(open: boolean) =&gt; void</code>', '—', 'Open state change handler'],
+        ['<code>modal</code>', '<code>boolean</code>', '<code>false</code>', 'Trap focus and block outside interaction while open'],
+      ],
+    },
+    {
+      name: 'PopoverContent',
+      headers: ['Prop', 'Type', 'Default', 'Description'],
+      rows: [
+        ['<code>side</code>', "<code>'top' | 'right' | 'bottom' | 'left'</code>", "<code>'bottom'</code>", 'Preferred side — flips on collision'],
+        ['<code>align</code>', "<code>'start' | 'center' | 'end'</code>", "<code>'center'</code>", 'Alignment along the trigger edge'],
+        ['<code>sideOffset</code>', '<code>number</code>', '<code>8</code>', 'Gap from trigger (= <code>--spacing-2</code>)'],
+        ['<code>showClose</code>', '<code>boolean</code>', '<code>false</code>', 'Show a dismiss button in the top-right corner'],
+      ],
+    },
+  ]}
+  accessibility={[
+    'Focus moves into the panel on open and returns to the trigger on close (managed by Radix)',
+    'Keyboard: <kbd>Escape</kbd> closes, <kbd>Tab</kbd> cycles panel content',
+    'Content is exposed as a <code>dialog</code> to assistive technology',
+    'Positioning is collision-aware with <code>--spacing-4</code> viewport padding, so panels never clip on small screens',
+  ]}
+>
+  <h2>Default</h2>
+  <PopoverDefault client:load />
+  <pre><code>{`<Popover>
+  <PopoverTrigger asChild>
+    <Button variant="secondary">Size guide</Button>
+  </PopoverTrigger>
+  <PopoverContent>
+    <PopoverArrow />
+    <Text size="sm">Measurements are in inches...</Text>
+  </PopoverContent>
+</Popover>`}</code></pre>
+
+  <h2>With close button</h2>
+  <PopoverWithClose client:load />
+  <pre><code>{`<PopoverContent showClose>
+  <PopoverArrow />
+  ...
+</PopoverContent>`}</code></pre>
+
+  <h2>Composed close</h2>
+  <PopoverComposedClose client:load />
+  <pre><code>{`<PopoverContent>
+  <Text size="sm">Remove this item from your cart?</Text>
+  <PopoverClose asChild>
+    <Button size="sm" variant="secondary">Cancel</Button>
+  </PopoverClose>
+  <Button size="sm" variant="destructive">Remove</Button>
+</PopoverContent>`}</code></pre>
+
+  <h2>Sides</h2>
+  <PopoverSides client:load />
+  <pre><code>{`<PopoverContent side="top">...</PopoverContent>
+<PopoverContent side="right">...</PopoverContent>
+<PopoverContent side="bottom">...</PopoverContent>   {/* default */}
+<PopoverContent side="left">...</PopoverContent>`}</code></pre>
+</ComponentPage>

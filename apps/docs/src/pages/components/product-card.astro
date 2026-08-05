@@ -1,6 +1,6 @@
 ---
 import ComponentPage from '../../layouts/ComponentPage.astro';
-import { ProductCardSingle, ProductCardLarge, ProductCardWithBadge, ProductCardWithRenderPrice, ProductCardWithHoverImage, ProductCardGrid } from '../../components/ProductCardGallery';
+import { ProductCardSingle, ProductCardLarge, ProductCardWithBadge, ProductCardWithRenderPrice, ProductCardWithHoverImage, ProductCardWithActionSlot, ProductCardWithFooterSlot, ProductCardContainerAdaptive, ProductCardGrid } from '../../components/ProductCardGallery';
 ---
 
 <ComponentPage
@@ -19,13 +19,16 @@ import { ProductCardSingle, ProductCardLarge, ProductCardWithBadge, ProductCardW
         ['<code>fluid</code>', '<code>boolean</code>', '<code>false</code>', 'Fill parent width (use inside CSS Grid layouts)'],
         ['<code>badge</code>', '<code>ReactNode</code>', '—', 'Badge or label overlay positioned over the image'],
         ['<code>renderPrice</code>', '<code>(price, currency) =&gt; ReactNode</code>', '—', 'Custom price renderer — overrides the default formatted price'],
-        ['<code>hoverImage</code>', '<code>string</code>', '—', 'Secondary image URL shown on hover'],
+        ['<code>hoverImage</code>', '<code>string</code>', '—', 'Secondary image URL shown on hover (pointer devices only — touch keeps the first image)'],
+        ['<code>actionSlot</code>', '<code>ReactNode</code>', '—', 'Action overlay slot, top-right of the image (e.g. wishlist button). Pure slot — no baked-in behavior.'],
+        ['<code>footerSlot</code>', '<code>ReactNode</code>', '—', 'Footer slot below the name/price (e.g. quick-add button). Pure slot — no baked-in behavior.'],
       ],
     },
   ]}
   accessibility={[
     'Image <code>alt</code> text is derived from the product <code>name</code>',
-    'Hover image uses <code>aria-hidden="true"</code> (decorative)',
+    'Hover image uses <code>aria-hidden="true"</code> (decorative) and is disabled entirely on touch devices',
+    'Slotted <code>actionSlot</code> buttons/links get a 44px hit area (<code>--size-hit-area</code>)',
     'Inherits interactive hover behavior from <code>Card</code>',
     'Hover effects respect <code>prefers-reduced-motion</code>',
   ]}
@@ -89,6 +92,50 @@ import { ProductCardSingle, ProductCardLarge, ProductCardWithBadge, ProductCardW
   image="/products/front.jpg"
   hoverImage="/products/lifestyle.jpg"
 />`}</code></pre>
+
+  <h2>Action slot</h2>
+  <p>
+    Use <code>actionSlot</code> to overlay a control on the top-right of the image — typically a wishlist toggle. The slot is behavior-free: bring your own button and handler. Slotted controls get an invisible 44px hit area.
+  </p>
+  <ProductCardWithActionSlot client:load />
+  <pre><code>{`<ProductCard
+  name="Aramid Fiber iPhone 17 Pro Max Case"
+  price={8500}
+  image="/products/phone-case.jpg"
+  actionSlot={
+    <Button variant="secondary" size="sm" iconOnly aria-label="Add to wishlist">
+      ♡
+    </Button>
+  }
+/>`}</code></pre>
+
+  <h2>Footer slot</h2>
+  <p>
+    Use <code>footerSlot</code> for a quick-add button or similar call to action below the price. Insets match the card body.
+  </p>
+  <ProductCardWithFooterSlot client:load />
+  <pre><code>{`<ProductCard
+  name="Aramid Fiber iPhone 17 Pro Max Case"
+  price={8500}
+  image="/products/phone-case.jpg"
+  footerSlot={
+    <Button variant="secondary" size="sm" fullWidth>
+      Quick add
+    </Button>
+  }
+/>`}</code></pre>
+
+  <h2>Container adaptation</h2>
+  <p>
+    The card is a container-query component — internals respond to the width of its grid cell, not the viewport. Cells narrower than 200px tighten insets, corner radius, and type; cells 320px and wider relax type up to base size. The 220px standalone card is the reference appearance.
+  </p>
+  <ProductCardContainerAdaptive client:load />
+  <pre><code>{`/* No props needed — drop a fluid card into any grid */
+<div style={{ display: 'grid', gridTemplateColumns: '160px 220px 340px' }}>
+  <ProductCard {...product} fluid />
+  <ProductCard {...product} fluid />
+  <ProductCard {...product} fluid />
+</div>`}</code></pre>
 
   <h2>Product grid</h2>
   <p>

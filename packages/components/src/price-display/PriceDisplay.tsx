@@ -10,6 +10,13 @@ export interface PriceDisplayProps extends HTMLAttributes<HTMLDivElement> {
   comparePrice?: string;
   /** Size variant */
   size?: 'sm' | 'md' | 'lg';
+  /**
+   * Emphasis treatment. `'sale'` renders the current price in the
+   * destructive (sale) color even without a `comparePrice`.
+   * `'none'` keeps the default behavior: the sale color still applies
+   * automatically when a `comparePrice` is present.
+   */
+  emphasis?: 'none' | 'sale';
 }
 
 /**
@@ -20,12 +27,13 @@ export interface PriceDisplayProps extends HTMLAttributes<HTMLDivElement> {
  */
 export const PriceDisplay = forwardRef<HTMLDivElement, PriceDisplayProps>(
   function PriceDisplay(
-    { price, comparePrice, size = 'md', className, ...props },
+    { price, comparePrice, size = 'md', emphasis = 'none', className, ...props },
     ref,
   ) {
     const classes = [
       'ds-price-display',
       `ds-price-display--${size}`,
+      emphasis !== 'none' && `ds-price-display--emphasis-${emphasis}`,
       className,
     ]
       .filter(Boolean)

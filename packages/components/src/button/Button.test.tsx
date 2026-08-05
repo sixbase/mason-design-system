@@ -97,6 +97,56 @@ describe('Button', () => {
     });
   });
 
+  describe('icon-only', () => {
+    it('applies the icon-only class', () => {
+      render(
+        <Button iconOnly aria-label="Close">
+          <span data-testid="x-icon" />
+        </Button>,
+      );
+      expect(screen.getByRole('button', { name: 'Close' })).toHaveClass('ds-button--icon-only');
+    });
+
+    it('fires onClick when an icon-only button is clicked', async () => {
+      const user = userEvent.setup();
+      const onClick = vi.fn();
+      render(
+        <Button iconOnly aria-label="Close" onClick={onClick}>
+          <span data-testid="x-icon" />
+        </Button>,
+      );
+      await user.click(screen.getByRole('button', { name: 'Close' }));
+      expect(onClick).toHaveBeenCalledOnce();
+    });
+
+    it('remains clickable inside a flex row next to siblings', async () => {
+      const user = userEvent.setup();
+      const onIconClick = vi.fn();
+      const onSiblingClick = vi.fn();
+      render(
+        <div style={{ display: 'flex', gap: 'var(--spacing-3)' }}>
+          <Button size="sm" onClick={onSiblingClick}>Sibling</Button>
+          <Button size="sm" iconOnly aria-label="Remove" onClick={onIconClick}>
+            <span data-testid="x-icon" />
+          </Button>
+        </div>,
+      );
+      await user.click(screen.getByRole('button', { name: 'Remove' }));
+      await user.click(screen.getByRole('button', { name: 'Sibling' }));
+      expect(onIconClick).toHaveBeenCalledOnce();
+      expect(onSiblingClick).toHaveBeenCalledOnce();
+    });
+
+    it('has no accessibility violations', async () => {
+      const { container } = render(
+        <Button iconOnly aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </Button>,
+      );
+      expect(await axe(container)).toHaveNoViolations();
+    });
+  });
+
   describe('icons', () => {
     it('renders leading icon', () => {
       render(<Button leadingIcon={<span data-testid="icon" />}>Label</Button>);

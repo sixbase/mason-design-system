@@ -69,6 +69,41 @@
 }
 
 /* ==========================================================================
+   Indeterminate — div-based track with looping sweep
+   ========================================================================== */
+
+.ds-progress-bar__track--indeterminate {
+  position: relative;
+  background-color: var(--progress-bar-track-color);
+}
+
+/* Sweep bar: 38.2% of the track (φ⁻²). Keyframes are in own-width units:
+   starts fully off-screen left (-100%) and ends fully off-screen right
+   (261.8% × 38.2% = 100% of the track) — total travel 361.8% ≈ φ² × 138.2. */
+.ds-progress-bar__indeterminate-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 38.2%;
+  border-radius: var(--progress-bar-radius);
+  background-color: var(--progress-bar-fill-color);
+  animation: ds-progress-bar-sweep
+    calc(var(--transition-duration-slowest) * 1.618)
+    var(--transition-easing-in-out)
+    infinite;
+}
+
+@keyframes ds-progress-bar-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(261.8%);
+  }
+}
+
+/* ==========================================================================
    Variants
    ========================================================================== */
 
@@ -99,5 +134,13 @@
 
   .ds-progress-bar__track::-moz-progress-bar {
     transition: none;
+  }
+
+  /* Indeterminate: no sweep — a static, centered mid-track fill still
+     signals "busy" without motion. */
+  .ds-progress-bar__indeterminate-fill {
+    animation: none;
+    left: 50%;
+    transform: translateX(-50%);
   }
 }

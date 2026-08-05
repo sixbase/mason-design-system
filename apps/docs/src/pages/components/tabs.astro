@@ -1,6 +1,6 @@
 ---
 import ComponentPage from '../../layouts/ComponentPage.astro';
-import { TabsDefault, TabsControlled, TabsDisabled, TabsOverflow } from '../../components/TabsGallery';
+import { TabsDefault, TabsControlled, TabsDisabled, TabsWithBadges, TabsOverflow } from '../../components/TabsGallery';
 ---
 
 <ComponentPage
@@ -23,6 +23,7 @@ import { TabsDefault, TabsControlled, TabsDisabled, TabsOverflow } from '../../c
       rows: [
         ['<code>value</code>', '<code>string</code>', '—', 'Unique value identifying this tab (required)'],
         ['<code>disabled</code>', '<code>boolean</code>', '<code>false</code>', 'Prevents activation of this tab'],
+        ['<code>badge</code>', '<code>ReactNode</code>', '—', 'Count chip after the label — strings/numbers render in a secondary <code>&lt;Badge&gt;</code>, other nodes render as-is'],
       ],
     },
     {
@@ -39,6 +40,8 @@ import { TabsDefault, TabsControlled, TabsDisabled, TabsOverflow } from '../../c
     'Arrow keys navigate between tabs horizontally; Home/End jump to first/last tab',
     'Tab panel receives focus via <code>tabIndex={0}</code> for keyboard navigation',
     'Disabled tabs are skipped during keyboard navigation',
+    'Triggers meet the 44px minimum touch target via <code>min-height: var(--size-hit-area)</code>',
+    'Badges are part of the tab accessible name (e.g. "Reviews 127")',
   ]}
 >
   <h2>Default</h2>
@@ -76,8 +79,14 @@ import { TabsDefault, TabsControlled, TabsDisabled, TabsOverflow } from '../../c
   Reviews (Coming Soon)
 </TabsTrigger>`}</code></pre>
 
+  <h2>With badges</h2>
+  <p>Pass <code>badge</code> to show a count chip after the label — review counts, question counts, cart items. Numbers and strings render in a secondary <code>Badge</code>; long labels truncate without clipping the chip.</p>
+  <TabsWithBadges client:load />
+  <pre><code>{`<TabsTrigger value="reviews" badge={127}>Reviews</TabsTrigger>
+<TabsTrigger value="questions" badge={4}>Questions</TabsTrigger>`}</code></pre>
+
   <h2>Overflow (Scrollable)</h2>
-  <p>When tabs overflow their container, the list scrolls horizontally with subtle edge fades. This preserves the tab pattern on mobile without collapsing to an accordion.</p>
+  <p>When tabs overflow their container, the list scrolls horizontally with CSS-only scroll shadows that appear only while content is actually clipped in that direction. This preserves the tab pattern on mobile without collapsing to an accordion.</p>
   <TabsOverflow client:load />
   <pre><code>{`<div style={{ maxWidth: '400px' }}>
   <Tabs defaultValue="tab-1">

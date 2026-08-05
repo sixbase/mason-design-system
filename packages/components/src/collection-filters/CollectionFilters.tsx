@@ -290,6 +290,8 @@ interface FilterPanelContentProps {
   onClearAll: () => void;
   showMoreThreshold: number;
   header?: ReactNode;
+  /** Rendered inside the mobile Drawer — pads bottom for the device safe area */
+  inDrawer?: boolean;
 }
 
 function FilterPanelContent({
@@ -299,6 +301,7 @@ function FilterPanelContent({
   onClearAll,
   showMoreThreshold,
   header,
+  inDrawer = false,
 }: FilterPanelContentProps) {
   // First 3 filters open by default
   const defaultOpen = filters.slice(0, 3).map((f) => f.id);
@@ -310,8 +313,15 @@ function FilterPanelContent({
     [onFilterChange],
   );
 
+  const panelClasses = [
+    'ds-collection-filters__panel',
+    inDrawer && 'ds-collection-filters__panel--drawer',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
-    <div className="ds-collection-filters__panel">
+    <div className={panelClasses}>
       {header && <div className="ds-collection-filters__header">{header}</div>}
 
       {activeCount > 0 && (
@@ -470,7 +480,7 @@ export const CollectionFilters = forwardRef<HTMLDivElement, CollectionFiltersPro
             side="left"
             title="Filter products"
           >
-            <FilterPanelContent {...sharedProps} />
+            <FilterPanelContent {...sharedProps} inDrawer />
           </Drawer>
         </div>
       </div>

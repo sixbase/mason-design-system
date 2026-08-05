@@ -1,0 +1,98 @@
+---
+import ComponentPage from '../../layouts/ComponentPage.astro';
+import {
+  SegmentedControlDefault,
+  SegmentedControlThreeSegments,
+  SegmentedControlIcons,
+  SegmentedControlSizes,
+  SegmentedControlDisabled,
+  SegmentedControlControlled,
+} from '../../components/SegmentedControlGallery';
+---
+
+<ComponentPage
+  title="Segmented Control"
+  description="A single-select group of 2–5 adjacent segments for mutually exclusive choices — grid/list view switchers, sort toggles. The selected segment renders as a raised pill that slides inside a muted track."
+  installCode="import { SegmentedControl, SegmentedControlItem } from '@ds/components';"
+  props={[
+    {
+      name: 'SegmentedControl',
+      headers: ['Prop', 'Type', 'Default', 'Description'],
+      rows: [
+        ['<code>value</code>', '<code>string</code>', '—', 'Controlled selected value.'],
+        ['<code>defaultValue</code>', '<code>string</code>', '—', 'Uncontrolled initial value.'],
+        ['<code>onValueChange</code>', '<code>(value: string) =&gt; void</code>', '—', 'Called when the selected value changes.'],
+        ['<code>size</code>', "<code>'sm' | 'md'</code>", "<code>'md'</code>", 'Track height — <code>--size-control-sm</code> / <code>--size-control-md</code>.'],
+        ['<code>children</code>', '<code>ReactNode</code>', '—', '2–5 <code>&lt;SegmentedControlItem&gt;</code> elements (direct children).'],
+      ],
+    },
+    {
+      name: 'SegmentedControlItem',
+      headers: ['Prop', 'Type', 'Default', 'Description'],
+      rows: [
+        ['<code>value</code>', '<code>string</code>', '—', 'Value this segment represents. Required.'],
+        ['<code>disabled</code>', '<code>boolean</code>', '<code>false</code>', 'Segment cannot be selected.'],
+        ['<code>children</code>', '<code>ReactNode</code>', '—', 'Text label and/or icon. Icon-only segments require <code>aria-label</code>.'],
+      ],
+    },
+  ]}
+  accessibility={[
+    '<strong>Radiogroup, not tabs</strong> — implemented as <code>role="radiogroup"</code> with <code>role="radio"</code> buttons. Tabs (<code>role="tablist"</code>) navigate between panels of content; a segmented control selects a <em>value</em>. Radio semantics tell assistive technology exactly that: one choice among a small set',
+    'Roving tabindex — only the selected segment is in the tab order; with no selection, the first segment takes the tab stop',
+    'Arrow keys (all four directions) move focus and selection together, wrapping at the ends — matching native radio group behavior. <code>Home</code> / <code>End</code> jump to the first / last segment. Disabled segments are skipped',
+    'Pass <code>aria-label</code> (or <code>aria-labelledby</code>) on the group; icon-only segments require an <code>aria-label</code> of their own',
+    'The sliding pill is <code>aria-hidden</code> and purely decorative; its slide is instant under <code>prefers-reduced-motion</code>',
+    'Segments are adjacent, so invisible hit-area extenders would overlap. On coarse pointers the whole track grows to the 44px <code>--size-hit-area</code> minimum instead',
+  ]}
+>
+  <h2>Default</h2>
+  <SegmentedControlDefault client:load />
+  <pre><code>{`<SegmentedControl aria-label="View" defaultValue="grid">
+  <SegmentedControlItem value="grid">Grid</SegmentedControlItem>
+  <SegmentedControlItem value="list">List</SegmentedControlItem>
+</SegmentedControl>`}</code></pre>
+
+  <h2>Three segments</h2>
+  <p>Segments are always equal width — the sliding indicator depends on it. Two to five segments are supported.</p>
+  <SegmentedControlThreeSegments client:load />
+  <pre><code>{`<SegmentedControl aria-label="Sort by" defaultValue="newest">
+  <SegmentedControlItem value="newest">Newest</SegmentedControlItem>
+  <SegmentedControlItem value="price">Price</SegmentedControlItem>
+  <SegmentedControlItem value="rating">Rating</SegmentedControlItem>
+</SegmentedControl>`}</code></pre>
+
+  <h2>Icons</h2>
+  <p>Icon-only segments must carry an <code>aria-label</code>. Icons can also sit next to a text label.</p>
+  <SegmentedControlIcons client:load />
+  <pre><code>{`<SegmentedControl aria-label="View" defaultValue="grid">
+  <SegmentedControlItem value="grid" aria-label="Grid view">
+    <Icon size="sm">…</Icon>
+  </SegmentedControlItem>
+  <SegmentedControlItem value="list" aria-label="List view">
+    <Icon size="sm">…</Icon>
+  </SegmentedControlItem>
+</SegmentedControl>`}</code></pre>
+
+  <h2>Sizes</h2>
+  <SegmentedControlSizes client:load />
+  <pre><code>{`<SegmentedControl aria-label="View" defaultValue="grid" size="md">…</SegmentedControl>
+<SegmentedControl aria-label="View" defaultValue="grid" size="sm">…</SegmentedControl>`}</code></pre>
+
+  <h2>Disabled segment</h2>
+  <SegmentedControlDisabled client:load />
+  <pre><code>{`<SegmentedControl aria-label="Availability" defaultValue="all">
+  <SegmentedControlItem value="all">All</SegmentedControlItem>
+  <SegmentedControlItem value="in-stock">In stock</SegmentedControlItem>
+  <SegmentedControlItem value="preorder" disabled>Preorder</SegmentedControlItem>
+</SegmentedControl>`}</code></pre>
+
+  <h2>Controlled</h2>
+  <SegmentedControlControlled client:load />
+  <pre><code>{`const [view, setView] = useState('grid');
+
+<SegmentedControl aria-label="View" value={view} onValueChange={setView}>
+  <SegmentedControlItem value="grid">Grid</SegmentedControlItem>
+  <SegmentedControlItem value="list">List</SegmentedControlItem>
+  <SegmentedControlItem value="map">Map</SegmentedControlItem>
+</SegmentedControl>`}</code></pre>
+</ComponentPage>

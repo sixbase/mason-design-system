@@ -36,6 +36,16 @@ describe('PriceDisplay', () => {
     expect(container.querySelector('.ds-price-display--lg')).toBeInTheDocument();
   });
 
+  it('does not apply an emphasis class by default', () => {
+    const { container } = render(<PriceDisplay price="$48.00" />);
+    expect(container.querySelector('.ds-price-display--emphasis-sale')).not.toBeInTheDocument();
+  });
+
+  it('applies the sale emphasis class', () => {
+    const { container } = render(<PriceDisplay price="$38.00" emphasis="sale" />);
+    expect(container.querySelector('.ds-price-display--emphasis-sale')).toBeInTheDocument();
+  });
+
   it('merges custom className', () => {
     render(<PriceDisplay price="$48.00" className="custom" data-testid="price" />);
     expect(screen.getByTestId('price')).toHaveClass('custom', 'ds-price-display');
@@ -52,6 +62,7 @@ describe('PriceDisplay', () => {
       <div>
         <PriceDisplay price="$48.00" />
         <PriceDisplay price="$38.00" comparePrice="$48.00" size="lg" />
+        <PriceDisplay price="$29.00" emphasis="sale" />
       </div>,
     );
     expect(await axe(container)).toHaveNoViolations();

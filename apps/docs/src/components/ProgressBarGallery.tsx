@@ -9,6 +9,15 @@ export function ProgressBarDefault() {
   );
 }
 
+export function ProgressBarIndeterminate() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-6)', maxWidth: '400px' }}>
+      <ProgressBar indeterminate label="Loading products" />
+      <ProgressBar indeterminate size="sm" label="Refreshing cart" />
+    </div>
+  );
+}
+
 export function ProgressBarSizes() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-6)', maxWidth: '400px' }}>

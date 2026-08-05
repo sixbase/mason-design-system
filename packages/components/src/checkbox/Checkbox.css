@@ -24,6 +24,7 @@
   --checkbox-bg:           var(--color-background-surface);
   --checkbox-radius:       var(--radius-sm);
 
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -51,6 +52,23 @@
   height: var(--size-checkbox-md);
 }
 
+/* ─── Touch hit area ─────────────────────────────────────── */
+/* Visual size stays 13px/21px; the interactive zone expands to
+   --size-hit-area (44px). Guarded by pointer: coarse because
+   stacked checkboxes (filter panels) sit closer than 44px and
+   their zones would overlap for precise pointers. */
+@media (pointer: coarse) {
+  .ds-checkbox-box::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: max(100%, var(--size-hit-area));
+    height: max(100%, var(--size-hit-area));
+  }
+}
+
 /* Hover */
 .ds-checkbox-box:hover:not([data-disabled]) {
   border-color: var(--color-border-strong);
@@ -59,14 +77,14 @@
 /* Active (pressed) */
 .ds-checkbox-box:active:not([data-disabled]) {
   border-color: var(--color-primary);
-  transform: scale(0.98);
+  transform: scale(var(--scale-press));
 }
 
 .ds-checkbox-box[data-state="checked"]:active:not([data-disabled]),
 .ds-checkbox-box[data-state="indeterminate"]:active:not([data-disabled]) {
   background-color: var(--color-primary-active);
   border-color: var(--color-primary-active);
-  transform: scale(0.98);
+  transform: scale(var(--scale-press));
 }
 
 /* Focus */

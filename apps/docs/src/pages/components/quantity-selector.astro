@@ -1,11 +1,11 @@
 ---
 import ComponentPage from '../../layouts/ComponentPage.astro';
-import { QuantitySelectorDefault, QuantitySelectorSizes, QuantitySelectorStates } from '../../components/QuantitySelectorGallery';
+import { QuantitySelectorDefault, QuantitySelectorEditable, QuantitySelectorSizes, QuantitySelectorStates } from '../../components/QuantitySelectorGallery';
 ---
 
 <ComponentPage
   title="Quantity Selector"
-  description="A controlled stepper for numeric values. Common in ecommerce for cart item quantities. Supports min/max bounds, step increments, and three sizes."
+  description="A controlled stepper for numeric values. Common in ecommerce for cart item quantities. The value is directly editable — typed quantities clamp to min/max. Supports min/max bounds, step increments, and three sizes."
   installCode="import { QuantitySelector } from '@ds/components';"
   props={[
     {
@@ -22,10 +22,12 @@ import { QuantitySelectorDefault, QuantitySelectorSizes, QuantitySelectorStates 
     },
   ]}
   accessibility={[
-    'Wraps in <code>role="group"</code> with <code>aria-label="Quantity"</code>',
-    'Decrement/increment buttons have descriptive <code>aria-label</code>',
+    'Follows the WAI-ARIA spinbutton pattern — the value is an editable input with <code>role="spinbutton"</code>, <code>aria-valuenow</code>, <code>aria-valuemin</code>, and <code>aria-valuemax</code>',
+    'Keyboard: <kbd>↑</kbd>/<kbd>↓</kbd> step the value, <kbd>Home</kbd>/<kbd>End</kbd> jump to min/max, <kbd>Enter</kbd> commits a typed value',
+    'The +/- buttons are pointer affordances with descriptive <code>aria-label</code>s, removed from the tab order per the APG spinbutton pattern',
     'Buttons are automatically disabled at min/max bounds',
-    'Value is rendered as <code>&lt;output&gt;</code> for live region semantics',
+    '<code>inputMode="numeric"</code> raises the numeric keypad on touch devices; typed values clamp to min/max on blur or Enter',
+    'Buttons keep their visual size but expand to 44px touch hit areas on coarse pointers',
   ]}
 >
   <h2>Default</h2>
@@ -33,6 +35,11 @@ import { QuantitySelectorDefault, QuantitySelectorSizes, QuantitySelectorStates 
   <pre><code>{`const [qty, setQty] = useState(1);
 
 <QuantitySelector value={qty} onChange={setQty} />`}</code></pre>
+
+  <h2>Typed entry</h2>
+  <p>Click the value and type a quantity — it clamps to the min/max bounds (here 1–20) on blur or Enter.</p>
+  <QuantitySelectorEditable client:load />
+  <pre><code>{`<QuantitySelector value={qty} onChange={setQty} min={1} max={20} />`}</code></pre>
 
   <h2>Sizes</h2>
   <QuantitySelectorSizes client:load />

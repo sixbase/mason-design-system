@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { ToastProvider, useToast } from './Toast';
-import type { ToastVariant } from './Toast';
+import type { ToastPosition, ToastVariant } from './Toast';
 import { Button } from '../button/Button';
 
 const meta: Meta<typeof ToastProvider> = {
@@ -140,6 +140,46 @@ export const Stacking: Story = {
       );
     }
     return <StackDemo />;
+  },
+};
+
+export const Positions: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Four positions, each padded by max(spacing, safe-area inset) so toasts clear notches and home indicators. On touch, swipe a toast toward its nearest screen edge to dismiss it (right positions swipe right, top-center swipes up, bottom-center swipes down).',
+      },
+    },
+  },
+  render: () => {
+    const positions: ToastPosition[] = ['top-right', 'top-center', 'bottom-right', 'bottom-center'];
+    function PositionButton({ position }: { position: ToastPosition }) {
+      const { toast } = useToast();
+      return (
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() =>
+            toast({
+              title: position,
+              description: 'Swipe me toward the nearest edge on touch.',
+            })
+          }
+        >
+          {position}
+        </Button>
+      );
+    }
+    return (
+      <div style={{ display: 'flex', gap: 'var(--spacing-3)', flexWrap: 'wrap' }}>
+        {positions.map((position) => (
+          <ToastProvider key={position} position={position}>
+            <PositionButton position={position} />
+          </ToastProvider>
+        ))}
+      </div>
+    );
   },
 };
 

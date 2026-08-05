@@ -7,6 +7,17 @@
   border-radius: var(--radius-md);
   overflow: hidden;
   background-color: var(--color-background-surface);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+/* Keyboard focus on the editable value lights up the whole control —
+   the input sits inside an overflow-hidden frame, so a ring on the
+   input itself would be clipped. */
+.ds-quantity-selector:has(.ds-quantity-selector__value:focus-visible) {
+  border-color: var(--color-primary);
+  box-shadow: var(--focus-ring);
 }
 
 .ds-quantity-selector--disabled {
@@ -16,6 +27,7 @@
 
 /* ─── Buttons ────────────────────────────────────────────── */
 .ds-quantity-selector__btn {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -36,21 +48,45 @@
   cursor: not-allowed;
 }
 
-/* ─── Value display ──────────────────────────────────────── */
+/* ─── Touch hit area ─────────────────────────────────────── */
+/* Buttons stay at their visual size; the interactive zone expands
+   to --size-hit-area (44px). Guarded by pointer: coarse because the
+   +/- buttons flank the value directly and their zones overlap it
+   for precise pointers. */
+@media (pointer: coarse) {
+  .ds-quantity-selector__btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: max(100%, var(--size-hit-area));
+    height: max(100%, var(--size-hit-area));
+  }
+}
+
+/* ─── Value input ────────────────────────────────────────── */
 .ds-quantity-selector__value {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   font-family: var(--font-family-numeric);
   font-variant-numeric: tabular-nums;
+  text-align: center;
   color: var(--color-foreground);
+  background: transparent;
+  border: none;
   border-left: 1px solid var(--color-border);
   border-right: 1px solid var(--color-border);
-  user-select: none;
+  border-radius: 0;
+  padding: 0;
+  outline: none;
+  appearance: textfield;
 
   /* Optical centering: trim em-box to cap height + baseline */
   text-box-trim: both;
   text-box-edge: cap alphabetic;
+}
+
+.ds-quantity-selector__value:disabled {
+  cursor: not-allowed;
 }
 
 /* ─── Size variants ──────────────────────────────────────── */
@@ -60,7 +96,7 @@
 }
 
 .ds-quantity-selector--sm .ds-quantity-selector__value {
-  min-width: var(--size-control-sm);
+  width: var(--size-control-sm);
   height: var(--size-control-sm);
   font-size: var(--font-size-xs);
 }
@@ -71,7 +107,7 @@
 }
 
 .ds-quantity-selector--md .ds-quantity-selector__value {
-  min-width: var(--size-control-md);
+  width: var(--size-control-md);
   height: var(--size-control-md);
   font-size: var(--font-size-sm);
 }
@@ -82,9 +118,21 @@
 }
 
 .ds-quantity-selector--lg .ds-quantity-selector__value {
-  min-width: var(--size-control-lg);
+  width: var(--size-control-lg);
   height: var(--size-control-lg);
   font-size: var(--font-size-base);
+}
+
+/* ─── iOS zoom guard ─────────────────────────────────────── */
+/* iOS Safari auto-zooms when a focused input's font-size is below
+   1rem. --font-size-base is fluid and dips below 1rem on small
+   viewports, so the guard uses --font-size-tight-base (fixed 1rem). */
+@media (pointer: coarse) {
+  .ds-quantity-selector--sm .ds-quantity-selector__value,
+  .ds-quantity-selector--md .ds-quantity-selector__value,
+  .ds-quantity-selector--lg .ds-quantity-selector__value {
+    font-size: var(--font-size-tight-base);
+  }
 }
 
 /* ─── Optical centering fallback ─────────────────────────── */

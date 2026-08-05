@@ -151,10 +151,82 @@ describe('Tabs', () => {
     expect(container.querySelector('.ds-tabs__content.content-class')).toBeInTheDocument();
   });
 
+  // ─── Badge slot ─────────────────────────────────────────
+
+  it('renders a numeric badge inside a Badge chip', () => {
+    const { container } = render(
+      <Tabs defaultValue="reviews">
+        <TabsList>
+          <TabsTrigger value="reviews" badge={12}>Reviews</TabsTrigger>
+        </TabsList>
+        <TabsContent value="reviews">Reviews content</TabsContent>
+      </Tabs>,
+    );
+
+    const badge = container.querySelector('.ds-tabs__badge');
+    expect(badge).toBeInTheDocument();
+    expect(badge).toHaveClass('ds-badge');
+    expect(badge).toHaveTextContent('12');
+  });
+
+  it('includes the badge in the tab accessible name', () => {
+    render(
+      <Tabs defaultValue="reviews">
+        <TabsList>
+          <TabsTrigger value="reviews" badge={12}>Reviews</TabsTrigger>
+        </TabsList>
+        <TabsContent value="reviews">Reviews content</TabsContent>
+      </Tabs>,
+    );
+
+    expect(screen.getByRole('tab', { name: /Reviews\s*12/ })).toBeInTheDocument();
+  });
+
+  it('renders a custom node badge as-is', () => {
+    const { container } = render(
+      <Tabs defaultValue="reviews">
+        <TabsList>
+          <TabsTrigger value="reviews" badge={<em data-testid="custom-badge">New</em>}>
+            Reviews
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="reviews">Reviews content</TabsContent>
+      </Tabs>,
+    );
+
+    expect(screen.getByTestId('custom-badge')).toBeInTheDocument();
+    expect(container.querySelector('.ds-tabs__badge .ds-badge')).not.toBeInTheDocument();
+  });
+
+  it('renders no badge slot when badge is omitted', () => {
+    const { container } = renderTabs();
+    expect(container.querySelector('.ds-tabs__badge')).not.toBeInTheDocument();
+  });
+
+  it('wraps the trigger label for safe truncation', () => {
+    const { container } = renderTabs();
+    expect(container.querySelectorAll('.ds-tabs__trigger-label')).toHaveLength(3);
+  });
+
   // ─── Accessibility ─────────────────────────────────────
 
   it('has no accessibility violations', async () => {
     const { container } = renderTabs();
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+
+  it('has no accessibility violations with badges', async () => {
+    const { container } = render(
+      <Tabs defaultValue="description">
+        <TabsList>
+          <TabsTrigger value="description">Description</TabsTrigger>
+          <TabsTrigger value="reviews" badge={127}>Reviews</TabsTrigger>
+        </TabsList>
+        <TabsContent value="description">Description content</TabsContent>
+        <TabsContent value="reviews">Reviews content</TabsContent>
+      </Tabs>,
+    );
     const results = await axe(container);
     expect(results).toHaveNoViolations();
   });

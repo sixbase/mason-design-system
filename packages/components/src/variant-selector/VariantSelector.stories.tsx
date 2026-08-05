@@ -154,6 +154,30 @@ export const WithUnavailableOptions: Story = {
   },
 };
 
+export const WithUnavailableColors: Story = {
+  render: () => {
+    const colorWithStock: VariantOption = {
+      name: 'Color',
+      type: 'color',
+      values: [
+        { label: 'Carbon Black', value: 'carbon-black', colorHex: '#1A1A1A' },
+        { label: 'Bone White', value: 'bone-white', colorHex: '#F5F0E8', available: false },
+        { label: 'Navy Blue', value: 'navy-blue', colorHex: '#1B2A4A' },
+        { label: 'Forest Green', value: 'forest-green', colorHex: '#2D4A2D', available: false },
+      ],
+    };
+
+    return (
+      <div style={{ width: '320px' }}>
+        <InteractiveVariantSelector
+          options={[colorWithStock]}
+          initialValues={{ Color: 'carbon-black' }}
+        />
+      </div>
+    );
+  },
+};
+
 export const WithDisabledOptions: Story = {
   render: () => {
     const sizeWithDisabled: VariantOption = {

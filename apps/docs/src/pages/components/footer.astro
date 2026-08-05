@@ -32,9 +32,12 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   ]}
   accessibility={[
     'Uses semantic <code>&lt;footer&gt;</code> element for landmark identification',
+    'Each link column is a <code>&lt;nav&gt;</code> landmark labelled by its heading (e.g. <code>aria-label="Shop"</code>)',
     'Column headings use <code>&lt;h3&gt;</code> for proper document structure',
     'Logo link has an <code>aria-label</code> for screen readers',
     'All links have visible focus indicators and hover states',
+    'Bottom padding respects the device safe-area inset on notched phones',
+    'Link transitions respect <code>prefers-reduced-motion: reduce</code>',
   ]}
 >
   <h2>Default</h2>

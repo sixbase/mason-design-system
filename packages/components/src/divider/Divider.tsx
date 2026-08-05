@@ -1,5 +1,6 @@
 import { forwardRef } from 'react';
 import type { HTMLAttributes } from 'react';
+import { Text } from '../typography/Typography';
 import './Divider.css';
 
 export type DividerOrientation = 'horizontal' | 'vertical';
@@ -13,6 +14,12 @@ export interface DividerProps extends HTMLAttributes<HTMLHRElement> {
   variant?: DividerVariant;
   /** Spacing above/below (horizontal) or left/right (vertical) */
   spacing?: DividerSpacing;
+  /**
+   * Optional centered text label between two rule lines — the "OR"
+   * pattern in checkout ("Express checkout — OR — pay by card").
+   * Horizontal orientation only; ignored when vertical.
+   */
+  label?: string;
 }
 
 /**
@@ -25,12 +32,14 @@ export interface DividerProps extends HTMLAttributes<HTMLHRElement> {
  * <Divider />
  * <Divider variant="subtle" spacing="lg" />
  * <Divider orientation="vertical" />
+ * <Divider label="OR" />
  */
 export const Divider = forwardRef<HTMLHRElement, DividerProps>(function Divider(
   {
     orientation = 'horizontal',
     variant = 'default',
     spacing = 'md',
+    label,
     className,
     ...props
   },
@@ -41,10 +50,29 @@ export const Divider = forwardRef<HTMLHRElement, DividerProps>(function Divider(
     `ds-divider--${orientation}`,
     `ds-divider--${variant}`,
     `ds-divider--spacing-${spacing}`,
+    orientation === 'horizontal' && label != null && 'ds-divider--labeled',
     className,
   ]
     .filter(Boolean)
     .join(' ');
+
+  if (orientation === 'horizontal' && label != null) {
+    return (
+      <div
+        ref={ref as React.Ref<HTMLDivElement>}
+        role="separator"
+        aria-orientation="horizontal"
+        className={classes}
+        {...(props as HTMLAttributes<HTMLDivElement>)}
+      >
+        <span className="ds-divider__line" aria-hidden="true" />
+        <Text as="span" size="sm" className="ds-divider__label">
+          {label}
+        </Text>
+        <span className="ds-divider__line" aria-hidden="true" />
+      </div>
+    );
+  }
 
   if (orientation === 'vertical') {
     return (

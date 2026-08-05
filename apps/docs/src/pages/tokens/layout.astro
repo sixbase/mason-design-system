@@ -399,6 +399,181 @@ import '../../styles/token-docs.css';
   ))}
 </Carousel>`}</code></pre>
 
+    <!-- ─── Aspect Ratios ────────────────────────────────── -->
+
+    <h2>Aspect Ratios</h2>
+    <p class="section-desc">
+      Tokenized proportions for image and media containers — always
+      <code>aspect-ratio: var(--aspect-*)</code>, never a raw ratio. Two φ ratios for
+      editorial moments, plus the practical media ratios components already use.
+    </p>
+
+    <div class="aspect-grid">
+      <div class="aspect-swatch">
+        <div class="aspect-sample" style="aspect-ratio: var(--aspect-square);"></div>
+        <code class="aspect-name">--aspect-square</code>
+        <span class="aspect-usage">1 / 1 — avatars, thumbnails, cart line images</span>
+      </div>
+      <div class="aspect-swatch">
+        <div class="aspect-sample" style="aspect-ratio: var(--aspect-portrait);"></div>
+        <code class="aspect-name">--aspect-portrait</code>
+        <span class="aspect-usage">4 / 5 — product cards, gallery images</span>
+      </div>
+      <div class="aspect-swatch">
+        <div class="aspect-sample" style="aspect-ratio: var(--aspect-landscape);"></div>
+        <code class="aspect-name">--aspect-landscape</code>
+        <span class="aspect-usage">4 / 3 — default card image ratio</span>
+      </div>
+      <div class="aspect-swatch">
+        <div class="aspect-sample" style="aspect-ratio: var(--aspect-video);"></div>
+        <code class="aspect-name">--aspect-video</code>
+        <span class="aspect-usage">16 / 9 — video embeds, wide media banners</span>
+      </div>
+      <div class="aspect-swatch">
+        <div class="aspect-sample" style="aspect-ratio: var(--aspect-golden);"></div>
+        <code class="aspect-name">--aspect-golden</code>
+        <span class="aspect-usage">φ : 1 — hero images, editorial banners</span>
+      </div>
+      <div class="aspect-swatch">
+        <div class="aspect-sample" style="aspect-ratio: var(--aspect-golden-portrait);"></div>
+        <code class="aspect-name">--aspect-golden-portrait</code>
+        <span class="aspect-usage">1 : φ — editorial and campaign imagery</span>
+      </div>
+    </div>
+
+    <div class="layout-note">
+      <strong>φ note:</strong> 4/5 (0.8) is the practical neighbor of 1/√φ ≈ 0.786 — the
+      product standard agreed with the storefront. The golden pair carries the exact φ proportion.
+    </div>
+
+    <!-- ─── Elevation ────────────────────────────────────── -->
+
+    <h2>Elevation</h2>
+    <p class="section-desc">
+      Semantic aliases over the Fibonacci shadow scale. Components declare what a surface
+      <em>is</em> (<code>--elevation-card</code>), not which shadow it wears (<code>--shadow-md</code>) —
+      retuning the shadow scale flows through every elevation automatically.
+    </p>
+
+    <div class="elevation-grid">
+      <div class="elevation-swatch">
+        <div class="elevation-sample" style="box-shadow: var(--elevation-card);"></div>
+        <code class="elevation-name">--elevation-card</code>
+        <span class="elevation-usage">shadow-md — resting cards, tiles</span>
+      </div>
+      <div class="elevation-swatch">
+        <div class="elevation-sample" style="box-shadow: var(--elevation-dropdown);"></div>
+        <code class="elevation-name">--elevation-dropdown</code>
+        <span class="elevation-usage">shadow-lg — menus, popovers, tooltips</span>
+      </div>
+      <div class="elevation-swatch">
+        <div class="elevation-sample" style="box-shadow: var(--elevation-sticky);"></div>
+        <code class="elevation-name">--elevation-sticky</code>
+        <span class="elevation-usage">shadow-lg — sticky bars once scrolled</span>
+      </div>
+      <div class="elevation-swatch">
+        <div class="elevation-sample" style="box-shadow: var(--elevation-modal);"></div>
+        <code class="elevation-name">--elevation-modal</code>
+        <span class="elevation-usage">shadow-xl — modal dialogs</span>
+      </div>
+      <div class="elevation-swatch">
+        <div class="elevation-sample" style="box-shadow: var(--elevation-toast);"></div>
+        <code class="elevation-name">--elevation-toast</code>
+        <span class="elevation-usage">shadow-2xl — toasts, drawers</span>
+      </div>
+    </div>
+
+    <!-- ─── Safe Area ────────────────────────────────────── -->
+
+    <h2>Safe Area</h2>
+    <p class="section-desc">
+      Device inset tokens for notches, home indicators, and curved corners. Each wraps
+      <code>env(safe-area-inset-*)</code> with a <code>0px</code> fallback, so they're inert
+      on desktop. Requires <code>viewport-fit=cover</code> in the viewport meta tag.
+    </p>
+
+    <table class="layout-table">
+      <thead>
+        <tr>
+          <th>Token</th>
+          <th>Value</th>
+          <th>Use case</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>--safe-area-top</code></td>
+          <td><code>env(safe-area-inset-top, 0px)</code></td>
+          <td>Fixed headers under a notch</td>
+        </tr>
+        <tr>
+          <td><code>--safe-area-right</code></td>
+          <td><code>env(safe-area-inset-right, 0px)</code></td>
+          <td>Landscape edge padding</td>
+        </tr>
+        <tr>
+          <td><code>--safe-area-bottom</code></td>
+          <td><code>env(safe-area-inset-bottom, 0px)</code></td>
+          <td>Bottom bars, drawers, toasts above the home indicator</td>
+        </tr>
+        <tr>
+          <td><code>--safe-area-left</code></td>
+          <td><code>env(safe-area-inset-left, 0px)</code></td>
+          <td>Landscape edge padding</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <pre><code>{`/* Bottom bar clears the home indicator on notched devices */
+.cart-bar {
+  padding-bottom: calc(var(--spacing-4) + var(--safe-area-bottom));
+}`}</code></pre>
+
+    <!-- ─── Interaction ──────────────────────────────────── -->
+
+    <h2>Interaction</h2>
+    <p class="section-desc">
+      Shared physical constants for interactive behavior — press feedback, touch targets,
+      and gesture thresholds.
+    </p>
+
+    <table class="layout-table">
+      <thead>
+        <tr>
+          <th>Token</th>
+          <th>Value</th>
+          <th>Purpose</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>--scale-press</code></td>
+          <td>0.98</td>
+          <td>Pressed-state <code>transform: scale(var(--scale-press))</code> on buttons, checkboxes, options</td>
+        </tr>
+        <tr>
+          <td><code>--size-hit-area</code></td>
+          <td>44px</td>
+          <td>Minimum invisible touch <strong>hit zone</strong> (Apple HIG / WCAG 2.5.8). Extend with padding or a pseudo-element — not by growing the visual</td>
+        </tr>
+        <tr>
+          <td><code>--size-touch-target</code></td>
+          <td>36px</td>
+          <td>The <strong>visual</strong> icon-button size — stays 36px; the hit area around it is what must reach 44px</td>
+        </tr>
+        <tr>
+          <td><code>--size-swipe-threshold</code></td>
+          <td>50px</td>
+          <td>Minimum drag distance to register a swipe (carousels, drawers) — JS-consumable via the tokens JSON export</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="layout-rule">
+      <strong>Try it:</strong> the sample below scales to <code>var(--scale-press)</code> while pressed.
+    </div>
+    <button type="button" class="press-demo">Press and hold</button>
+
     <!-- ─── Shopify Theme Mapping ────────────────────────── -->
 
     <h2>Shopify Theme Mapping</h2>
@@ -527,5 +702,109 @@ import '../../styles/token-docs.css';
 
   .layout-rule code {
     font-size: var(--font-size-xs);
+  }
+
+  /* ─── Aspect ratio grid ────────────────────────────── */
+  .aspect-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: var(--spacing-6);
+    align-items: end;
+    margin: var(--spacing-3) 0 var(--spacing-6);
+  }
+
+  .aspect-swatch {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+  }
+
+  .aspect-sample {
+    width: 100%;
+    background-color: var(--color-background-subtle);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+  }
+
+  .aspect-name {
+    font-size: var(--font-size-xs);
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--color-foreground);
+  }
+
+  .aspect-usage {
+    font-size: var(--font-size-xs);
+    color: var(--color-foreground-secondary);
+    line-height: var(--line-height-relaxed);
+  }
+
+  /* ─── Elevation grid ───────────────────────────────── */
+  .elevation-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: var(--spacing-6);
+    margin: var(--spacing-3) 0 var(--spacing-8);
+  }
+
+  .elevation-swatch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-2);
+    text-align: center;
+  }
+
+  .elevation-sample {
+    width: 100%;
+    aspect-ratio: var(--aspect-landscape);
+    background-color: var(--color-background-surface);
+    border-radius: var(--radius-lg);
+  }
+
+  .elevation-name {
+    font-size: var(--font-size-xs);
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--color-foreground);
+  }
+
+  .elevation-usage {
+    font-size: var(--font-size-xs);
+    color: var(--color-foreground-secondary);
+    line-height: var(--line-height-relaxed);
+  }
+
+  /* ─── Press-scale demo ─────────────────────────────── */
+  .press-demo {
+    height: var(--size-control-md);
+    padding: 0 var(--spacing-4);
+    font-family: var(--font-family-body);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-primary-foreground);
+    background-color: var(--color-primary);
+    border: 1px solid var(--color-primary);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    margin-bottom: var(--spacing-6);
+    transition: transform var(--transition-fast);
+  }
+
+  .press-demo:active {
+    transform: scale(var(--scale-press));
+  }
+
+  .press-demo:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .press-demo:active {
+      transform: none;
+    }
   }
 </style>

@@ -106,6 +106,20 @@
   border-color: var(--color-border-strong);
 }
 
+/* ─── Status dot ─────────────────────────────────────────── */
+/*
+ * currentColor keeps the dot on the variant's foreground token, which
+ * already passes contrast against the variant background. The label
+ * carries the meaning; the dot is decorative reinforcement.
+ */
+.ds-badge__dot {
+  width: var(--spacing-2);
+  height: var(--spacing-2);
+  border-radius: var(--radius-full);
+  background-color: currentColor;
+  flex-shrink: 0;
+}
+
 /* ─── Focus visibility (2.4.7 / 2.4.11) ─────────────────── */
 /*
  * Badges are not inherently interactive, but may receive focus when

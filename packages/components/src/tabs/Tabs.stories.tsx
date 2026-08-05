@@ -80,6 +80,27 @@ export const WithDisabledTab: Story = {
   ),
 };
 
+export const WithBadges: Story = {
+  render: () => (
+    <Tabs defaultValue="description">
+      <TabsList>
+        <TabsTrigger value="description">Description</TabsTrigger>
+        <TabsTrigger value="reviews" badge={127}>Reviews</TabsTrigger>
+        <TabsTrigger value="questions" badge={4}>Questions</TabsTrigger>
+      </TabsList>
+      <TabsContent value="description">
+        A minimal stoneware bowl with a matte finish.
+      </TabsContent>
+      <TabsContent value="reviews">
+        127 reviews — 4.8 average. Customers highlight the weight and texture.
+      </TabsContent>
+      <TabsContent value="questions">
+        4 answered questions about care, sizing, and shipping.
+      </TabsContent>
+    </Tabs>
+  ),
+};
+
 export const ManyTabs: Story = {
   render: () => (
     <div style={{ maxWidth: '400px' }}>

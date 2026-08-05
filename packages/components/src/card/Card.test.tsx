@@ -44,6 +44,21 @@ describe('Card', () => {
     expect(screen.getByAltText('Product photo')).toBeInTheDocument();
   });
 
+  it('uses the aspect token default when no aspectRatio is passed', () => {
+    const { container } = render(<CardImage src="/image.jpg" alt="Product photo" />);
+    const wrapper = container.querySelector('.ds-card-image') as HTMLElement;
+    // No inline override — CSS falls back to var(--aspect-landscape) (4/3).
+    expect(wrapper.style.getPropertyValue('--card-image-ratio')).toBe('');
+  });
+
+  it('sets the component token when aspectRatio is passed', () => {
+    const { container } = render(
+      <CardImage src="/image.jpg" alt="Product photo" aspectRatio="1/1" />,
+    );
+    const wrapper = container.querySelector('.ds-card-image') as HTMLElement;
+    expect(wrapper.style.getPropertyValue('--card-image-ratio')).toBe('1/1');
+  });
+
   it('has no accessibility violations', async () => {
     const { container } = render(
       <Card>

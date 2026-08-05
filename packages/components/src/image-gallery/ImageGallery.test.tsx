@@ -68,6 +68,20 @@ describe('ImageGallery', () => {
     expect(main.style.getPropertyValue('--gallery-ratio')).toBe('1/1');
   });
 
+  it('eager-loads the main image and lazy-loads thumbnails by default', () => {
+    render(<ImageGallery images={images} />);
+    expect(screen.getByAltText('Front view')).toHaveAttribute('loading', 'eager');
+    const thumbImgs = screen
+      .getAllByRole('tab')
+      .map((tab) => tab.querySelector('img'));
+    thumbImgs.forEach((img) => expect(img).toHaveAttribute('loading', 'lazy'));
+  });
+
+  it('forwards loading="lazy" to the main image', () => {
+    render(<ImageGallery images={images} loading="lazy" />);
+    expect(screen.getByAltText('Front view')).toHaveAttribute('loading', 'lazy');
+  });
+
   it('has no accessibility violations', async () => {
     const { container } = render(<ImageGallery images={images} />);
     expect(await axe(container)).toHaveNoViolations();

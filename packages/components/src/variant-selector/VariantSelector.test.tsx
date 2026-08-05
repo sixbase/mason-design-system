@@ -127,6 +127,31 @@ describe('VariantSelector', () => {
     });
   });
 
+  describe('unavailable color swatches', () => {
+    it('exposes the out-of-stock suffix the CSS strikethrough hooks onto', () => {
+      const colorWithStock: VariantOption = {
+        name: 'Color',
+        type: 'color',
+        values: [
+          { label: 'Black', value: 'black', colorHex: '#000000' },
+          { label: 'White', value: 'white', colorHex: '#FFFFFF', available: false },
+        ],
+      };
+      const { container } = render(
+        <VariantSelector
+          options={[colorWithStock]}
+          selectedValues={{ Color: 'black' }}
+          onValueChange={vi.fn()}
+        />,
+      );
+      // VariantSelector.css draws the diagonal slash via this attribute selector
+      expect(
+        container.querySelector('.ds-color-picker__btn[aria-label$="(out of stock)"]'),
+      ).toBeInTheDocument();
+      expect(screen.getByRole('radio', { name: 'White (out of stock)' })).toBeInTheDocument();
+    });
+  });
+
   describe('disabled state', () => {
     it('disables fully disabled options', () => {
       const disabledOption: VariantOption = {
