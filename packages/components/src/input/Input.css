@@ -102,6 +102,9 @@
 /* ─── With icons / adornments ──────────────────────────────── */
 .ds-input-wrapper {
   position: relative;
+  /* Contain the adornment's stacking to this field, so raising it above the
+     input cannot reach past the wrapper. */
+  isolation: isolate;
   display: flex;
   align-items: center;
   width: 100%;
@@ -121,6 +124,16 @@
 
 .ds-input-adornment {
   position: absolute;
+  /*
+   * Raised deliberately. The optical-centering fallback below puts a transform
+   * on .ds-input-field, and a transformed element becomes a stacking context
+   * painted at the z-index:0 layer. The leading adornment is a *previous*
+   * sibling with z-index:auto, so the input's opaque background painted over
+   * it and the leading "$" vanished — while the trailing adornment, which
+   * comes after the input, survived. Every browser without text-box-trim hit
+   * this, Safari included. Isolation on the wrapper keeps this local.
+   */
+  z-index: var(--z-index-raised);
   display: flex;
   align-items: center;
   color: var(--color-foreground-subtle);
