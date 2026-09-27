@@ -12,7 +12,6 @@ const money = (cents: number, currency: string) =>
 const meta: Meta<typeof ProductCard> = {
   title: 'Components/ProductCard',
   component: ProductCard,
-  tags: ['autodocs'],
   parameters: {
     docs: {
       description: {

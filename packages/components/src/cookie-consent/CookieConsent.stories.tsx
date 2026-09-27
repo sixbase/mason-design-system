@@ -39,9 +39,8 @@ const categories: CookieCategory[] = [
 const meta: Meta<typeof CookieConsent> = {
   title: 'Components/CookieConsent',
   component: CookieConsent,
-  tags: ['autodocs'],
   decorators: [
-    // Contain the fixed-position banner within the Storybook canvas
+    // Contain the fixed-position banner within the workbench frame
     (Story) => (
       <div style={{ transform: 'translateZ(0)', position: 'relative', minHeight: 'var(--size-modal-md)', overflow: 'hidden' }}>
         <div style={{ padding: 'var(--spacing-6)' }}>

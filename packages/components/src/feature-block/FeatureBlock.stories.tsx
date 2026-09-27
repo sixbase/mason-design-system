@@ -5,7 +5,6 @@ import { FeatureBlock } from './FeatureBlock';
 const meta: Meta<typeof FeatureBlock> = {
   title: 'Components/FeatureBlock',
   component: FeatureBlock,
-  tags: ['autodocs'],
   parameters: {
     docs: {
       description: {

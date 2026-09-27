@@ -13,7 +13,7 @@
 /* ─── Header ──────────────────────────────────────────── */
 .ds-cart-drawer__header {
   padding-bottom: var(--cart-drawer-gap);
-  border-bottom: var(--border-width-sm) solid var(--color-border);
+  border-bottom: var(--border-width-sm) solid var(--color-border-subtle);
 }
 
 /* ─── Items list ──────────────────────────────────────── */
@@ -27,7 +27,7 @@
   flex-direction: column;
   gap: var(--spacing-3);
   padding-top: var(--cart-drawer-gap);
-  border-top: var(--border-width-sm) solid var(--color-border);
+  border-top: var(--border-width-sm) solid var(--color-border-subtle);
   margin-top: auto;
   position: sticky;
   bottom: calc(-1 * var(--spacing-6));

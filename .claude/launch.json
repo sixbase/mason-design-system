@@ -10,16 +10,6 @@
         "dev"
       ],
       "port": 4321
-    },
-    {
-      "name": "storybook",
-      "runtimeExecutable": "pnpm",
-      "runtimeArgs": [
-        "--filter",
-        "@ds/storybook",
-        "dev"
-      ],
-      "port": 6006
     }
   ]
 }

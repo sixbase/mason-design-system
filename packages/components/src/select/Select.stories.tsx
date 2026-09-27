@@ -4,7 +4,6 @@ import { Select, SelectGroup, SelectItem, SelectSeparator } from './Select';
 const meta: Meta<typeof Select> = {
   title: 'Components/Select',
   component: Select,
-  tags: ['autodocs'],
   parameters: {
     docs: {
       description: {

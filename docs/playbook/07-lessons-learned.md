@@ -23,11 +23,9 @@ Every lesson produced a rule. This table collects the rules **still in force** s
 |------|--------------|
 | `types` must be first key in package.json exports | [types-export-order](#types-export-order) |
 | tsup outputs `.js` for CJS, `.mjs` for ESM — not `.cjs` | [tsup-extensions](#tsup-extensions) |
-| Storybook glob is relative to `.storybook/`, uses `{ts,tsx}` not `@(ts\|tsx)` | [storybook-glob](#storybook-glob) |
 | Token CSS needs a full `@ds/tokens` build — `pnpm dev` builds it once, then only watches TS | Harder than expected |
 | Component CSS changes show instantly in the workbench (it renders source); only `dist` consumers need a rebuild | [workbench-source](#workbench-source) (replaces the docs-era [css-hot-reload](#css-hot-reload)) |
 | Chromatic (if re-enabled) needs `fetch-depth: 0` in GitHub Actions | [chromatic-fetch-depth](#chromatic-fetch-depth) |
-| Clear Storybook cache after adding any Radix package | [storybook-cache](#storybook-cache) |
 | Bump all `@radix-ui/*` together; check the lockfile for duplicate internals | [radix-duplicates](#radix-duplicates) |
 | tsup `splitting` needs `clean: true` | [tsup-clean](#tsup-clean) |
 | Token build scripts resolve references through a lookup that throws | [token-build-fails-silently](#token-build-fails-silently) |
@@ -42,6 +40,7 @@ Every lesson produced a rule. This table collects the rules **still in force** s
 | Never use CSS variable fallbacks with hardcoded values | [color-rename-bug](#color-rename-bug) |
 | After renaming tokens, `grep -r "old-name" .` — CSS vars fail silently | [color-rename-bug](#color-rename-bug) |
 | Never use `color-mix(… %, transparent)` for WCAG-required contrast | [color-mix-contrast](#color-mix-contrast) |
+| A line that must look the same on several backgrounds is translucent, not a lighter solid step | [translucent-hairline](#translucent-hairline) |
 | Disabled state: `var(--opacity-medium)`, never `0.5` | Refactor audit |
 | Transitions: use `var(--transition-fast)` shorthands, never raw duration | Token convention |
 | `@media` queries cannot use CSS custom properties — write the breakpoint token's value; `check-css` rejects any other width | [css-media-vars](#css-media-vars) |
@@ -141,9 +140,6 @@ Every component got a docs page the same session. The discipline meant docs were
 **Expected:** `.cjs` for CJS. **Reality:** `.js` for CJS, `.mjs` for ESM. Cost time tracing "module not found" errors.
 **Rule:** package.json exports must match actual tsup output: `"import": "./dist/index.mjs"`, `"require": "./dist/index.js"`.
 
-### Storybook stories glob path
-**Expected:** Relative to package root. **Reality:** Relative to `.storybook/` dir. Need `../../../` not `../../`. Silent failure — empty Storybook, no error.
-
 ### Astro JSON import paths
 *(Obsolete — the Astro docs site was retired 2026-09-25.)*
 **Expected:** Relative to project root. **Reality:** Relative to `.astro` file. Five `../` to reach packages from a nested page. Silent 404.
@@ -158,9 +154,6 @@ Every component got a docs page the same session. The discipline meant docs were
 ### `types` export order in package.json {#types-export-order}
 **Bug:** TypeScript can't find declarations. **Cause:** `import` before `types` in exports. **Fix:** `types` must be first key.
 **Rule:** Always `types` first in every exports condition.
-
-### Storybook glob `@(ts|tsx)` not supported {#storybook-glob}
-**Bug:** Zero stories found. **Fix:** Use `{ts,tsx}` not `@(ts|tsx)`.
 
 ### Hardcoded color references broke on palette rename {#color-rename-bug}
 **Bug:** Code blocks lost styling after `gray` → `stone` rename. Fallback values masked the failure.
@@ -177,11 +170,6 @@ Every component got a docs page the same session. The discipline meant docs were
 ### jest-axe requires both install AND `expect.extend()` {#jest-axe-setup}
 **Bug:** "Invalid Chai property: toHaveNoViolations."
 **Fix:** `expect.extend(toHaveNoViolations)` in `vitest.setup.ts` + `configureAxe({ rules: { region: { enabled: false } } })`.
-
-### Storybook Vite cache duplicates React after Radix packages {#storybook-cache}
-**Bug:** "Cannot read properties of null (reading 'useState')" — dual React.
-**Fix:** `rm -rf node_modules/.cache/storybook` then restart.
-**Rule:** Clear Storybook cache after adding any package that depends on React.
 
 ### Radix Select needs `aria-labelledby`, not `htmlFor` {#radix-select-aria}
 **Bug:** axe "Buttons must have discernible text" despite label present.
@@ -241,6 +229,11 @@ Browser UA stylesheets override inheritance on `input`, `select`, `textarea`, `b
 ### `color-mix(… %, transparent)` broken for WCAG contrast {#color-mix-contrast}
 Mathematically impossible to reach 3:1 or 4.5:1 at low percentages. Use solid primitive references.
 **Rule:** `color-mix` with `transparent` ONLY for decorative elements. Use 50-shade primitives for backgrounds, 600+ for borders/text.
+
+### A lighter solid step vanishes on tinted surfaces {#translucent-hairline}
+The storefront's first `--color-border-subtle` mixed the border halfway toward the page background. It looked right on `--color-background`, but it fell to 1.03:1 on `--color-background-subtle` and 1.05:1 on dark surfaces, so dividers disappeared in drawers and tinted panels. A translucent foreground (stone-950 or stone-50 at 5.57%) sits at ≈1.12:1 on every surface.
+Opacity also multiplies. The Divider's `subtle` variant (38.2% opacity) on top of the new hairline dropped it to ≈1.04:1.
+**Rule:** A decorative line that has to read the same on several backgrounds is a translucent mix of the foreground, not a solid step. Before stacking an opacity variant on a faint token, check the product of the two.
 
 ### Semantic token gaps surface during a11y audits {#semantic-token-gap}
 Gap between `foreground-subtle` (fails AA) and `foreground`. Warning badge text needs primitive.
@@ -540,7 +533,7 @@ CartLineItem pinned QuantitySelector (~104px intrinsic) into the grid column nex
 3. **Set up Chromatic from day one.** Baselines grow incrementally. Setting up after 10 components triggers "changes detected" on all of them.
 4. **Write stories the same session as the component.** Not "this week." The same session. (Originally "docs"; the stories are now the only specimens.)
 5. **Keep primitive token names stable.** The semantic layer exists so primitives are never in component CSS. Enforce this.
-6. **Build a review bench on your stories, not a docs site.** We ran Storybook plus an Astro docs site for months; the docs cost parity work on every component and still couldn't show phone next to desktop or light next to dark. A small Vite app that renders the stories in real device-width iframes replaced it (`02` → Workbench).
+6. **Build a review bench on your stories, not a docs site.** We ran Storybook plus an Astro docs site for months; the docs cost parity work on every component and still couldn't show phone next to desktop or light next to dark. A small Vite app that renders the stories in real device-width iframes replaced it (`02` → Workbench). Storybook itself was dropped too (2026-09-27); the stories stay, rendered only by the workbench.
 7. **`pnpm --filter @ds/tokens build` is the most-run command.** Set up watchers for heavy token iteration.
 8. **When changing fonts, test small dense components immediately.** Badges, tags, chips, small buttons, inline code. And check that optical-centering CSS actually applies (`CSS.supports(…)`) — ours never did ([text-box-trim-invalid](#text-box-trim-invalid)).
 9. **Add silent-failure guards on day one:** a CSS lint for undefined `var()`, raw values and ungated `:hover`; type-checked stories; a token build that throws on bad references. Each of these caught real bugs only after months.
@@ -594,7 +587,7 @@ Chrome doesn't count an element painted at opacity 0 as contentful. A hero headl
 Fixing the syntax alone would visibly change every fixed-height control at once. Recommended path: one deliberate pass — add a `__label` span where needed, switch to `text-box: trim-both cap alphabetic`, drop the translate fallback, and re-baseline visuals (Chromatic). The same snippet in CLAUDE.md and 04-components.md must be corrected in that pass. Not changed in the 2026-09-25 audit.
 
 ### The workbench renders component source — no build to see a change {#workbench-source}
-The retired docs site consumed built `@ds/components` (`dist/`), so a CSS edit needed a rebuild before it showed (see `#css-hot-reload`). The workbench aliases `@ds/components` and `@ds/motion` to `src/` in `vite.config.ts`: component edits hot-reload in every frame immediately. Storybook also reads source.
+The retired docs site consumed built `@ds/components` (`dist/`), so a CSS edit needed a rebuild before it showed (see `#css-hot-reload`). The workbench aliases `@ds/components` and `@ds/motion` to `src/` in `vite.config.ts`: component edits hot-reload in every frame immediately.
 
 ### `composeStories` + `import.meta.glob` lose story order {#story-order}
 A module namespace object lists exports alphabetically ("All variants, As link, Destructive…"), and Storybook's `__namedExportsOrder` is injected only by Storybook's own compiler. The workbench also globs each story file as `?raw` text and reads `export const` names in source order. **Rule:** write stories in the order you want to review them.

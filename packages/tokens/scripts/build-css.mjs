@@ -188,9 +188,10 @@ const css = lines(
  * so every theme prints with the light semantic tokens.
  *
  * prefers-contrast: more (macOS "Increase contrast", Windows contrast
- * themes without forced colors): decorative borders take the 3:1 control
- * edge, and the two faintest text roles step up — one rung in light, two
- * in dark (so dark subtle lands on stone-300, the same as secondary).
+ * themes without forced colors): decorative borders and dividers take the
+ * 3:1 control edge, and the two faintest text roles step up — one rung
+ * in light, two in dark (so dark subtle lands on stone-300, the same as
+ * secondary).
  * border-strong moves too (to stone-500: 3.9:1 light, 4.7:1 dark) — left
  * alone it sat BELOW the raised --color-border, so hover borders
  * (CollectionFilters pill, ColorPicker ring) got fainter on hover.
@@ -202,12 +203,14 @@ const css = lines(
  */
 const moreContrast = {
   light: [
+    `--color-border-subtle: var(--color-border-control);`,
     `--color-border: var(--color-border-control);`,
     `--color-border-strong: var(--color-stone-500);`,
     `--color-foreground-subtle: var(--color-stone-600);`,
     `--color-foreground-muted: var(--color-stone-500);`,
   ],
   dark: [
+    `--color-border-subtle: var(--color-border-control);`,
     `--color-border: var(--color-border-control);`,
     `--color-border-strong: var(--color-stone-500);`,
     `--color-foreground-subtle: var(--color-stone-300);`,

@@ -1,7 +1,8 @@
 /* ─── Table: Component Tokens ─────────────────────────────── */
 
 .ds-table {
-  --table-border-color: var(--color-border);
+  --table-border-color: var(--color-border-subtle);
+  --table-stack-border-color: var(--color-border);
   --table-header-bg: var(--color-background-subtle);
   --table-header-weight: var(--font-weight-semibold);
   --table-stripe-bg: var(--color-background-subtle);
@@ -270,7 +271,7 @@
 
   .ds-table--stack .ds-table__body .ds-table__row {
     display: block;
-    border: var(--border-width-sm) solid var(--table-border-color);
+    border: var(--border-width-sm) solid var(--table-stack-border-color);
     border-radius: var(--radius-md);
     padding: var(--spacing-2) 0;
     margin-bottom: var(--spacing-3);
@@ -278,7 +279,7 @@
 
   .ds-table--stack .ds-table__body .ds-table__row:last-child {
     margin-bottom: 0;
-    border-bottom: var(--border-width-sm) solid var(--table-border-color);
+    border-bottom: var(--border-width-sm) solid var(--table-stack-border-color);
   }
 
   .ds-table--stack .ds-table__cell {

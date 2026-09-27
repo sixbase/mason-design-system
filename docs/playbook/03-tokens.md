@@ -9,7 +9,7 @@
 1. **Every visual value must come from a token.** No hex codes, no pixel values, no raw numbers in component or page CSS. If the token doesn't exist, flag it as a gap — do not invent a value.
 2. **All scales derive from the golden ratio (φ).** When adding a new token or scale, derive it from φ, 1/φ, fractional powers of φ, or the Fibonacci sequence. See the math reference below.
 3. **Semantic tokens are what components use.** Components never reference primitives directly except in documented edge cases (see Known Gaps below). If a semantic token doesn't exist for your need, add one — don't reach for the primitive.
-4. **Token renames require a full codebase grep.** CSS variables fail silently. `var(--old-name)` resolves to `initial` with no error. Always `grep -r "old-name" .` before and after renaming. `check-css` (in `pnpm lint`) catches undefined `var()` in component CSS only — not in workbench, Storybook or storefront CSS.
+4. **Token renames require a full codebase grep.** CSS variables fail silently. `var(--old-name)` resolves to `initial` with no error. Always `grep -r "old-name" .` before and after renaming. `check-css` (in `pnpm lint`) catches undefined `var()` in component CSS only — not in workbench or storefront CSS.
 5. **Two spacing scales, two scopes.** Standard 4px grid (`--spacing-*`) is the default for all spacing: component internals, element-to-element gaps, section rhythm, and any "I need some space here" situation. Section rhythm uses `--spacing-16` (64px) via `.ds-section`. Phi scale (`--spacing-phi-*`) is reserved for proportional layout relationships where the mathematical relationship to φ is the actual design intent — sidebar-to-content ratios, aspect ratio approximations, layout split proportions. Never mix scales within the same component. See "Phi vs Standard Spacing" below for detailed rules.
 6. **Never use `color-mix(… %, transparent)` for elements that need WCAG contrast.** The math makes it impossible to reach 3:1 or 4.5:1 at low percentages. Use solid primitive references (typically 50-shade for backgrounds, 600+ for borders/text). See Common Mistakes below.
 7. **Disabled states use `opacity: var(--opacity-medium)`.** Never hardcode `opacity: 0.5`.
@@ -153,11 +153,11 @@ Map primitives to **purpose**. Components use this layer. Dark mode swaps this l
 
 Both sides of the contrast pair are defined together — illegible text is impossible if you follow this pattern.
 
-**Complete semantic color set** (defined per mode in `tokens.json` under `semantic.color.light` / `semantic.color.dark` — 33 tokens each. The build fails if the two modes list different names, or if a `color-mix()` names a `--color-*` token that doesn't exist — always add both):
+**Complete semantic color set** (defined per mode in `tokens.json` under `semantic.color.light` / `semantic.color.dark` — 34 tokens each. The build fails if the two modes list different names, or if a `color-mix()` names a `--color-*` token that doesn't exist — always add both):
 ```
 --color-background           --color-background-subtle      --color-background-surface
 --color-foreground           --color-foreground-secondary   --color-foreground-subtle    --color-foreground-muted
---color-border               --color-border-strong          --color-border-control
+--color-border-subtle        --color-border                 --color-border-strong        --color-border-control
 --color-primary              --color-primary-hover          --color-primary-active       --color-primary-foreground
 --color-secondary            --color-secondary-hover        --color-secondary-active     --color-secondary-foreground
 --color-destructive          --color-destructive-hover      --color-destructive-active   --color-destructive-foreground   --color-destructive-subtle
@@ -183,7 +183,8 @@ Dark mode (on stone.950): foreground stone.50 (17.99:1) · secondary stone.300 (
 
 | Token | Light | Dark | Permitted use |
 |-------|-------|------|---------------|
-| `--color-border` | stone.200 (1.3:1) | stone.800 | Decorative separation only — dividers, card edges, table rules. **Never the only boundary of a form control** |
+| `--color-border-subtle` (2026-09-27) | stone.950 at 5.57% (φ⁻⁶), translucent — 1.12:1 on bg, subtle and surface alike | stone.50 at 5.57% — 1.13:1 on bg, 1.16 on surface | Dividers — rules *between* content: the Divider component, list rows, header/footer and section rules, table rows, menu separators, the tabs baseline. Translucent so one line keeps the same weight on every background. Decorative only |
+| `--color-border` | stone.200 (1.3:1) | stone.800 | Decorative edges of boxes — cards, popovers, menu and select panels, modals, drawers, pills, swatches — and tracks. Rules between content use `--color-border-subtle`. **Never the only boundary of a form control** |
 | `--color-border-strong` | stone.300 (1.7:1) | stone.700 | Emphasis dividers, hover borders |
 | `--color-border-control` (2026-09-25) | 38.2% stone.400 + 61.8% stone.500 = `#918A80` (3.24:1 on bg, 3.00 on subtle, 3.41 on surface) | 61.8% stone.500 + 38.2% stone.600 (≥3.4:1) | The resting boundary of Input, Textarea, Select, Checkbox, Radio, Switch-off track — anything a user must find to operate |
 
@@ -254,11 +255,11 @@ Implemented by overriding semantic tokens under `.dark` on `<html>`:
 
 **To enable:** Add `class="dark"` (or `data-theme="dark"`) to `<html>` — or to any element, for a dark region. Components need zero dark-mode-specific code. The Header's theme toggle (`showThemeToggle`) flips `.dark` on `<html>` and remembers the choice in `localStorage` (`ds-theme`).
 
-**In Storybook:** `preview.ts` decorator toggles `.dark` on `document.body` when dark background is selected. **In the workbench:** the toolbar's Theme control sets it per frame.
+**In the workbench:** the toolbar's Theme control sets it per frame.
 
-**Two more automatic modes (2026-09-25):** `@media print` forces the light tokens on every theme; `@media (prefers-contrast: more)` raises `--color-border` to the control border and moves subtle/muted text one step stronger. Components need no changes.
+**Two more automatic modes (2026-09-25):** `@media print` forces the light tokens on every theme; `@media (prefers-contrast: more)` raises `--color-border` and `--color-border-subtle` to the control border and moves subtle/muted text one step stronger. Components need no changes.
 
-**Dark mode + `color-mix`:** Mixing against `transparent` produces unpredictable results in dark mode. Mixing against `var(--color-background-subtle)` (an opaque dark color) works because both sides are opaque.
+**Dark mode + `color-mix`:** Mixing against `transparent` produces unpredictable results in dark mode. Mixing against `var(--color-background-subtle)` (an opaque dark color) works because both sides are opaque. The one deliberate exception is `--color-border-subtle`: a decorative hairline whose translucency is the point — it has to read the same over every surface.
 
 **Composite tokens are emitted per mode (2026-09-25).** `--focus-ring*` and `--color-overlay` are built from semantic colors, so `build-css.mjs` (`compositeBlock()`) writes them inside *both* the light and dark blocks. A custom property's `var()` references resolve where it is declared — declared once on `:root`, a nested `.dark` region (a dark promo band, a workbench frame) inherited the light ring. Each mode block also sets `color-scheme`, so native scrollbars and form widgets match the theme.
 
@@ -705,7 +706,7 @@ pnpm --filter @ds/tokens build
 
 ### ⚠️ Watch mode limitation
 
-`pnpm dev` runs `build-css.mjs` once at start, then only `tsup --watch`. Later edits to `tokens.json` do NOT regenerate `tokens.css` (the workbench and Storybook read it from `dist`). Re-run the build:
+`pnpm dev` runs `build-css.mjs` once at start, then only `tsup --watch`. Later edits to `tokens.json` do NOT regenerate `tokens.css` (the workbench reads it from `dist`). Re-run the build:
 
 ```bash
 pnpm --filter @ds/tokens build
@@ -730,7 +731,7 @@ pnpm --filter @ds/tokens build
 5. `grep -r "old-token-name" .` again — verify zero results
 6. Rebuild and test: `pnpm build && pnpm test`
 
-**CSS variables fail silently.** There is no build error when a variable doesn't exist. `pnpm lint` (`check-css`) flags undefined `var()` in component CSS; everywhere else (workbench, Storybook, storefront) only a search finds them.
+**CSS variables fail silently.** There is no build error when a variable doesn't exist. `pnpm lint` (`check-css`) flags undefined `var()` in component CSS; everywhere else (workbench, storefront) only a search finds them.
 
 ## How to Extend a Scale
 

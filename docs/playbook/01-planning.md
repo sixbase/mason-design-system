@@ -60,7 +60,7 @@ This design system was started from an empty GitHub repository with one directiv
 - A token system that makes consistent theming and dark mode non-optional
 - Components that are accessible by default (keyboard navigation, screen reader support, WCAG contrast)
 - Full test coverage and visual regression testing from day one
-- A documentation site that consumers can actually use, not just a Storybook dump (later replaced by the visual workbench — see "Why Two Apps" below)
+- A documentation site that consumers can actually use, not just a Storybook dump (later replaced by the visual workbench — see "Why One App" below)
 
 The system is built for an **ecommerce context** — the color palette, typography, and component priorities all reflect that use case.
 
@@ -107,15 +107,11 @@ No components are currently deferred. Open design decisions live in `12-audit-20
 
 ---
 
-## Why Two Apps (Workbench + Storybook)?
+## Why One App (the Workbench)?
 
-| | Storybook | Workbench |
-|--|-----------|-----------|
-| **Audience** | Component engineers | Alvin, reviewing what shipped |
-| **Need** | Isolated rendering, controls, a11y panel | Every state at real device widths, light/dark, stress modes; record verdicts |
-| **Runs** | `:6006` | `:4321` locally; deployed to GitHub Pages |
+`apps/workbench` is the only app: `:4321` locally, deployed to GitHub Pages. It renders the stories directly — every state at real device widths, light/dark, stress modes, an on-demand axe check, and review verdicts.
 
-Both read the **same stories**, so there is nothing to keep in parity. The public Astro docs site (usage prose, props tables, code snippets) was retired on 2026-09-25 — its only real user wanted a visual test bench, not documentation. See `06-decisions-log.md`.
+Storybook was removed on 2026-09-27. The owner reviews everything in the workbench; Storybook's controls and a11y panel went unused, and it was one more app to install, build and type-check. Stories stay in Component Story Format, so nothing about writing them changed. The public Astro docs site (usage prose, props tables, code snippets) was retired on 2026-09-25 — its only real user wanted a visual test bench, not documentation. See `06-decisions-log.md`.
 
 ---
 

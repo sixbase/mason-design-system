@@ -1,7 +1,7 @@
 .ds-header {
   position: relative;
   background-color: var(--color-background);
-  border-bottom: var(--border-width-sm) solid var(--color-border);
+  border-bottom: var(--border-width-sm) solid var(--color-border-subtle);
 }
 
 /* ─── Sticky variant ─────────────────────────────────────── */
@@ -292,7 +292,7 @@ html:has(.ds-header--sticky :focus:not(.ds-skip-link)) {
   line-height: var(--line-height-snug);
   color: var(--color-foreground);
   text-decoration: none;
-  border-bottom: var(--border-width-sm) solid var(--color-border);
+  border-bottom: var(--border-width-sm) solid var(--color-border-subtle);
   transition: color var(--transition-fast);
   /* Links rise in one tight stagger apart while the drawer slides —
      the list arrives just behind its panel. nth-child delays, not a

@@ -5,7 +5,6 @@ import { AddToCartButton } from './AddToCartButton';
 const meta: Meta<typeof AddToCartButton> = {
   title: 'Ecommerce/AddToCartButton',
   component: AddToCartButton,
-  tags: ['autodocs'],
   parameters: {
     layout: 'centered',
     docs: {

@@ -1,7 +1,7 @@
 /**
  * Everything the workbench can show, in sidebar order.
  *
- * Components are discovered from their Storybook stories — the stories ARE
+ * Components are discovered from their stories — the stories ARE
  * the specimens, so a new component with a story appears here with no
  * extra work. Any story folder missing from GROUPS still shows up, under
  * "Other", so nothing can silently go untested.

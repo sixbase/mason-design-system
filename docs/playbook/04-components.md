@@ -52,7 +52,7 @@ packages/components/src/{component}/
 ├── {Component}.tsx          ← React implementation
 ├── {Component}.css          ← Styles (component tokens + all variants)
 ├── {Component}.test.tsx     ← Vitest + Testing Library + axe
-├── {Component}.stories.tsx  ← Storybook stories (one per variant/state)
+├── {Component}.stories.tsx  ← Stories (one per variant/state; rendered by the workbench)
 └── index.ts                 ← Re-exports
 ```
 
@@ -301,11 +301,13 @@ Fixed-height controls (buttons, badges, tags, inputs, select triggers, tabs) loo
 Applies to: Accordion items, cart line items, and any vertical list with dividers.
 
 ```css
-.ds-{component}__item { border-bottom: var(--border-width-sm) solid var(--color-border); }
+.ds-{component}__item { border-bottom: var(--border-width-sm) solid var(--color-border-subtle); }
 .ds-{component}__item:last-child { border-bottom: none; }
 ```
 
 No `border-top` on first item. Use CSS `:last-child`, not JavaScript.
+
+**Rules vs edges (2026-09-27):** a line *between* pieces of content — list rows, header/footer and section rules, table rows, menu separators — uses `--color-border-subtle`. The edge of a box (card, popover, menu panel, modal, drawer, pill) uses `--color-border`. See `03-tokens.md` → Boundary roles.
 
 The `bordered` accordion variant wraps in a panel with its own border + radius — inner dividers nest cleanly inside the container border.
 
@@ -429,9 +431,9 @@ it('has no accessibility violations', async () => {
 
 ---
 
-## Storybook Story Conventions
+## Story Conventions
 
-- `tags: ['autodocs']` on every meta object
+- Component Story Format, typed with `Meta`/`StoryObj` from `@storybook/react` (installed in the workbench only — no Storybook app)
 - One story per meaningful state, in the order you want to review them (the workbench reads source order)
 - Use `render` for complex layouts (multiple components side by side)
 - Inline styles in stories are layout only and use token references: `gap: 'var(--spacing-3)'`, `maxWidth: 'var(--size-content-sm)'` — not `'12px'`/`'640px'` (about 34 older wrappers still use px — open cleanup in `12`)

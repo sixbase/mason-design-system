@@ -6,7 +6,6 @@ import { AnnouncementBar } from './AnnouncementBar';
 const meta: Meta<typeof AnnouncementBar> = {
   title: 'Components/AnnouncementBar',
   component: AnnouncementBar,
-  tags: ['autodocs'],
   parameters: {
     docs: {
       description: {

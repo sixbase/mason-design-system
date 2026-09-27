@@ -72,7 +72,7 @@
 .ds-account__divider {
   width: 100%;
   border: none;
-  border-top: var(--border-width-sm) solid var(--color-border);
+  border-top: var(--border-width-sm) solid var(--color-border-subtle);
   margin: 0;
 }
 

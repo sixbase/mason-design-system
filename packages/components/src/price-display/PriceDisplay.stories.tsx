@@ -4,7 +4,6 @@ import { PriceDisplay } from './PriceDisplay';
 const meta: Meta<typeof PriceDisplay> = {
   title: 'Components/PriceDisplay',
   component: PriceDisplay,
-  tags: ['autodocs'],
   parameters: {
     docs: {
       description: {

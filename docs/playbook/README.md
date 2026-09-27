@@ -44,9 +44,9 @@ This playbook records every rule, decision, dead end and "oh, that's how that wo
 
 ```bash
 pnpm install
-pnpm dev          # workbench http://localhost:4321 + Storybook http://localhost:6006 (+ package watchers)
+pnpm dev          # workbench http://localhost:4321 (+ package watchers)
 pnpm lint         # ESLint + check-css (component CSS guard)
-pnpm typecheck    # every package, Storybook, the workbench, and every story
+pnpm typecheck    # every package, the workbench, and every story
 pnpm test         # Vitest + axe, all packages
 pnpm build        # all packages, in dependency order (Turborepo)
 ```
@@ -69,7 +69,6 @@ packages/dskit/                          separate URL-audit CLI (Bun); not part 
 apps/workbench/                          visual test bench (renders every story)
 apps/workbench/src/lib/catalog.ts        sidebar groups, SOLO list
 apps/workbench/src/specimens/            foundations, line-ups, store pages, mock data
-apps/storybook/.storybook/               Storybook config
 tooling/                                 shared TypeScript and ESLint configs
 ```
 
@@ -88,7 +87,7 @@ Repo: `/Users/alvinthong/Code/mason-design-system`. Storefront: `/Users/alvintho
 | Bundler | tsup | `^8.0.2` | ESM + CJS, per-component entries and CSS |
 | Primitives | Radix UI | `^1.x` / `^2.x` | Accessible, unstyled; bump all `@radix-ui/*` together |
 | Visual test bench | Vite + React (`apps/workbench`) | `^5.x` | Stories at real device widths, light/dark, review notes |
-| Component dev | Storybook | `8.x` | Controls, addon-a11y |
+| Stories | Component Story Format, rendered with `@storybook/react`'s `composeStories` | `^8.6.18` | Workbench dependency only — no Storybook app or server |
 | Unit tests | Vitest + Testing Library + jest-axe | `^1.6.0` | Vite-native, Jest API |
 | Lint | ESLint 9 flat config + jsx-a11y; `check-css` | `9.x` | A11y and token rules at lint time |
 | Format | Prettier | `^3.2.5` | |
@@ -96,7 +95,7 @@ Repo: `/Users/alvinthong/Code/mason-design-system`. Storefront: `/Users/alvintho
 | Motion | GSAP via `@ds/motion` | `^3.15.0` | Lazy-loaded, never on the critical path |
 | Font | IBM Plex Sans (+ JetBrains Mono for numerals) | Google Fonts | Neutral, technical warmth, SIL OFL |
 
-Visual regression (Chromatic) is **not** wired: the addon is installed but there is no workflow. See `02`.
+Visual regression (Chromatic) is **not** wired: there is no workflow, and it screenshots Storybook, which was removed (2026-09-27). See `02`.
 
 ---
 
@@ -150,5 +149,4 @@ Claude keeps this playbook current without being asked:
 | Native `disabled` on a button that disables itself | Focus drops to `<body>` | `aria-disabled` |
 | Live region rendered with its text | Screen readers skip it or repeat it | `useChangeAnnouncement` |
 | `types` not first in an exports condition | TypeScript can't find declarations | `types` first in each condition |
-| Storybook stories glob | Empty Storybook, no error | Path is relative to `.storybook/` |
 | Restyling components in workbench sheets | The bench stops showing what ships | Sheets compose only |

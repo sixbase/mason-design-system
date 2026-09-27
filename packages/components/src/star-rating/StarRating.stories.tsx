@@ -5,7 +5,6 @@ import { StarRating } from './StarRating';
 const meta: Meta<typeof StarRating> = {
   title: 'Components/StarRating',
   component: StarRating,
-  tags: ['autodocs'],
   parameters: {
     docs: {
       description: {

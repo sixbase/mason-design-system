@@ -6,7 +6,6 @@ import type { VariantOption } from './VariantSelector';
 const meta: Meta<typeof VariantSelector> = {
   title: 'Ecommerce/VariantSelector',
   component: VariantSelector,
-  tags: ['autodocs'],
   parameters: {
     layout: 'centered',
     docs: {

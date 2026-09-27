@@ -7,7 +7,6 @@ import { Heading } from '../typography';
 const meta: Meta<typeof CollectionFilters> = {
   title: 'Ecommerce/CollectionFilters',
   component: CollectionFilters,
-  tags: ['autodocs'],
   parameters: {
     layout: 'padded',
     docs: {

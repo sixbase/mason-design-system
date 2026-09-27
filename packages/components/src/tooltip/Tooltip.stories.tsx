@@ -6,7 +6,6 @@ import { Tooltip } from './Tooltip';
 const meta: Meta<typeof Tooltip> = {
   title: 'Components/Tooltip',
   component: Tooltip,
-  tags: ['autodocs'],
   parameters: {
     docs: {
       description: {

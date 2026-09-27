@@ -1,6 +1,6 @@
 .ds-footer {
   font-family: var(--font-family-body);
-  border-top: var(--border-width-sm) solid var(--color-border);
+  border-top: var(--border-width-sm) solid var(--color-border-subtle);
   margin-top: var(--spacing-16);
 }
 
@@ -164,7 +164,7 @@
   gap: var(--spacing-3);
   margin-top: var(--spacing-12);
   padding-top: var(--spacing-6);
-  border-top: var(--border-width-sm) solid var(--color-border);
+  border-top: var(--border-width-sm) solid var(--color-border-subtle);
 }
 
 /* @breakpoint-md = 768px */

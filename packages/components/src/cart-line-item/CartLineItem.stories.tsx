@@ -7,7 +7,6 @@ import { CartLineItem } from './CartLineItem';
 const meta: Meta<typeof CartLineItem> = {
   title: 'Ecommerce/CartLineItem',
   component: CartLineItem,
-  tags: ['autodocs'],
   parameters: {
     docs: {
       description: {

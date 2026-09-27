@@ -5,7 +5,6 @@ import { LayoutGrid, LayoutGridItem, PageContainer, Section } from './LayoutGrid
 const meta: Meta<typeof LayoutGrid> = {
   title: 'Layout/LayoutGrid',
   component: LayoutGrid,
-  tags: ['autodocs'],
   parameters: {
     layout: 'fullscreen',
     docs: {

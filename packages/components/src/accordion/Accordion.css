@@ -47,7 +47,7 @@
  * larger layout.
  */
 .ds-accordion__item {
-  border-bottom: var(--border-width-sm) solid var(--color-border);
+  border-bottom: var(--border-width-sm) solid var(--color-border-subtle);
 }
 
 .ds-accordion__item:last-child {

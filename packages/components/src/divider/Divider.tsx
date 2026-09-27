@@ -10,7 +10,11 @@ export type DividerSpacing = 'none' | 'sm' | 'md' | 'lg';
 export interface DividerProps extends HTMLAttributes<HTMLHRElement> {
   /** Orientation of the divider */
   orientation?: DividerOrientation;
-  /** Visual style variant */
+  /**
+   * @deprecated Every divider now uses the quiet `--color-border-subtle`
+   * hairline, so `'subtle'` looks the same as `'default'`. Kept so
+   * existing code compiles; will be removed.
+   */
   variant?: DividerVariant;
   /** Spacing above/below (horizontal) or left/right (vertical) */
   spacing?: DividerSpacing;
@@ -30,7 +34,7 @@ export interface DividerProps extends HTMLAttributes<HTMLHRElement> {
  *
  * @example
  * <Divider />
- * <Divider variant="subtle" spacing="lg" />
+ * <Divider spacing="lg" />
  * <Divider orientation="vertical" />
  * <Divider label="OR" />
  */

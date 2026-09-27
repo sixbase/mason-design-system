@@ -4,7 +4,6 @@ import { StockIndicator } from './StockIndicator';
 const meta: Meta<typeof StockIndicator> = {
   title: 'Components/StockIndicator',
   component: StockIndicator,
-  tags: ['autodocs'],
   parameters: {
     docs: {
       description: {

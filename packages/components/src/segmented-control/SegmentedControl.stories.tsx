@@ -27,7 +27,6 @@ const ListGlyph = () => (
 const meta: Meta<typeof SegmentedControl> = {
   title: 'Components/SegmentedControl',
   component: SegmentedControl,
-  tags: ['autodocs'],
   parameters: {
     docs: {
       description: {

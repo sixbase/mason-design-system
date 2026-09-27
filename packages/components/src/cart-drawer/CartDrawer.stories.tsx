@@ -83,7 +83,6 @@ function CartDemo({
 const meta: Meta<typeof CartDrawer> = {
   title: 'Ecommerce/Cart Drawer',
   component: CartDrawer,
-  tags: ['autodocs'],
   parameters: {
     layout: 'centered',
     docs: {
