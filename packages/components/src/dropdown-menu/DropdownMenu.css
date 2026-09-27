@@ -161,6 +161,6 @@
 /* ─── Separator ──────────────────────────────────────────── */
 .ds-dropdown-menu__separator {
   height: var(--border-width-sm);
-  background-color: var(--color-border);
+  background-color: var(--color-border-subtle);
   margin: var(--spacing-1) 0;
 }

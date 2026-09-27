@@ -15,7 +15,6 @@ const meta: Meta<typeof Divider> = {
   },
   argTypes: {
     orientation: { control: 'select', options: ['horizontal', 'vertical'] },
-    variant: { control: 'select', options: ['default', 'subtle'] },
     spacing: { control: 'select', options: ['none', 'sm', 'md', 'lg'] },
   },
 };
@@ -33,8 +32,6 @@ const inContext: Decorator = (Story) => (
 );
 
 export const Default: Story = { decorators: [inContext] };
-
-export const Subtle: Story = { args: { variant: 'subtle' }, decorators: [inContext] };
 
 export const SpacingNone: Story = { args: { spacing: 'none' }, decorators: [inContext] };
 
@@ -73,26 +70,11 @@ export const CheckoutOrPattern: Story = {
   ),
 };
 
-export const LabeledSubtle: Story = {
-  args: { label: 'Continue as guest', variant: 'subtle', spacing: 'lg' },
-  decorators: [inContext],
-};
-
 export const Vertical: Story = {
   render: () => (
     <div style={{ display: 'flex', alignItems: 'center', height: 'var(--spacing-12)' }}>
       <Text as="span">Left</Text>
       <Divider orientation="vertical" />
-      <Text as="span">Right</Text>
-    </div>
-  ),
-};
-
-export const VerticalSubtle: Story = {
-  render: () => (
-    <div style={{ display: 'flex', alignItems: 'center', height: 'var(--spacing-12)' }}>
-      <Text as="span">Left</Text>
-      <Divider orientation="vertical" variant="subtle" />
       <Text as="span">Right</Text>
     </div>
   ),
@@ -105,7 +87,7 @@ export const BetweenSections: Story = {
       <Text>Subtotal · $137.00</Text>
       <Divider />
       <Text>Shipping · Free</Text>
-      <Divider variant="subtle" />
+      <Divider />
       <Text>Estimated tax · $11.30</Text>
     </div>
   ),

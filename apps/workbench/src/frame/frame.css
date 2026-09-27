@@ -24,7 +24,7 @@ body {
 
 /* ─── State list ─────────────────────────────────────────── */
 .wb-story + .wb-story {
-  border-top: var(--border-width-sm) solid var(--color-border);
+  border-top: var(--border-width-sm) solid var(--color-border-subtle);
 }
 
 .wb-story__label {

@@ -40,6 +40,7 @@ Every lesson produced a rule. This table collects the rules **still in force** s
 | Never use CSS variable fallbacks with hardcoded values | [color-rename-bug](#color-rename-bug) |
 | After renaming tokens, `grep -r "old-name" .` — CSS vars fail silently | [color-rename-bug](#color-rename-bug) |
 | Never use `color-mix(… %, transparent)` for WCAG-required contrast | [color-mix-contrast](#color-mix-contrast) |
+| A line that must look the same on several backgrounds is translucent, not a lighter solid step | [translucent-hairline](#translucent-hairline) |
 | Disabled state: `var(--opacity-medium)`, never `0.5` | Refactor audit |
 | Transitions: use `var(--transition-fast)` shorthands, never raw duration | Token convention |
 | `@media` queries cannot use CSS custom properties — write the breakpoint token's value; `check-css` rejects any other width | [css-media-vars](#css-media-vars) |
@@ -228,6 +229,11 @@ Browser UA stylesheets override inheritance on `input`, `select`, `textarea`, `b
 ### `color-mix(… %, transparent)` broken for WCAG contrast {#color-mix-contrast}
 Mathematically impossible to reach 3:1 or 4.5:1 at low percentages. Use solid primitive references.
 **Rule:** `color-mix` with `transparent` ONLY for decorative elements. Use 50-shade primitives for backgrounds, 600+ for borders/text.
+
+### A lighter solid step vanishes on tinted surfaces {#translucent-hairline}
+The storefront's first `--color-border-subtle` mixed the border halfway toward the page background. It looked right on `--color-background`, but it fell to 1.03:1 on `--color-background-subtle` and 1.05:1 on dark surfaces, so dividers disappeared in drawers and tinted panels. A translucent foreground (stone-950 or stone-50 at 5.57%) sits at ≈1.12:1 on every surface.
+Opacity also multiplies. The Divider's `subtle` variant (38.2% opacity) on top of the new hairline dropped it to ≈1.04:1.
+**Rule:** A decorative line that has to read the same on several backgrounds is a translucent mix of the foreground, not a solid step. Before stacking an opacity variant on a faint token, check the product of the two.
 
 ### Semantic token gaps surface during a11y audits {#semantic-token-gap}
 Gap between `foreground-subtle` (fails AA) and `foreground`. Warning badge text needs primitive.

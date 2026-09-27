@@ -2,7 +2,7 @@
 
 /* 1. Component tokens */
 .ds-tabs {
-  --tabs-border-color: var(--color-border);
+  --tabs-border-color: var(--color-border-subtle);
   --tabs-indicator-color: var(--color-primary);
   --tabs-content-padding: var(--spacing-6);
   /* Truncation limit for long labels — a typographic measure

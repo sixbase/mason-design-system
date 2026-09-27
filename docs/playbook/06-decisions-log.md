@@ -153,6 +153,7 @@ Use this to find decisions by topic without scrolling 2,300+ lines. Statuses her
 | Shopify theme extracted to its own repo | Active |
 | Playbook: how-to chapters state today's rules; logs are history; one open list | Active |
 | Storybook removed; workbench is the only app (stories stay Component Story Format) | Active |
+| Divider hairline: `--color-border-subtle` (translucent, φ⁻⁶); Divider `subtle` variant deprecated | Active |
 
 ---
 
@@ -2405,4 +2406,29 @@ Also replaced Footer.css hardcoded `1280px` with `var(--size-content-xl)`.
 **Options considered:** (a) keep it; (b) remove the Storybook app but keep stories in Component Story Format, rendered by the workbench via `@storybook/react`'s `composeStories`; (c) also drop `@storybook/react` and write a local `composeStories` + story types.
 **Decision:** (b). Deleted `apps/storybook` and its addons (incl. `@chromatic-com/storybook`), the `storybook` launch config and the changesets ignore entry; stripped `tags: ['autodocs']` from every story. Stories, `tsconfig.stories.json` and the workbench's `@storybook/react` + `storybook` devDependencies stay.
 **Rationale:** (b) removes the unused app with zero change to how stories are written or rendered. (c) is possible later but means owning story typing/composition code for no current benefit. Chromatic would now need Storybook restored first.
+**Status:** Active
+
+---
+
+### Divider Hairline: `--color-border-subtle`
+
+**Date/Phase:** 2026-09-27
+**Context:** Horizontal dividers read too heavy. The header and footer rules, list and table rows, menu separators and the Divider component all used `--color-border`: stone-200 in light (1.27:1 on the page) and stone-800 in dark (1.43:1). The storefront had already patched this with a theme-side `--color-border-subtle` (50% border + 50% background) and asked for it to become a token (`15` → D2).
+**Options considered:** (a) Lighten `--color-border` itself. That would also fade card, popover, drawer and modal edges. (b) A lighter solid step mixed toward the page background, either the storefront's 50% or a φ mix. On `--color-background-subtle` it falls to 1.03–1.07:1, and on dark surfaces (drawers, modals) to 1.05–1.09:1, so rules vanish there. (c) A translucent hairline: the foreground stone at a low alpha.
+**Decision:** (c). A new semantic token, `--color-border-subtle`:
+- Light: `color-mix(in srgb, var(--color-stone-950) 5.57%, transparent)`. Dark: `color-mix(in srgb, var(--color-stone-50) 5.57%, transparent)`. 5.57% is φ⁻⁶, one step below `--opacity-ghost`.
+- It measures 1.12:1 on background, subtle and surface in light, and 1.13:1 on background and 1.16:1 on surface in dark.
+- `prefers-contrast: more` raises it to `--color-border-control`, along with the other borders.
+
+Every rule *between* content moved to it:
+- **Components:** Divider, Accordion items, CartDrawer header and footer, CartLineItem, the CollectionFilters clear row, the DropdownMenu and Select separators, Footer (top and bottom bar), Header (underline and mobile nav rows), the PredictiveSearch footer, Table rows (`--table-border-color`) and the Tabs baseline.
+- **Workbench:** the store pages, foundation-sheet rows, story separators, and the toolbar and review-bar rules.
+
+These stay on `--color-border`:
+- **Box edges:** Card, Popover, the DropdownMenu and Select panels, Modal, Drawer, CookieConsent, pills, swatches, the bordered Accordion panel, and stacked Table rows (via the new `--table-stack-border-color`).
+- **Tracks:** Slider, ProgressBar and Stepper.
+- **Scroll shadows.**
+
+**Also:** Divider `variant="subtle"` dimmed the line to 38.2% opacity. On the new hairline that would be ≈1.04:1, which is invisible. The variant is deprecated and now renders like the default, and its three duplicate stories were removed.
+**Rationale:** Dividers are decorative, and WCAG 1.4.11 does not apply to them, so a transparent mix is allowed (`07` → `#color-mix-contrast`). It is also the only option that keeps one visual weight on every surface in both modes. The token has the same name as the storefront's, so the theme replaces its local definition with the synced one.
 **Status:** Active

@@ -1,6 +1,6 @@
 /* ─── Divider component tokens ──────────────────────────── */
 .ds-divider {
-  --divider-color: var(--color-border);
+  --divider-color: var(--color-border-subtle);
   --divider-thickness: var(--border-width-sm);
 
   border: none;
@@ -44,20 +44,10 @@
   white-space: nowrap;
 }
 
-/* ─── Variant: subtle ───────────────────────────────────── */
-.ds-divider--subtle {
-  opacity: var(--opacity-medium);
-}
-
-/* Subtle + label: dim only the rule lines, never the text —
-   fading the label would break WCAG contrast on real copy. */
-.ds-divider--labeled.ds-divider--subtle {
-  opacity: var(--opacity-full);
-}
-
-.ds-divider--labeled.ds-divider--subtle .ds-divider__line {
-  opacity: var(--opacity-medium);
-}
+/* ─── Variant: subtle (deprecated) ──────────────────────── */
+/* No rules: the default line is already the quiet
+   --color-border-subtle hairline (≈1.12:1). Dimming it further
+   left it invisible (≈1.04:1), so 'subtle' now matches 'default'. */
 
 /* ─── Spacing: none ─────────────────────────────────────── */
 .ds-divider--spacing-none {

@@ -16,7 +16,7 @@
   grid-template-columns: var(--cart-line-item-image-size) 1fr auto auto auto;
   gap: var(--cart-line-item-gap);
   padding: var(--cart-line-item-padding) 0;
-  border-bottom: var(--border-width-sm) solid var(--color-border);
+  border-bottom: var(--border-width-sm) solid var(--color-border-subtle);
   align-items: center;
 }
 

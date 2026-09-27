@@ -37,7 +37,7 @@
 
 .ds-cart__summary-divider {
   border: none;
-  border-top: var(--border-width-sm) solid var(--color-border);
+  border-top: var(--border-width-sm) solid var(--color-border-subtle);
   margin: 0;
 }
 

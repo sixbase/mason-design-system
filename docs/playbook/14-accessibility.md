@@ -11,7 +11,7 @@ Accessibility is a ship gate: a component that fails any rule below is not done.
 - **Readable text** (below large size) uses `--color-foreground` or `--color-foreground-secondary` — secondary is the floor (≥4.5:1).
 - **`--color-foreground-subtle`** is for large text (≥24px, or ≥18.7px bold) and icons/chevrons only (≥3:1).
 - **`--color-foreground-muted`** is for disabled and decorative things only — never readable text, never a glyph that carries state.
-- **A control's boundary** (input, select, checkbox, radio, switch track) uses `--color-border-control` (≥3:1). `--color-border` is decoration only. The same applies to anything that *is* a control or shows a control's state (WCAG 1.4.11): colour-swatch edges, interactive empty stars, the selected segment (dark mode needs an edge — its raised fill alone is 1.28:1).
+- **A control's boundary** (input, select, checkbox, radio, switch track) uses `--color-border-control` (≥3:1). `--color-border` and `--color-border-subtle` are decoration only. The same applies to anything that *is* a control or shows a control's state (WCAG 1.4.11): colour-swatch edges, interactive empty stars, the selected segment (dark mode needs an edge — its raised fill alone is 1.28:1).
 - **Never `color-mix(… %, transparent)` for anything that needs contrast.** Use solid tokens (`07` → `#color-mix-contrast`).
 - **Colour is never the only signal** — add text, an icon, a border or a shape.
 - **Forced colors (Windows High Contrast)** removes backgrounds and box-shadows. A state shown only by a fill (selected segment, swatch ring, switch thumb, progress fill) also needs a transparent `outline`/border, or system colours in `@media (forced-colors: active)` (`#forced-colors`).

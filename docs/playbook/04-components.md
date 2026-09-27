@@ -301,11 +301,13 @@ Fixed-height controls (buttons, badges, tags, inputs, select triggers, tabs) loo
 Applies to: Accordion items, cart line items, and any vertical list with dividers.
 
 ```css
-.ds-{component}__item { border-bottom: var(--border-width-sm) solid var(--color-border); }
+.ds-{component}__item { border-bottom: var(--border-width-sm) solid var(--color-border-subtle); }
 .ds-{component}__item:last-child { border-bottom: none; }
 ```
 
 No `border-top` on first item. Use CSS `:last-child`, not JavaScript.
+
+**Rules vs edges (2026-09-27):** a line *between* pieces of content — list rows, header/footer and section rules, table rows, menu separators — uses `--color-border-subtle`. The edge of a box (card, popover, menu panel, modal, drawer, pill) uses `--color-border`. See `03-tokens.md` → Boundary roles.
 
 The `bordered` accordion variant wraps in a panel with its own border + radius — inner dividers nest cleanly inside the container border.
 
