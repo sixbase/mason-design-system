@@ -19,7 +19,7 @@ tokens.json
     ↓
 @ds/tokens (dist/tokens.css)
     ↓                          ↓  (copied by hand)
-apps/workbench + Storybook    mason-storefront repo (Shopify Liquid)
+apps/workbench                mason-storefront repo (Shopify Liquid)
                                 ↓
                               Mason storefront
 ```

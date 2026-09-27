@@ -17,26 +17,25 @@
 
 ## Running the Dev Environment
 
-Two servers run simultaneously:
+One server — the workbench:
 
 ```bash
-pnpm dev    # Starts both in parallel from monorepo root
+pnpm dev    # Workbench → http://localhost:4321, plus package watchers, from monorepo root
 ```
 
-Or individually:
+Or on its own:
 
 ```bash
 pnpm --filter @ds/workbench dev   # Workbench   → http://localhost:4321
-pnpm --filter @ds/storybook dev   # Storybook   → http://localhost:6006
 ```
 
-### Which server for which task
+### Where to look for which task
 
-| Task | Server |
+| Task | Where |
 |------|--------|
-| Building a new component (controls panel) | Storybook (`:6006`) or the workbench |
+| Building a new component | Workbench (`:4321`) |
 | Checking every state side by side | Workbench (`:4321`) |
-| Quick a11y panel while building | Storybook (`:6006`) |
+| Quick a11y check while building | Workbench → *Check accessibility* (`:4321`) |
 | Reviewing a component at phone/tablet/desktop, light/dark | Workbench (`:4321`) |
 | Checking token colors, typography, spacing, motion | Workbench → Foundations (`:4321`) |
 | Checking consistency across components | Workbench → Consistency line-ups (`:4321`) |
@@ -50,8 +49,7 @@ pnpm --filter @ds/storybook dev   # Storybook   → http://localhost:6006
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "workbench", "runtimeExecutable": "pnpm", "runtimeArgs": ["--filter", "@ds/workbench", "dev"], "port": 4321 },
-    { "name": "storybook", "runtimeExecutable": "pnpm", "runtimeArgs": ["--filter", "@ds/storybook", "dev"], "port": 6006 }
+    { "name": "workbench", "runtimeExecutable": "pnpm", "runtimeArgs": ["--filter", "@ds/workbench", "dev"], "port": 4321 }
   ]
 }
 ```
@@ -72,7 +70,7 @@ pnpm --filter @ds/components build   # 3. Components last
 
 **Why order matters:** `@ds/components` imports from `@ds/tokens`. tsup looks in `packages/tokens/dist/`. If tokens hasn't been built, `dist/` doesn't exist → "module not found." (`@ds/motion` depends only on tokens.)
 
-The workbench and Storybook compile component **source**, so you don't need to rebuild `@ds/components` to see a change — only `@ds/tokens` after editing `tokens.json`.
+The workbench compiles component **source**, so you don't need to rebuild `@ds/components` to see a change — only `@ds/tokens` after editing `tokens.json`.
 
 ---
 
@@ -207,13 +205,13 @@ pnpm --filter @ds/components test:watch   # Watch mode while writing tests
 
 ### Step 5 — Write `{Component}.stories.tsx`
 
-One story per meaningful state. Always use `autodocs` tag.
+One story per meaningful state, in review order. Component Story Format, typed with `Meta`/`StoryObj` from `@storybook/react`.
 
 ```tsx
 const meta: Meta<typeof Component> = {
   title: 'Components/ComponentName',
   component: Component,
-  tags: ['autodocs'],
+  parameters: { docs: { description: { component: 'One-line description.' } } },
 }
 export default meta
 
@@ -230,12 +228,11 @@ export const AllSizes: Story = {
 }
 ```
 
-**Verify in Storybook:**
+**Verify in the workbench:**
 
-- [ ] All stories render
-- [ ] Controls panel works
-- [ ] A11y panel shows no violations
-- [ ] Dark mode looks correct (toggle background in toolbar)
+- [ ] All stories render, with no error in any frame
+- [ ] *Check accessibility* shows no violations
+- [ ] Dark mode looks correct (toolbar Theme control)
 
 **Note:** Inline styles in stories are layout only and use token references (`gap: 'var(--spacing-3)'`, `maxWidth: 'var(--size-content-sm)'`), never raw pixels. Add `parameters.docs.description.component` — a one-line description the workbench shows under the title. Then run `pnpm --filter @ds/workbench typecheck` (it compiles every story).
 
@@ -290,7 +287,7 @@ Open the component in the workbench (`:4321`). Check every state at Phone and De
 - [ ] Announcements via `useChangeAnnouncement`; overlays return focus via `dialog-opener`
 - [ ] Reduced motion and `data-motion="off"` honoured (`13`)
 - [ ] Tests with axe pass; regression test for every bug fixed
-- [ ] Stories: one per meaningful state, `autodocs` tag, type-check clean
+- [ ] Stories: one per meaningful state, type-check clean
 - [ ] Workbench review done (Phone/Desktop, Light/Dark, Long text, RTL, Check accessibility) and marked *Looks good*
 - [ ] Playbook updated
 
@@ -365,7 +362,7 @@ git commit -m "feat: add Badge component"
 ### Important
 
 - `"access": "public"` is required for `@ds/*` scoped packages on npm
-- Apps (`@ds/workbench`, `@ds/storybook`) are in the `ignore` list — never published
+- The app (`@ds/workbench`) is in the `ignore` list — never published
 
 ---
 
@@ -377,37 +374,11 @@ git commit -m "feat: add Badge component"
 
 ---
 
-## Storybook Glob Path Reference
-
-The stories path in `apps/storybook/.storybook/main.ts` is relative to `.storybook/`, NOT `apps/storybook/`:
-
-```
-apps/storybook/.storybook/   ← you are here
-  ../                         → apps/storybook/
-  ../../                      → apps/
-  ../../../                   → monorepo root
-  ../../../packages/components/src/  → component source
-```
-
-```ts
-// ✅ Correct — three levels up from .storybook/
-stories: ['../../../packages/components/src/**/*.stories.{ts,tsx}']
-
-// ❌ Wrong — only two levels, finds nothing, no error
-stories: ['../../packages/components/src/**/*.stories.{ts,tsx}']
-```
-
-**Use `{ts,tsx}` not `@(ts|tsx)`.** Extglob syntax is not supported.
-
----
-
 ## When Things Go Wrong
 
 | Symptom | Likely Cause | Fix |
 |---------|-------------|-----|
 | "Module not found" for `@ds/tokens` | Tokens not built, or built after components | `pnpm --filter @ds/tokens build` first |
-| Empty Storybook, no stories | Glob path wrong (relative to `.storybook/`) | Fix path — needs `../../../` |
-| Storybook shows no stories, using `@(ts\|tsx)` | Extglob not supported | Change to `{ts,tsx}` |
 | TypeScript can't find declarations | `types` not first in package.json exports | Move `types` above `import` |
 | Token change didn't take effect | `pnpm dev` only built `tokens.css` once | Run `pnpm --filter @ds/tokens build` |
 | Renamed token, component now invisible/broken | CSS variable resolves to `initial` silently | `pnpm lint` (component CSS) + `grep -r "var(--old-name)" .` everywhere else |

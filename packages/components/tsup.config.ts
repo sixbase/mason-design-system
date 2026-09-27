@@ -13,8 +13,8 @@ export default defineConfig({
   // Clean every build: chunk names are content hashes, so without this each
   // rebuild left the previous chunks behind (dist had grown to ~800 files,
   // 10MB, most of them unreferenced — and `files: ["dist"]` would publish
-  // them all). Nothing reads this dist during dev: the workbench and
-  // Storybook both compile component source.
+  // them all). Nothing reads this dist during dev: the workbench compiles
+  // component source.
   clean: true,
   sourcemap: true,
   external: ['react', 'react-dom'],

@@ -20,8 +20,6 @@ These are the configuration mistakes that have cost the most time. Check this be
 |------|--------|-------------|-----|
 | tsup | Assumes `.cjs` output for CJS | "Module not found" — file doesn't exist | CJS is `.js`, ESM is `.mjs` |
 | package.json | `import` before `types` in exports | TypeScript can't find declarations | Always put `types` first |
-| Storybook | Stories glob relative to package root | Empty Storybook, no error, no stories | Path is relative to `.storybook/` dir |
-| Storybook | Uses `@(ts\|tsx)` glob syntax | No stories found | Use `{ts,tsx}` instead |
 | Chromatic (if re-enabled) | `fetch-depth: 1` in GitHub Actions | Every run treated as first build | Must use `fetch-depth: 0` |
 | Tokens | `dev` runs `build-css.mjs` once, then only `tsup --watch` | Later `tokens.json` edits don't reach `tokens.css` | Re-run `pnpm --filter @ds/tokens build` |
 | tsup | `splitting` without `clean: true` | Old hashed chunks pile up in `dist` and get published | Keep `clean: true` |
@@ -88,7 +86,7 @@ pnpm install --frozen-lockfile  # CI — fail if lockfile is stale
 }
 ```
 
-`outputs` must match where each tool really writes. Tests write nothing, so `[]`. Storybook writes `storybook-static/`, set in `apps/storybook/turbo.json` (`"extends": ["//"]` plus its own `build.outputs`). A mismatch prints "no output files found" and silently disables caching for that task.
+`outputs` must match where each tool really writes. Tests write nothing, so `[]`. A mismatch prints "no output files found" and silently disables caching for that task.
 
 **Critical concept:** `"dependsOn": ["^build"]` means "run `build` in all my dependencies first." Without this, `@ds/components` tries to import from `@ds/tokens` before tokens has been built → "module not found."
 
@@ -110,7 +108,7 @@ pnpm install --frozen-lockfile  # CI — fail if lockfile is stale
 
 **Guards that run in `lint` / `typecheck`:**
 - `packages/components/scripts/check-css.mjs` (in `@ds/components` lint, ~0.2s, no dependencies): undefined `var()`, component tokens nothing reads, raw values, `!important` outside the reduced-motion reset, non-token breakpoints, and `:hover` outside `@media (hover: hover)`. Its header lists every allowed exception and why.
-- `apps/workbench/tsconfig.stories.json` (in the workbench `typecheck`): type-checks every `*.stories.tsx`. Stories import `@storybook/react`, which only the apps install, so the workbench — the stories' consumer — checks them.
+- `apps/workbench/tsconfig.stories.json` (in the workbench `typecheck`): type-checks every `*.stories.tsx`. Stories import `@storybook/react`, which only the workbench installs, so the workbench — the stories' consumer — checks them.
 
 ### `@ds/motion` and GSAP (2026-09-25)
 
@@ -228,7 +226,7 @@ export const react = [
 
 **`eslint-plugin-jsx-a11y` is the first line of defense.** It catches missing `alt` attributes, incorrect ARIA roles, and label association errors at lint time — before runtime a11y testing. Do not remove or disable it.
 
-Packages lint `src` only (tests and stories are ignored by ESLint; stories are type-checked instead — see "Guards" above). `apps/workbench` and `apps/storybook` have no lint script yet.
+Packages lint `src` only (tests and stories are ignored by ESLint; stories are type-checked instead — see "Guards" above). `apps/workbench` has no lint script yet.
 
 ---
 
@@ -286,44 +284,9 @@ When `asChild` is true, `Slot` merges the component's props (className, ref, ari
 
 ---
 
-## Storybook 8
+## Storybook — removed (2026-09-27)
 
-**Role:** Internal development tool (controls, a11y panel). Not a documentation site, and not the review tool — that is the workbench.
-
-**Why Storybook over alternatives:** Histoire and Ladle were evaluated — smaller ecosystems, fewer addons, less Chromatic support. Storybook 8 with `@storybook/react-vite` is fast (Vite HMR). `@storybook/addon-a11y` runs axe-core in the panel.
-
-**Configuration:**
-```
-apps/storybook/.storybook/
-├── main.ts     — stories glob, addons, framework
-└── preview.ts  — global CSS imports, decorators, addon config
-```
-
-### ⚠️ Critical: stories glob path
-
-The path is relative to `.storybook/` directory, NOT `apps/storybook/`:
-
-```
-apps/storybook/.storybook/   ← you are here
-  ../                         → apps/storybook/
-  ../../                      → apps/
-  ../../../                   → monorepo root
-  ../../../packages/components/src/  → component source
-```
-
-```ts
-// ✅ Correct
-stories: ['../../../packages/components/src/**/*.stories.{ts,tsx}']
-
-// ❌ Wrong — finds nothing, no error
-stories: ['../../packages/components/src/**/*.stories.{ts,tsx}']
-```
-
-**Also critical:** Use `{ts,tsx}` not `@(ts|tsx)`. Extglob syntax is not supported.
-
-### Dark mode in Storybook
-
-`preview.ts` has a decorator that watches for the dark background selection and toggles `.dark` on `document.body`. No component-level dark mode code needed.
+`apps/storybook` was deleted with its config (`.storybook/main.ts`, `preview.ts`, `preview-head.html`) and dependencies (`@storybook/react-vite`, `addon-essentials`, `addon-interactions`, `addon-a11y`, `addon-docs`, `@storybook/test`, `@chromatic-com/storybook`). The workbench is the only app. Stories are still Component Story Format: `apps/workbench` keeps `@storybook/react` (for `composeStories` and the `Meta`/`StoryObj` types) and its peer `storybook` as library dependencies — no Storybook server or UI. To restore the app, start from git history (`git log -- apps/storybook`). See `06-decisions-log.md` → "Storybook Removed — Workbench Is the Only App".
 
 ---
 
@@ -366,7 +329,7 @@ pnpm --filter @ds/components test:watch   # Watch mode during development
 
 ## Chromatic — not wired
 
-**Status (2026-09-26):** `@chromatic-com/storybook` is installed, but there is no Chromatic workflow — `chromatic.yml` was removed as unconfigured (commit `325bcf2`). Visual review happens in the workbench. To enable it: create a Chromatic project, add `CHROMATIC_PROJECT_TOKEN` as a repo secret, and restore the workflow from git history (`git show 325bcf2^:.github/workflows/chromatic.yml`).
+**Status (2026-09-27):** there is no Chromatic workflow — `chromatic.yml` was removed as unconfigured (commit `325bcf2`) — and `@chromatic-com/storybook` was removed with the Storybook app. Visual review happens in the workbench. Chromatic screenshots Storybook, so enabling it would first require restoring Storybook (see "Storybook — removed" above), then: create a Chromatic project, add `CHROMATIC_PROJECT_TOKEN` as a repo secret, and restore the workflow from git history (`git show 325bcf2^:.github/workflows/chromatic.yml`).
 
 **Role when enabled:** Visual regression testing. Screenshots every Storybook story on every PR, shows diffs.
 
@@ -419,14 +382,14 @@ git commit -m "feat: add Badge component"
 {
   "access": "public",
   "baseBranch": "main",
-  "ignore": ["@ds/workbench", "@ds/storybook"],
+  "ignore": ["@ds/workbench"],
   "updateInternalDependencies": "patch"
 }
 ```
 
 **`access: "public"` is required** for scoped packages (`@ds/*`) to be publicly installable on npm.
 
-**`ignore` excludes apps** — `@ds/workbench` and `@ds/storybook` are never published.
+**`ignore` excludes the app** — `@ds/workbench` is never published.
 
 ---
 
@@ -463,7 +426,6 @@ Single quotes and trailing commas match the style of most large React codebases 
 | CI | `.github/workflows/ci.yml`, `.github/workflows/deploy-docs.yml` (workbench → Pages) |
 | Prettier config | `.prettierrc` |
 | Changesets config | `.changeset/config.json` |
-| Storybook config | `apps/storybook/.storybook/main.ts` |
 | Workbench config | `apps/workbench/vite.config.ts` |
 | Token source | `packages/tokens/src/tokens.json` |
 | Token CSS build script | `packages/tokens/scripts/build-css.mjs` |

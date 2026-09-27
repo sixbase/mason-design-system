@@ -4,7 +4,6 @@ import { Highlight, Highlights } from './Highlights';
 const meta: Meta<typeof Highlights> = {
   title: 'Components/Highlights',
   component: Highlights,
-  tags: ['autodocs'],
   parameters: {
     docs: {
       description: {

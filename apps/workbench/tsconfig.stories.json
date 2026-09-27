@@ -1,5 +1,5 @@
 {
-  "//": "Type-checks every component story. The workbench renders the stories, so it is their consumer; stories import @storybook/react, which only the apps install.",
+  "//": "Type-checks every component story. The workbench renders the stories, so it is their consumer; stories import @storybook/react, which only the workbench installs.",
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "paths": {

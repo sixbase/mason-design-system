@@ -5,7 +5,6 @@ import { Divider } from './Divider';
 const meta: Meta<typeof Divider> = {
   title: 'Components/Divider',
   component: Divider,
-  tags: ['autodocs'],
   parameters: {
     docs: {
       description: {

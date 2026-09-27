@@ -9,7 +9,7 @@
 1. **Every visual value must come from a token.** No hex codes, no pixel values, no raw numbers in component or page CSS. If the token doesn't exist, flag it as a gap — do not invent a value.
 2. **All scales derive from the golden ratio (φ).** When adding a new token or scale, derive it from φ, 1/φ, fractional powers of φ, or the Fibonacci sequence. See the math reference below.
 3. **Semantic tokens are what components use.** Components never reference primitives directly except in documented edge cases (see Known Gaps below). If a semantic token doesn't exist for your need, add one — don't reach for the primitive.
-4. **Token renames require a full codebase grep.** CSS variables fail silently. `var(--old-name)` resolves to `initial` with no error. Always `grep -r "old-name" .` before and after renaming. `check-css` (in `pnpm lint`) catches undefined `var()` in component CSS only — not in workbench, Storybook or storefront CSS.
+4. **Token renames require a full codebase grep.** CSS variables fail silently. `var(--old-name)` resolves to `initial` with no error. Always `grep -r "old-name" .` before and after renaming. `check-css` (in `pnpm lint`) catches undefined `var()` in component CSS only — not in workbench or storefront CSS.
 5. **Two spacing scales, two scopes.** Standard 4px grid (`--spacing-*`) is the default for all spacing: component internals, element-to-element gaps, section rhythm, and any "I need some space here" situation. Section rhythm uses `--spacing-16` (64px) via `.ds-section`. Phi scale (`--spacing-phi-*`) is reserved for proportional layout relationships where the mathematical relationship to φ is the actual design intent — sidebar-to-content ratios, aspect ratio approximations, layout split proportions. Never mix scales within the same component. See "Phi vs Standard Spacing" below for detailed rules.
 6. **Never use `color-mix(… %, transparent)` for elements that need WCAG contrast.** The math makes it impossible to reach 3:1 or 4.5:1 at low percentages. Use solid primitive references (typically 50-shade for backgrounds, 600+ for borders/text). See Common Mistakes below.
 7. **Disabled states use `opacity: var(--opacity-medium)`.** Never hardcode `opacity: 0.5`.
@@ -254,7 +254,7 @@ Implemented by overriding semantic tokens under `.dark` on `<html>`:
 
 **To enable:** Add `class="dark"` (or `data-theme="dark"`) to `<html>` — or to any element, for a dark region. Components need zero dark-mode-specific code. The Header's theme toggle (`showThemeToggle`) flips `.dark` on `<html>` and remembers the choice in `localStorage` (`ds-theme`).
 
-**In Storybook:** `preview.ts` decorator toggles `.dark` on `document.body` when dark background is selected. **In the workbench:** the toolbar's Theme control sets it per frame.
+**In the workbench:** the toolbar's Theme control sets it per frame.
 
 **Two more automatic modes (2026-09-25):** `@media print` forces the light tokens on every theme; `@media (prefers-contrast: more)` raises `--color-border` to the control border and moves subtle/muted text one step stronger. Components need no changes.
 
@@ -705,7 +705,7 @@ pnpm --filter @ds/tokens build
 
 ### ⚠️ Watch mode limitation
 
-`pnpm dev` runs `build-css.mjs` once at start, then only `tsup --watch`. Later edits to `tokens.json` do NOT regenerate `tokens.css` (the workbench and Storybook read it from `dist`). Re-run the build:
+`pnpm dev` runs `build-css.mjs` once at start, then only `tsup --watch`. Later edits to `tokens.json` do NOT regenerate `tokens.css` (the workbench reads it from `dist`). Re-run the build:
 
 ```bash
 pnpm --filter @ds/tokens build
@@ -730,7 +730,7 @@ pnpm --filter @ds/tokens build
 5. `grep -r "old-token-name" .` again — verify zero results
 6. Rebuild and test: `pnpm build && pnpm test`
 
-**CSS variables fail silently.** There is no build error when a variable doesn't exist. `pnpm lint` (`check-css`) flags undefined `var()` in component CSS; everywhere else (workbench, Storybook, storefront) only a search finds them.
+**CSS variables fail silently.** There is no build error when a variable doesn't exist. `pnpm lint` (`check-css`) flags undefined `var()` in component CSS; everywhere else (workbench, storefront) only a search finds them.
 
 ## How to Extend a Scale
 

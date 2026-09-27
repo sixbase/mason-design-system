@@ -120,7 +120,7 @@ packages/components/src/{component}/
 ├── {Component}.tsx          ← Implementation
 ├── {Component}.css          ← Styles
 ├── {Component}.test.tsx     ← Tests (including axe a11y)
-├── {Component}.stories.tsx  ← Storybook stories
+├── {Component}.stories.tsx  ← Stories (the workbench's specimens)
 └── index.ts                 ← Re-exports
 ```
 
@@ -213,7 +213,7 @@ Built into every section and template — not a separate pass.
 ## Build & Dev Reference
 
 ```bash
-pnpm dev                              # Start workbench (:4321) + storybook (:6006)
+pnpm dev                              # Start workbench (:4321)
 pnpm build                            # Build all packages (Turborepo handles order)
 pnpm --filter @ds/tokens build        # Rebuild tokens only
 pnpm --filter @ds/components build    # Rebuild components only
@@ -269,7 +269,7 @@ Before any new section, component, or template is considered done:
 - [ ] Accessibility — axe passes, keyboard nav works, focus states visible
 - [ ] Performance — no render-blocking resources
 - [ ] Tests — unit + a11y passing
-- [ ] Storybook stories — one per meaningful state, autodocs tag
+- [ ] Stories — one per meaningful state
 - [ ] Workbench — stories cover every meaningful state; reviewed at phone/desktop, light/dark, with Long text and RTL
 - [ ] Playbook updated — decisions, conventions, lessons captured
 

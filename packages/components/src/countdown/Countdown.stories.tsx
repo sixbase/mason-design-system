@@ -8,7 +8,6 @@ const DAY = 86_400_000;
 const meta: Meta<typeof Countdown> = {
   title: 'Components/Countdown',
   component: Countdown,
-  tags: ['autodocs'],
   parameters: {
     docs: {
       description: {

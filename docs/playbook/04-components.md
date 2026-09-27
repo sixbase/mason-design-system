@@ -52,7 +52,7 @@ packages/components/src/{component}/
 ├── {Component}.tsx          ← React implementation
 ├── {Component}.css          ← Styles (component tokens + all variants)
 ├── {Component}.test.tsx     ← Vitest + Testing Library + axe
-├── {Component}.stories.tsx  ← Storybook stories (one per variant/state)
+├── {Component}.stories.tsx  ← Stories (one per variant/state; rendered by the workbench)
 └── index.ts                 ← Re-exports
 ```
 
@@ -429,9 +429,9 @@ it('has no accessibility violations', async () => {
 
 ---
 
-## Storybook Story Conventions
+## Story Conventions
 
-- `tags: ['autodocs']` on every meta object
+- Component Story Format, typed with `Meta`/`StoryObj` from `@storybook/react` (installed in the workbench only — no Storybook app)
 - One story per meaningful state, in the order you want to review them (the workbench reads source order)
 - Use `render` for complex layouts (multiple components side by side)
 - Inline styles in stories are layout only and use token references: `gap: 'var(--spacing-3)'`, `maxWidth: 'var(--size-content-sm)'` — not `'12px'`/`'640px'` (about 34 older wrappers still use px — open cleanup in `12`)

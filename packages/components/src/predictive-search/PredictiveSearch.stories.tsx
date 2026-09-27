@@ -53,7 +53,6 @@ function Typed({ query, children }: { query: string; children: ReactNode }) {
 const meta: Meta<typeof PredictiveSearch> = {
   title: 'Components/PredictiveSearch',
   component: PredictiveSearch,
-  tags: ['autodocs'],
   parameters: {
     layout: 'centered',
     docs: {

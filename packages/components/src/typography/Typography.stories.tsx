@@ -3,7 +3,6 @@ import { Caption, Code, Heading, Text } from './Typography';
 
 const meta: Meta = {
   title: 'Components/Typography',
-  tags: ['autodocs'],
   parameters: {
     docs: {
       description: {

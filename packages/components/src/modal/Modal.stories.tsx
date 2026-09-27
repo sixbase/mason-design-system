@@ -20,7 +20,6 @@ import {
 const meta: Meta<typeof Modal> = {
   title: 'Components/Modal',
   component: Modal,
-  tags: ['autodocs'],
   parameters: {
     docs: {
       // Every state opens on load (so it can be seen without a click); in

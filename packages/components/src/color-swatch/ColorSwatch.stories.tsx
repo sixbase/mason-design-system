@@ -5,7 +5,6 @@ import { ColorSwatch } from './ColorSwatch';
 const meta: Meta<typeof ColorSwatch> = {
   title: 'Foundation/Colors',
   component: ColorSwatch,
-  tags: ['autodocs'],
   parameters: {
     layout: 'padded',
     docs: {

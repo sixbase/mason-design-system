@@ -6,7 +6,6 @@ import { Carousel, CarouselSlide } from './Carousel';
 const meta: Meta<typeof Carousel> = {
   title: 'Components/Carousel',
   component: Carousel,
-  tags: ['autodocs'],
   parameters: {
     docs: {
       description: {

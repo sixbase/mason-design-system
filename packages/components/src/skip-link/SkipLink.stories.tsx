@@ -6,7 +6,6 @@ import { SkipLink } from './SkipLink';
 const meta: Meta<typeof SkipLink> = {
   title: 'Components/SkipLink',
   component: SkipLink,
-  tags: ['autodocs'],
   parameters: {
     docs: {
       description: {

@@ -30,7 +30,7 @@
 
 ## Quick Reference Index
 
-Use this to find decisions by topic without scrolling 2,300+ lines. Statuses here mirror each entry's **Status** line (last synced 2026-09-26).
+Use this to find decisions by topic without scrolling 2,300+ lines. Statuses here mirror each entry's **Status** line (last synced 2026-09-27).
 
 ### Architecture & Tooling
 
@@ -40,7 +40,7 @@ Use this to find decisions by topic without scrolling 2,300+ lines. Statuses her
 | Package Manager: pnpm + Turborepo | Active |
 | Token Architecture: 3-Tier | Active |
 | Package Bundler: tsup | Active |
-| Documentation: Two Apps (Storybook + Astro) | **Changed** → Storybook + workbench (2026-09-25) |
+| Documentation: Two Apps (Storybook + Astro) | **Changed** → workbench only (2026-09-27) |
 | Primitive Components: Radix UI | Active |
 | CSS Strategy: Plain CSS + BEM + `ds-` prefix | Active |
 | package.json exports: `types` first | Active |
@@ -152,6 +152,7 @@ Use this to find decisions by topic without scrolling 2,300+ lines. Statuses her
 | Round 4: `check-css`, hover gating, `.ds-motion-safe`, live regions on change, hit areas, per-component CSS, stories type-checked | Active |
 | Shopify theme extracted to its own repo | Active |
 | Playbook: how-to chapters state today's rules; logs are history; one open list | Active |
+| Storybook removed; workbench is the only app (stories stay Component Story Format) | Active |
 
 ---
 
@@ -212,7 +213,7 @@ Use this to find decisions by topic without scrolling 2,300+ lines. Statuses her
 **Options considered:** Storybook only, Astro only, Storybook with MDX docs, separate Storybook + Astro
 **Decision:** Separate apps — Storybook for internal dev, Astro for public docs
 **Rationale:** Storybook serves engineers who are building components. The Astro docs site serves consumers who are using components. They have fundamentally different needs. Storybook as the only documentation leads to a poor consumer experience (too technical, no prose explanation). A custom docs site can be more opinionated and brand-appropriate.
-**Status:** Changed (2026-09-25) — the Astro docs site was retired; Storybook stays for engineering and `apps/workbench` renders the same stories for review. See "Docs Site Retired → Visual Workbench Built on Stories".
+**Status:** Changed (2026-09-25) — the Astro docs site was retired; Storybook stays for engineering and `apps/workbench` renders the same stories for review. See "Docs Site Retired → Visual Workbench Built on Stories". Changed again (2026-09-27) — Storybook was removed; the workbench is the only app. See "Storybook Removed — Workbench Is the Only App".
 
 ---
 
@@ -734,7 +735,7 @@ Combined with `transform: scale(0.98)` on buttons/selects, `scale(0.92)` on smal
 3. **CI time** — `pnpm turbo test` runs all axe tests as a required status check (automated gate)
 
 **Rationale:** Three layers of a11y enforcement means a violation has to slip past development, testing, AND CI to ship. The branch protection + required review ensures no code reaches `main` without passing all checks and being reviewed by another human.
-**Status:** Active
+**Status:** Active — layer 1 changed (2026-09-27): the Storybook a11y panel went with Storybook; dev-time checks are now the workbench's on-demand *Check accessibility* (axe) button. `jest-axe` in tests remains the CI gate.
 
 ---
 
@@ -2230,7 +2231,7 @@ Also replaced Footer.css hardcoded `1280px` with `var(--size-content-xl)`.
 **Decision:** (c). `apps/workbench` (Vite + React): sidebar grouped by kind with review-status dots; a toolbar for Theme (Light / Dark / Both) and Screen (Phone 375 / Tablet 768 / Desktop 1280 / All), test modes (Motion off, Outlines, Long text, RTL), Replay and an on-demand axe check; device frames as real iframes, scaled to fit, with linked scrolling; a state picker per component; a review bar (Not reviewed / Looks good / Needs work + note, stored in localStorage) with keyboard shortcuts (G, N, J/K, T, W, R); an Overview with progress and "Copy notes". Plus foundation sheets (colors with live contrast in the frame's theme, type, space/radius/elevation, motion), three consistency line-ups (control heights on guide bands, status colors, form states), and the eight store pages. Deployed to GitHub Pages in place of the docs.
 **Rationale:** Stories already exist for all 58 components (418 states) and are the 4-file rule's specimens — rendering them directly removes the duplicate gallery layer entirely. Real iframes at true widths are the only way media/container queries behave like a device. Storybook (b) stays as the engineering tool and Chromatic baseline, but its UI is dense and it can't compare devices/themes side by side or track review verdicts.
 **Removed:** `apps/docs` (Astro, galleries, doc pages, demo-utilities.css). Store-page demos, product data and motion demos moved to `apps/workbench/src/specimens/`.
-**Status:** Active
+**Status:** Active — Storybook itself was removed on 2026-09-27; the workbench is the only app. See "Storybook Removed — Workbench Is the Only App".
 
 ---
 
@@ -2393,4 +2394,15 @@ Also replaced Footer.css hardcoded `1280px` with `var(--size-content-xl)`.
 - **A link blocked by `safeHref` renders nothing** (as if no link was given) — never a dead, link-styled `<a>` that can't be focused.
 - **Radio and Switch rows grow to 44px on touch** (`pointer: coarse`) instead of overlapping 44px hit zones; 24px zones for every pointer, as Checkbox.
 - **Table warns in development when unnamed** — its scroll wrapper is always a tab stop.
+**Status:** Active
+
+---
+
+### Storybook Removed — Workbench Is the Only App
+
+**Date/Phase:** 2026-09-27
+**Context:** Storybook (`apps/storybook`) was kept as an "engineering tool" after the workbench replaced the docs site, but the owner reviews everything in the workbench and doesn't use Storybook. It was a second app to install, build and type-check, with its own config drift (fonts, dark mode, RTL decorators duplicated from the workbench).
+**Options considered:** (a) keep it; (b) remove the Storybook app but keep stories in Component Story Format, rendered by the workbench via `@storybook/react`'s `composeStories`; (c) also drop `@storybook/react` and write a local `composeStories` + story types.
+**Decision:** (b). Deleted `apps/storybook` and its addons (incl. `@chromatic-com/storybook`), the `storybook` launch config and the changesets ignore entry; stripped `tags: ['autodocs']` from every story. Stories, `tsconfig.stories.json` and the workbench's `@storybook/react` + `storybook` devDependencies stay.
+**Rationale:** (b) removes the unused app with zero change to how stories are written or rendered. (c) is possible later but means owning story typing/composition code for no current benefit. Chromatic would now need Storybook restored first.
 **Status:** Active

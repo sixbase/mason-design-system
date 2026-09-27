@@ -7,7 +7,6 @@ import { Button } from '../button/Button';
 const meta: Meta<typeof ToastProvider> = {
   title: 'Components/Toast',
   component: ToastProvider,
-  tags: ['autodocs'],
   parameters: {
     docs: {
       description: {

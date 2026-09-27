@@ -80,7 +80,7 @@ Every agent prompt must include:
 4. **What snippets to consume:** e.g. "use `{% render 'price' %}` for prices, do not inline the formatter"
 5. **What section settings to expose:** content only (text, images, URLs) — never design settings (color, font, spacing)
 6. **SEO requirements:** which JSON-LD schema applies, which headings are required for hierarchy, image alt rules
-7. **Test procedure:** run `shopify theme check`, visit test URL, screenshot the section, compare to component's Storybook story
+7. **Test procedure:** run `shopify theme check`, visit test URL, screenshot the section, compare to the component's workbench story
 8. **What NOT to touch:** explicit list of foundation files off-limits
 
 ### Running the streams
@@ -127,7 +127,7 @@ When you're ready to start parallelization:
 | Risk | Mitigation |
 |------|-----------|
 | Two streams both decide they need a new shared snippet | Phase 0 enumerates all shared snippets upfront; agent prompts forbid creating new shared snippets (must escalate) |
-| Stream drifts from component's BEM class names, causing style mismatch | Prompt explicitly lists every class to preserve, agent screenshots compared to Storybook |
+| Stream drifts from component's BEM class names, causing style mismatch | Prompt explicitly lists every class to preserve, agent screenshots compared to the workbench |
 | Stream introduces raw values (hex, px) to ship faster | `theme-check.yml` rule flags it; prompt reiterates "every visual value is a token" |
 | Stream modifies a Phase 0 file to "fix" something | Prompt explicit: Phase 0 files are read-only; raise in PR description if something's missing |
 | Agent worktree stale vs. main | Each agent pulls `main` at start; if conflicts, surface to you before attempting auto-resolution |
