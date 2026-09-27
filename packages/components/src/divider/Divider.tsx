@@ -58,10 +58,13 @@ export const Divider = forwardRef<HTMLHRElement, DividerProps>(function Divider(
 
   if (orientation === 'horizontal' && label != null) {
     return (
+      // role="separator" has presentational children, so the visible
+      // label never reaches assistive tech — name the separator with it.
       <div
         ref={ref as React.Ref<HTMLDivElement>}
         role="separator"
         aria-orientation="horizontal"
+        aria-label={label}
         className={classes}
         {...(props as HTMLAttributes<HTMLDivElement>)}
       >

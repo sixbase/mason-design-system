@@ -41,6 +41,7 @@ export const Checkbox = forwardRef<HTMLButtonElement, CheckboxProps>(function Ch
     id: idProp,
     className,
     disabled,
+    'aria-describedby': ariaDescribedBy,
     ...rootProps
   },
   ref,
@@ -50,8 +51,11 @@ export const Checkbox = forwardRef<HTMLButtonElement, CheckboxProps>(function Ch
   const hintId = `${id}-hint`;
   const errorId = `${id}-error`;
 
+  // Only reference ids that are actually rendered — the hint is hidden while
+  // an error shows. Consumer ids are kept, not replaced.
+  const showHint = Boolean(hint) && !error;
   const describedBy =
-    [hint && hintId, error && errorId].filter(Boolean).join(' ') || undefined;
+    [ariaDescribedBy, showHint && hintId, error && errorId].filter(Boolean).join(' ') || undefined;
 
   const rootClasses = [
     'ds-checkbox-root',
@@ -84,6 +88,7 @@ export const Checkbox = forwardRef<HTMLButtonElement, CheckboxProps>(function Ch
         >
           <RadixCheckbox.Indicator className="ds-checkbox-indicator">
             <CheckIcon />
+            <DashIcon />
           </RadixCheckbox.Indicator>
         </RadixCheckbox.Root>
 
@@ -94,7 +99,7 @@ export const Checkbox = forwardRef<HTMLButtonElement, CheckboxProps>(function Ch
         )}
       </div>
 
-      {hint && !error && (
+      {showHint && (
         <span id={hintId} className="ds-checkbox-hint">
           {hint}
         </span>
@@ -113,14 +118,42 @@ Checkbox.displayName = 'Checkbox';
 
 function CheckIcon() {
   return (
-    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+    <svg
+      className="ds-checkbox-icon ds-checkbox-icon--check"
+      width="10"
+      height="10"
+      viewBox="0 0 10 10"
+      fill="none"
+      aria-hidden="true"
+    >
       <path
+        pathLength={1}
         d="M1.5 5L4 7.5L8.5 2.5"
         stroke="currentColor"
         strokeWidth="1.75"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+    </svg>
+  );
+}
+
+/**
+ * Indeterminate dash. A stroked glyph (currentColor), not a CSS background:
+ * forced-colors mode repaints backgrounds to the canvas color, which erased
+ * the old ::before dash and made "indeterminate" look unchecked.
+ */
+function DashIcon() {
+  return (
+    <svg
+      className="ds-checkbox-icon ds-checkbox-icon--dash"
+      width="10"
+      height="10"
+      viewBox="0 0 10 10"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path d="M2.5 5H7.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
     </svg>
   );
 }

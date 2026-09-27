@@ -22,9 +22,10 @@ These are the configuration mistakes that have cost the most time. Check this be
 | package.json | `import` before `types` in exports | TypeScript can't find declarations | Always put `types` first |
 | Storybook | Stories glob relative to package root | Empty Storybook, no error, no stories | Path is relative to `.storybook/` dir |
 | Storybook | Uses `@(ts\|tsx)` glob syntax | No stories found | Use `{ts,tsx}` instead |
-| Astro | JSON import path relative to project root | Import fails or 404 at runtime | Path is relative to `.astro` file location |
-| Chromatic | `fetch-depth: 1` in GitHub Actions | Every run treated as first build | Must use `fetch-depth: 0` |
-| Tokens | Only runs `tsup --watch`, not CSS script | Token CSS doesn't regenerate | `build` chains tsup + `build-css.mjs` — watch only covers tsup |
+| Chromatic (if re-enabled) | `fetch-depth: 1` in GitHub Actions | Every run treated as first build | Must use `fetch-depth: 0` |
+| Tokens | `dev` runs `build-css.mjs` once, then only `tsup --watch` | Later `tokens.json` edits don't reach `tokens.css` | Re-run `pnpm --filter @ds/tokens build` |
+| tsup | `splitting` without `clean: true` | Old hashed chunks pile up in `dist` and get published | Keep `clean: true` |
+| ESLint | `eslint-plugin-react-hooks` v4 on ESLint 9 | Crashes | v5 (workbench has no ESLint config yet — open item) |
 
 ---
 
@@ -82,10 +83,12 @@ pnpm install --frozen-lockfile  # CI — fail if lockfile is stale
     },
     "lint":      { "dependsOn": ["^build"] },
     "typecheck": { "dependsOn": ["^build"] },
-    "test":      { "dependsOn": ["^build"], "outputs": ["coverage/**"] }
+    "test":      { "dependsOn": ["^build"], "outputs": [] }
   }
 }
 ```
+
+`outputs` must match where each tool really writes. Tests write nothing, so `[]`. Storybook writes `storybook-static/`, set in `apps/storybook/turbo.json` (`"extends": ["//"]` plus its own `build.outputs`). A mismatch prints "no output files found" and silently disables caching for that task.
 
 **Critical concept:** `"dependsOn": ["^build"]` means "run `build` in all my dependencies first." Without this, `@ds/components` tries to import from `@ds/tokens` before tokens has been built → "module not found."
 
@@ -100,6 +103,18 @@ pnpm install --frozen-lockfile  # CI — fail if lockfile is stale
 - **esbuild under the hood** — fast
 
 **Rejected alternatives:** Rollup (more config), esbuild directly (no declaration generation), tsc (slow, no CSS bundling), Vite library mode (adds Vite plugin dependency).
+
+### Per-component entries (2026-09-25)
+
+`@ds/components` builds with `entry: ['src/index.ts', 'src/*/index.ts']` and `splitting: true`. `dist/index.mjs` is now a ~6KB re-export of per-component chunks instead of one ~200KB module. Why it matters: Rollup/Vite chunk by *module*, so a single-module library lands whole in every page that imports anything from it. Measured on the docs site: average JS per interactive page **123KB → 57KB gz**; a Button-only page no longer ships the Carousel and Table. `dts` stays single-entry (`src/index.ts`) because the package exports only `.`. CSS ships two ways: `@ds/components/styles` (everything, ≈22KB gz) or `@ds/components/styles/<component>.css`, each self-contained (a Button-only page: 1.1KB gz; a 7-component product page: 6.1KB gz). The dist JS never imports CSS, which keeps plain-Node server rendering safe. tsup needs `clean: true` with `splitting`, or old hashed chunks pile up in `dist` and get published (10MB → 5.6MB when fixed). `types` is nested per condition (`.d.mts` for import, `.d.ts` for require) so node16 ESM consumers get ESM types.
+
+**Guards that run in `lint` / `typecheck`:**
+- `packages/components/scripts/check-css.mjs` (in `@ds/components` lint, ~0.2s, no dependencies): undefined `var()`, component tokens nothing reads, raw values, `!important` outside the reduced-motion reset, non-token breakpoints, and `:hover` outside `@media (hover: hover)`. Its header lists every allowed exception and why.
+- `apps/workbench/tsconfig.stories.json` (in the workbench `typecheck`): type-checks every `*.stories.tsx`. Stories import `@storybook/react`, which only the apps install, so the workbench — the stories' consumer — checks them.
+
+### `@ds/motion` and GSAP (2026-09-25)
+
+`gsap` is a dependency of `@ds/motion` only, and marked `external` in its tsup config so the *consumer's* bundler turns each `import('gsap/…')` into its own lazy chunk. Never bundle GSAP into a package dist — it would land on the critical path of every page. GSAP is free including all plugins since 3.13; its license excludes only competing visual site builders.
 
 ### ⚠️ Critical: tsup output extensions
 
@@ -134,7 +149,21 @@ pnpm install --frozen-lockfile  # CI — fail if lockfile is stale
 }
 ```
 
-**This applies to every package in the monorepo.** Check all three (`@ds/tokens`, `@ds/primitives`, `@ds/components`).
+**Current form (2026-09-26): `types` nested per condition.** Every package now points `import` at `.d.mts` and `require` at `.d.ts`, so node16/ESM consumers get ESM types:
+
+```json
+"exports": {
+  ".": {
+    "import":  { "types": "./dist/index.d.mts", "default": "./dist/index.mjs" },
+    "require": { "types": "./dist/index.d.ts",  "default": "./dist/index.js" }
+  },
+  "./package.json": "./package.json"
+}
+```
+
+`types` is still first inside each condition. Extra subpaths: `@ds/tokens/css`, `@ds/tokens/json`; `@ds/components/styles` and `@ds/components/styles/*.css`; `@ds/motion/react`, `@ds/motion/css`. CSS subpaths are listed in `sideEffects` so bundlers don't drop them.
+
+**This applies to every package.** Check all four (`@ds/tokens`, `@ds/primitives`, `@ds/components`, `@ds/motion`).
 
 ---
 
@@ -180,7 +209,7 @@ Using ESLint 9 flat config format (not legacy `.eslintrc`):
 ```js
 // tooling/eslint/index.js
 export const react = [
-  ...base,  // TypeScript strict-type-checked rules
+  ...base,  // @typescript-eslint recommended-type-checked + consistent-type-imports
   {
     plugins: {
       react: reactPlugin,
@@ -199,6 +228,8 @@ export const react = [
 
 **`eslint-plugin-jsx-a11y` is the first line of defense.** It catches missing `alt` attributes, incorrect ARIA roles, and label association errors at lint time — before runtime a11y testing. Do not remove or disable it.
 
+Packages lint `src` only (tests and stories are ignored by ESLint; stories are type-checked instead — see "Guards" above). `apps/workbench` and `apps/storybook` have no lint script yet.
+
 ---
 
 ## Primitive Components: Radix UI
@@ -213,15 +244,19 @@ export const react = [
 
 **Key Radix packages used:**
 
-| Package | What It Does | Used In |
-|---------|-------------|---------|
-| `@radix-ui/react-slot` | `Slot` for `asChild` pattern | Button, Typography |
-| `@radix-ui/react-label` | Accessible label with `for` association | Input |
-| `@radix-ui/react-visually-hidden` | Screen-reader-only content | Various |
-| `@radix-ui/react-dialog` | Modal dialog | Modal |
-| `@radix-ui/react-select` | Select dropdown | Select |
-| `@radix-ui/react-checkbox` | Checkbox with indeterminate | Checkbox |
-| `@radix-ui/react-accordion` | Collapsible sections | Accordion |
+| Package | Used In |
+|---------|---------|
+| `@radix-ui/react-slot` | `asChild` (Button) — via `@ds/primitives` |
+| `@radix-ui/react-label`, `react-visually-hidden` | `@ds/primitives` |
+| `@radix-ui/react-dialog` | Modal, Drawer (and CartDrawer, Header's mobile menu through Drawer) |
+| `@radix-ui/react-select` | Select |
+| `@radix-ui/react-checkbox`, `react-radio-group`, `react-switch`, `react-slider` | Checkbox, RadioGroup, Switch, Slider |
+| `@radix-ui/react-accordion`, `react-tabs` | Accordion, Tabs |
+| `@radix-ui/react-popover`, `react-tooltip`, `react-dropdown-menu` | Popover, Tooltip, DropdownMenu |
+
+**Bump all `@radix-ui/*` packages together** (`pnpm update -r "@radix-ui/*"`). Two versions of an internal such as `react-dismissable-layer` make two separate overlay stacks: a menu inside a dialog can't be clicked and one Escape closes both. Check the lockfile, not `node_modules/.pnpm`.
+
+**Wrap Radix parts, never rename them.** Export a thin `forwardRef` wrapper with its own `displayName`; setting `displayName` on the Radix object renames it for every other user on the page.
 
 ### ⚠️ Radix Portal gotcha
 
@@ -253,7 +288,7 @@ When `asChild` is true, `Slot` merges the component's props (className, ref, ari
 
 ## Storybook 8
 
-**Role:** Internal development tool and Chromatic integration point. NOT the public documentation site.
+**Role:** Internal development tool (controls, a11y panel). Not a documentation site, and not the review tool — that is the workbench.
 
 **Why Storybook over alternatives:** Histoire and Ladle were evaluated — smaller ecosystems, fewer addons, less Chromatic support. Storybook 8 with `@storybook/react-vite` is fast (Vite HMR). `@storybook/addon-a11y` runs axe-core in the panel.
 
@@ -292,63 +327,34 @@ stories: ['../../packages/components/src/**/*.stories.{ts,tsx}']
 
 ---
 
-## Astro 4 (Docs Site)
+## Workbench (Vite + React) — replaced the Astro docs site 2026-09-25
 
-**Role:** Public-facing documentation site. Consumers read this.
+**Role:** Private visual test bench. Every component story at real device widths, light/dark, with stress modes and review notes.
 
-**Why Astro over Next.js / Docusaurus / VitePress:**
-- **Island architecture** — most pages are static HTML; React hydrates only where needed
-- **MDX support** — Markdown with embedded React components
-- **Static output** — pure HTML/CSS/JS, deployable to any CDN
+**How it works:**
+- Two documents (Vite multi-page): `index.html` is the shell (sidebar, toolbar, review bar); `frame.html` renders one component's stories inside each device iframe. Frames are real iframes at 375 / 768 / 1280px, so media and container queries fire as on the device; they are CSS-scaled when the screen is too narrow.
+- Stories are loaded with `import.meta.glob('…/*.stories.tsx')` and rendered with Storybook's `composeStories` (`@storybook/react`) — no Storybook server involved. Story order comes from the source text (`?raw`), because module namespaces sort exports alphabetically.
+- `@ds/components` and `@ds/motion` are aliased to **source** in `vite.config.ts`, so component edits hot-reload instantly (the old docs site read the built `dist/`).
+- Shell ↔ frame talk over `postMessage` (`src/lib/messages.ts`): linked scrolling, error reports, axe results, keyboard shortcuts typed inside a frame, store-page link navigation.
+- `base` is `/mason-design-system/` for `vite build` and `vite preview` (GitHub Pages path), `/` for `vite dev`.
 
-**Rejected alternatives:** Docusaurus (too opinionated for non-blog), VitePress (Vue-focused), Next.js (full React runtime on every page is overkill for docs).
+**Rejected alternatives:** keeping the Astro docs (a documentation site nobody reads was costing parity work on every component); Storybook alone (dense developer UI, no side-by-side devices/themes, no review tracking).
 
-**Configuration:**
-```js
-// apps/docs/astro.config.mjs
-export default defineConfig({
-  integrations: [react(), mdx()],
-  output: 'static',
-})
-```
-
-### ⚠️ Critical: JSON import paths
-
-Astro resolves imports relative to the `.astro` file's location, not the project root:
-
-```astro
----
-// In apps/docs/src/pages/tokens/colors.astro
-import tokens from '../../../../../packages/tokens/src/tokens.json'
-//               ↑ five levels up — count carefully
----
-```
-
-**Getting this wrong means silent failure or 404 at runtime. No helpful error message.**
-
----
+### ⚠️ Gotchas
+- **Install frame-level listeners outside React.** StrictMode mounts effects twice; listeners registered in an effect without cleanup doubled every message (axe ran twice and threw "Axe is already running").
+- **A wrapping flex column sizes each line to its widest child.** The phone toolbar (`flex-direction: column; flex-wrap: wrap`) made the page 599px wide on a 390px screen until `flex-wrap: nowrap`.
+- **Changing an iframe's `src` pushes browser history** — one entry per frame per change, so Back desynced the sidebar from the frames. After the first load, frames navigate with `contentWindow.location.replace()`.
+- **An in-frame `#anchor` link rewrites the frame's route hash.** Skip links (`#main-content`) blanked the frame. The frame handles in-page anchors itself (scroll + focus) and ignores hashes that aren't routes.
+- **`scrollIntoView` also moves the sequential-focus start point** in Chrome, so the next Tab skipped the skip link. Scroll the sidebar list by hand instead.
+- **Stamp every frame→shell message with the frame's view.** Errors, axe results and scroll events from the previous component (or a removed iframe) otherwise land on the new one.
 
 ## Vitest
 
 **Why Vitest over Jest:** Vite-native (same transform pipeline as dev server), same API as Jest, faster in watch mode.
 
-**Shared config factory — no duplicated configuration:**
+**Config is inlined per package** (`packages/components/vitest.config.ts`, `packages/motion/vitest.config.ts`) — jsdom, globals, `src/**/*.test.{ts,tsx}`. A shared factory exists at `tooling/vitest/index.ts` but nothing imports it: under Node 20 it was loaded as raw TypeScript through the CommonJS path and broke CI, so the config was inlined (commit `325bcf2`). Delete it or make it loadable.
 
-```ts
-// tooling/vitest/index.ts
-export function createVitestConfig(options?) {
-  return defineConfig({
-    plugins: [react()],
-    test: {
-      environment: 'jsdom',
-      globals: true,
-      setupFiles: ['./vitest.setup.ts'],
-    },
-  })
-}
-```
-
-Each package creates a `vitest.config.ts` that calls this factory.
+`packages/components/vitest.setup.ts` registers `jest-axe` (`toHaveNoViolations`, `region` rule off), replaces Node 22+'s broken global `localStorage` with an in-memory one, and stubs what Radix popper components call but jsdom lacks (`ResizeObserver`, `scrollIntoView`, pointer capture).
 
 **Test command:**
 ```bash
@@ -358,9 +364,11 @@ pnpm --filter @ds/components test:watch   # Watch mode during development
 
 ---
 
-## Chromatic
+## Chromatic — not wired
 
-**Role:** Visual regression testing. Screenshots every Storybook story on every PR, shows diffs.
+**Status (2026-09-26):** `@chromatic-com/storybook` is installed, but there is no Chromatic workflow — `chromatic.yml` was removed as unconfigured (commit `325bcf2`). Visual review happens in the workbench. To enable it: create a Chromatic project, add `CHROMATIC_PROJECT_TOKEN` as a repo secret, and restore the workflow from git history (`git show 325bcf2^:.github/workflows/chromatic.yml`).
+
+**Role when enabled:** Visual regression testing. Screenshots every Storybook story on every PR, shows diffs.
 
 ### ⚠️ Critical: GitHub Actions checkout depth
 
@@ -391,6 +399,8 @@ Without `fetch-depth: 0`, Chromatic can't find the baseline commit and treats ev
 
 **Used by:** Radix UI, shadcn/ui, many other design systems.
 
+**Status:** configured (`.changeset/config.json`), but there is no release workflow — `release.yml` was removed as unconfigured (commit `325bcf2`), and nothing is published to npm. To start publishing: add an `NPM_TOKEN` secret and restore the workflow from git history (`git show 325bcf2^:.github/workflows/release.yml`).
+
 **Day-to-day workflow:**
 ```bash
 pnpm changeset              # Interactive: which packages? major/minor/patch? describe it.
@@ -398,7 +408,7 @@ git add .changeset/*.md     # Commit the changeset file alongside your code
 git commit -m "feat: add Badge component"
 ```
 
-**What happens on merge to main:**
+**What would happen on merge to main (once a release workflow exists):**
 1. GitHub Actions sees `.changeset/*.md`
 2. Creates a "Version Packages" PR that bumps versions
 3. When that PR merges → publishes to npm with `pnpm release`
@@ -409,14 +419,14 @@ git commit -m "feat: add Badge component"
 {
   "access": "public",
   "baseBranch": "main",
-  "ignore": ["@ds/docs", "@ds/storybook"],
+  "ignore": ["@ds/workbench", "@ds/storybook"],
   "updateInternalDependencies": "patch"
 }
 ```
 
 **`access: "public"` is required** for scoped packages (`@ds/*`) to be publicly installable on npm.
 
-**`ignore` excludes apps** — `@ds/docs` and `@ds/storybook` are never published.
+**`ignore` excludes apps** — `@ds/workbench` and `@ds/storybook` are never published.
 
 ---
 
@@ -446,10 +456,14 @@ Single quotes and trailing commas match the style of most large React codebases 
 | TypeScript base config | `tooling/typescript/base.json` |
 | TypeScript React config | `tooling/typescript/react.json` |
 | ESLint config | `tooling/eslint/index.js` |
-| Vitest config factory | `tooling/vitest/index.ts` |
+| Vitest config | `packages/{components,motion}/vitest.config.ts` (the `tooling/vitest` factory is unused) |
+| Vitest setup (axe, jsdom shims) | `packages/components/vitest.setup.ts` |
+| CSS lint guard | `packages/components/scripts/check-css.mjs` |
+| Story typecheck | `apps/workbench/tsconfig.stories.json` |
+| CI | `.github/workflows/ci.yml`, `.github/workflows/deploy-docs.yml` (workbench → Pages) |
 | Prettier config | `.prettierrc` |
 | Changesets config | `.changeset/config.json` |
 | Storybook config | `apps/storybook/.storybook/main.ts` |
-| Astro config | `apps/docs/astro.config.mjs` |
+| Workbench config | `apps/workbench/vite.config.ts` |
 | Token source | `packages/tokens/src/tokens.json` |
 | Token CSS build script | `packages/tokens/scripts/build-css.mjs` |

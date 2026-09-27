@@ -52,7 +52,7 @@
 /* Subtle + label: dim only the rule lines, never the text —
    fading the label would break WCAG contrast on real copy. */
 .ds-divider--labeled.ds-divider--subtle {
-  opacity: 1;
+  opacity: var(--opacity-full);
 }
 
 .ds-divider--labeled.ds-divider--subtle .ds-divider__line {

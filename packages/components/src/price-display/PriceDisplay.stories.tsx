@@ -5,6 +5,14 @@ const meta: Meta<typeof PriceDisplay> = {
   title: 'Components/PriceDisplay',
   component: PriceDisplay,
   tags: ['autodocs'],
+  parameters: {
+    docs: {
+      description: {
+        component:
+          'A price — and when something’s on sale, the old price crossed out beside it.',
+      },
+    },
+  },
   argTypes: {
     size: { control: 'select', options: ['sm', 'md', 'lg'] },
     emphasis: { control: 'select', options: ['none', 'sale'] },

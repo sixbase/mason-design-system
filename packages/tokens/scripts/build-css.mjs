@@ -33,10 +33,70 @@ function resolveValue(name, raw) {
   return value;
 }
 
+/**
+ * Guards the build adds on top of resolveValue():
+ *  - Light and dark must define the same semantic names in the same order.
+ *    A token defined in one mode only would silently keep the other mode's
+ *    value inside a nested theme region.
+ *  - var(--color-*) inside pass-through values (the color-mix() tokens) must
+ *    name a primitive shade or a semantic token that exists — resolveValue()
+ *    only checks {primitive.*} references.
+ */
+{
+  const light = Object.keys(tokens.semantic.color.light);
+  const dark = Object.keys(tokens.semantic.color.dark);
+  if (light.join() !== dark.join()) {
+    const only = (a, b) => a.filter((k) => !b.includes(k));
+    throw new Error(
+      `Semantic colour modes differ — light only: [${only(light, dark)}], dark only: [${only(dark, light)}]` +
+        (only(light, dark).length || only(dark, light).length ? '' : ' (same names, different order)')
+    );
+  }
+  for (const mode of ['light', 'dark']) {
+    for (const [name, { $value }] of Object.entries(tokens.semantic.color[mode])) {
+      for (const [, ref] of $value.matchAll(/var\(--color-([a-z0-9-]+)\)/g)) {
+        const shade = ref.match(/^([a-z]+)-(\d+)$/);
+        const ok = shade ? p.color[shade[1]]?.[shade[2]] !== undefined : ref in tokens.semantic.color[mode];
+        if (!ok) throw new Error(`Token "${name}" (${mode}) uses var(--color-${ref}), which is not defined`);
+      }
+    }
+  }
+}
+
 function semanticBlock(mode) {
   return Object.entries(tokens.semantic.color[mode]).map(
     ([name, { $value }]) => `  --color-${name}: ${resolveValue(name, $value)};`
   );
+}
+
+/**
+ * Composite tokens — built from semantic colors, so they are emitted inside
+ * EACH mode block rather than once on :root. A custom property's var()
+ * references resolve where it is declared: declared only on :root, a
+ * nested `.dark` region (a docs preview, a dark promo band) would inherit
+ * the light-mode ring and overlay. Re-declaring per mode re-resolves them.
+ *
+ * Focus ring: a solid 2px ring in --color-focus-ring, separated from the
+ * control by a 2px gap in the page background. The old 3px ring at 20%
+ * alpha measured 1.4:1 against the page — invisible to many keyboard users
+ * (WCAG 1.4.11 / 2.4.13 need 3:1). The solid ring is 8.7:1 light, 7.1:1 dark.
+ *
+ * Overlay: scrim for Modal/Drawer backdrops. Always darkens (stone-950) —
+ * the old foreground-based mix turned light in dark mode and *lightened*
+ * the page behind a dialog. Denser in dark mode (61.8% vs 38.2%, φ pair)
+ * because a dark page needs more scrim to read as dimmed.
+ */
+function compositeBlock(mode) {
+  const ring = 'var(--border-width-lg)';
+  const ringOuter = `calc(${ring} * 2)`;
+  return [
+    `  /* composites — see compositeBlock() in build-css.mjs */`,
+    `  --color-overlay: color-mix(in srgb, var(--color-stone-950) ${mode === 'dark' ? '61.8%' : '38.2%'}, transparent);`,
+    `  --focus-ring-color: var(--color-focus-ring);`,
+    `  --focus-ring: 0 0 0 ${ring} var(--color-background), 0 0 0 ${ringOuter} var(--color-focus-ring);`,
+    `  --focus-ring-inset: inset 0 0 0 ${ring} var(--color-focus-ring);`,
+    `  --focus-ring-error: 0 0 0 ${ring} var(--color-background), 0 0 0 ${ringOuter} var(--color-destructive);`,
+  ];
 }
 
 const css = lines(
@@ -86,6 +146,11 @@ const css = lines(
   `  --transition-fast:   ${p.transition.duration.fast} ${p.transition.easing.default};`,
   `  --transition-normal: ${p.transition.duration.normal} ${p.transition.easing.default};`,
   `  --transition-slow:   ${p.transition.duration.slow} ${p.transition.easing.default};`,
+  // motion — choreography primitives. Stagger continues the ×φ duration
+  // series downward (100/φ = 62, 100/φ² = 38); distance reuses the
+  // phi spacing steps so reveal travel sits on the same scale as layout.
+  ...Object.entries(p.motion.stagger).map(([k, v]) => `  --motion-stagger-${k}: ${v};`),
+  ...Object.entries(p.motion.distance).map(([k, v]) => `  --motion-distance-${k}: ${v};`),
   // opacity (successive powers of 1/φ ≈ 0.618)
   ...Object.entries(p.opacity).map(([k, v]) => `  --opacity-${k}: ${v};`),
   // z-index
@@ -98,23 +163,83 @@ const css = lines(
   ...Object.entries(tokens.semantic.elevation).map(
     ([k, { $value }]) => `  --elevation-${k}: ${$value};`
   ),
-  ``,
-  `  /* ── Composite tokens (derived from primitives) ──── */`,
-  `  --color-overlay: color-mix(in srgb, var(--color-foreground) 38.2%, transparent);`,
-  `  --focus-ring-color: color-mix(in srgb, var(--color-focus-ring) 20%, transparent);`,
-  `  --focus-ring: 0 0 0 3px var(--focus-ring-color);`,
-  `  --focus-ring-inset: inset 0 0 0 3px var(--focus-ring-color);`,
-  `  --focus-ring-error: 0 0 0 3px color-mix(in srgb, var(--color-destructive) 20%, transparent);`,
   `}`,
   ``,
   `/* ─── Semantic tokens — light mode ─────────────────── */`,
   `:root, [data-theme="light"] {`,
+  `  color-scheme: light;`,
   semanticBlock('light'),
+  compositeBlock('light'),
   `}`,
   ``,
   `/* ─── Semantic tokens — dark mode ──────────────────── */`,
   `.dark, [data-theme="dark"] {`,
+  `  color-scheme: dark;`,
   semanticBlock('dark'),
+  compositeBlock('dark'),
+  `}`,
+);
+
+/**
+ * Adaptive modes — both are token swaps only; no component needs to know.
+ *
+ * Print: paper is white. A page printed from dark mode would otherwise
+ * come out as light text on white (backgrounds are dropped by default),
+ * so every theme prints with the light semantic tokens.
+ *
+ * prefers-contrast: more (macOS "Increase contrast", Windows contrast
+ * themes without forced colors): decorative borders take the 3:1 control
+ * edge, and the two faintest text roles step up — one rung in light, two
+ * in dark (so dark subtle lands on stone-300, the same as secondary).
+ * border-strong moves too (to stone-500: 3.9:1 light, 4.7:1 dark) — left
+ * alone it sat BELOW the raised --color-border, so hover borders
+ * (CollectionFilters pill, ColorPicker ring) got fainter on hover.
+ *
+ * Order matters: print comes AFTER contrast. Printing with "Increase
+ * contrast" on used to apply the dark contrast overrides (stone-300 text)
+ * on top of print's light tokens — light grey on white paper. Print then
+ * re-applies the light contrast overrides itself.
+ */
+const moreContrast = {
+  light: [
+    `--color-border: var(--color-border-control);`,
+    `--color-border-strong: var(--color-stone-500);`,
+    `--color-foreground-subtle: var(--color-stone-600);`,
+    `--color-foreground-muted: var(--color-stone-500);`,
+  ],
+  dark: [
+    `--color-border: var(--color-border-control);`,
+    `--color-border-strong: var(--color-stone-500);`,
+    `--color-foreground-subtle: var(--color-stone-300);`,
+    `--color-foreground-muted: var(--color-stone-400);`,
+  ],
+};
+const indent = (n, arr) => arr.map((l) => ' '.repeat(n) + l);
+
+const adaptive = lines(
+  ``,
+  `/* ─── More contrast (OS setting) ──────────────────── */`,
+  `@media (prefers-contrast: more) {`,
+  `  :root, [data-theme="light"] {`,
+  indent(4, moreContrast.light),
+  `  }`,
+  `  .dark, [data-theme="dark"] {`,
+  indent(4, moreContrast.dark),
+  `  }`,
+  `}`,
+  ``,
+  `/* ─── Print: always the light theme ────────────────── */`,
+  `@media print {`,
+  `  :root, .dark, [data-theme="dark"] {`,
+  `    color-scheme: light;`,
+  semanticBlock('light').map((l) => '  ' + l),
+  compositeBlock('light').map((l) => '  ' + l),
+  `  }`,
+  `}`,
+  `@media print and (prefers-contrast: more) {`,
+  `  :root, .dark, [data-theme="dark"] {`,
+  indent(4, moreContrast.light),
+  `  }`,
   `}`,
 );
 
@@ -140,6 +265,16 @@ const globals = lines(
   `.ds-scroll-hidden { scrollbar-width: none; }`,
   `.ds-scroll-hidden::-webkit-scrollbar { display: none; }`,
   ``,
+  `/* ─── Mobile Safari defaults ────────────────────────── */`,
+  `/* iOS enlarges text when a phone rotates to landscape; the type scale is`,
+  `   already fluid, so keep sizes as authored. The grey tap flash is`,
+  `   replaced by each component's own pressed state (--scale-press etc.). */`,
+  `html {`,
+  `  -webkit-text-size-adjust: 100%;`,
+  `  text-size-adjust: 100%;`,
+  `  -webkit-tap-highlight-color: transparent;`,
+  `}`,
+  ``,
   `/* ─── Form element font inheritance ────────────────── */`,
   `/* Browsers don't inherit font on form controls — fix globally */`,
   `button, input, select, textarea {`,
@@ -149,22 +284,51 @@ const globals = lines(
   `/* ─── Global focus-visible ──────────────────────────── */`,
   `/* Safety-net focus ring for any element not styled by a component */`,
   `*:focus-visible {`,
-  `  outline: 2px solid var(--color-focus-ring);`,
-  `  outline-offset: 2px;`,
+  `  outline: var(--border-width-lg) solid var(--color-focus-ring);`,
+  `  outline-offset: var(--border-width-lg);`,
   `}`,
   ``,
   `/* ─── Reduced motion ────────────────────────────────── */`,
-  `/* Respect OS-level "reduce motion" accessibility setting */`,
+  `/* Respect OS-level "reduce motion", and <html data-motion="off"> (a site`,
+  `   "pause animations" switch — @ds/motion honours the same attribute).`,
+  `   .ds-motion-safe opts an element out: it promises to handle both`,
+  `   conditions itself with a non-moving animation (Spinner's opacity pulse),`,
+  `   which the !important reset would otherwise freeze on its first frame. */`,
   `@media (prefers-reduced-motion: reduce) {`,
-  `  *, *::before, *::after {`,
+  `  :not(.ds-motion-safe), :not(.ds-motion-safe)::before, :not(.ds-motion-safe)::after {`,
   `    animation-duration: 0.01ms !important;`,
+  `    animation-delay: 0s !important;`,
   `    animation-iteration-count: 1 !important;`,
   `    transition-duration: 0.01ms !important;`,
+  `    transition-delay: 0s !important;`,
   `    scroll-behavior: auto !important;`,
   `  }`,
+  `}`,
+  `:root[data-motion="off"] :not(.ds-motion-safe),`,
+  `:root[data-motion="off"] :not(.ds-motion-safe)::before,`,
+  `:root[data-motion="off"] :not(.ds-motion-safe)::after {`,
+  `  animation-duration: 0.01ms !important;`,
+  `  animation-delay: 0s !important;`,
+  `  animation-iteration-count: 1 !important;`,
+  `  transition-duration: 0.01ms !important;`,
+  `  transition-delay: 0s !important;`,
+  `  scroll-behavior: auto !important;`,
   `}`,
 );
 
 mkdirSync(join(root, 'dist'), { recursive: true });
-writeFileSync(join(root, 'dist/tokens.css'), css + globals + '\n');
+writeFileSync(join(root, 'dist/tokens.css'), css + adaptive + globals + '\n');
 console.log('✓ dist/tokens.css written');
+
+// Motion subset for the JS export (src/index.ts → @ds/motion). Written as
+// its own small file so JS consumers bundle ~1KB of timing values instead
+// of the whole token tree. Generated — edit tokens.json, not this file.
+const motionSubset = {
+  $comment: 'Generated by scripts/build-css.mjs from tokens.json — do not edit',
+  duration: p.transition.duration,
+  easing: p.transition.easing,
+  stagger: p.motion.stagger,
+  distance: p.motion.distance,
+};
+writeFileSync(join(root, 'src/motion.json'), JSON.stringify(motionSubset, null, 2) + '\n');
+console.log('✓ src/motion.json written');

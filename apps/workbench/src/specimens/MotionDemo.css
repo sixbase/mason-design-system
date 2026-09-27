@@ -1,0 +1,322 @@
+/* ─── Motion foundation page demos ─────────────────────── */
+
+.motion-demo {
+  --motion-demo-dot: var(--size-icon-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  padding: var(--spacing-6);
+  margin: var(--spacing-4) 0 var(--spacing-8);
+  border: var(--border-width-sm) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-background-surface);
+  font-family: var(--font-family-body);
+}
+
+.motion-demo__toolbar,
+.motion-demo__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+}
+
+.motion-demo__mono {
+  font-family: var(--font-family-code);
+  overflow-wrap: anywhere;
+}
+
+/* ─── Curve + dot rows ─────────────────────────────────── */
+.motion-demo__easings,
+.motion-demo__durations {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.motion-demo__easing {
+  display: grid;
+  grid-template-columns: var(--spacing-16) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+.motion-demo__easing-body,
+.motion-demo__duration-label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.motion-demo__curve {
+  width: var(--spacing-16);
+  height: var(--spacing-16);
+  overflow: visible;
+}
+
+.motion-demo__curve-axis {
+  fill: none;
+  stroke: var(--color-border-strong);
+  stroke-width: var(--border-width-sm);
+  vector-effect: non-scaling-stroke;
+}
+
+.motion-demo__curve-line {
+  fill: none;
+  stroke: var(--color-foreground);
+  stroke-width: var(--border-width-lg);
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.motion-demo__duration {
+  display: grid;
+  grid-template-columns: minmax(0, calc(var(--spacing-24) * 2)) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+@media (max-width: 639px) {
+  .motion-demo {
+    padding: var(--spacing-4);
+  }
+
+  .motion-demo__duration {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--spacing-2);
+  }
+}
+
+/* The track is a size container, so the dot's travel is exactly the
+   track's width minus the dot — no JS measurement. */
+.motion-demo__track {
+  container-type: inline-size;
+  position: relative;
+  height: var(--motion-demo-dot);
+  margin-top: var(--spacing-1);
+  border-radius: var(--radius-full);
+  background: var(--color-background-subtle);
+}
+
+.motion-demo__dot {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: var(--motion-demo-dot);
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  transition-property: transform;
+  transition-duration: var(--transition-duration-slowest);
+  transition-timing-function: var(--transition-easing-default);
+}
+
+.motion-demo--played .motion-demo__dot {
+  transform: translateX(calc(100cqi - var(--motion-demo-dot)));
+}
+
+.motion-demo__dot--emphasized { transition-timing-function: var(--transition-easing-emphasized); }
+.motion-demo__dot--emphasized-in { transition-timing-function: var(--transition-easing-emphasized-in); }
+.motion-demo__dot--glide { transition-timing-function: var(--transition-easing-glide); }
+.motion-demo__dot--spring { transition-timing-function: var(--transition-easing-spring); }
+.motion-demo__dot--default { transition-timing-function: var(--transition-easing-default); }
+
+.motion-demo__dot--d-fast,
+.motion-demo__dot--d-normal,
+.motion-demo__dot--d-slow,
+.motion-demo__dot--d-slower,
+.motion-demo__dot--d-slowest {
+  transition-timing-function: var(--transition-easing-emphasized);
+}
+
+.motion-demo__dot--d-fast { transition-duration: var(--transition-duration-fast); }
+.motion-demo__dot--d-normal { transition-duration: var(--transition-duration-normal); }
+.motion-demo__dot--d-slow { transition-duration: var(--transition-duration-slow); }
+.motion-demo__dot--d-slower { transition-duration: var(--transition-duration-slower); }
+.motion-demo__dot--d-slowest { transition-duration: var(--transition-duration-slowest); }
+
+/* ─── Reveal patterns ──────────────────────────────────── */
+/* Four patterns: 2 × 2 (auto-fit left a 3 + 1 orphan on wide frames) */
+.motion-demo--patterns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--spacing-4);
+  padding: var(--spacing-4);
+}
+
+.motion-demo__pattern {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  min-width: 0;
+  padding: var(--spacing-4);
+  border-radius: var(--radius-md);
+  background: var(--color-background);
+}
+
+.motion-demo__pattern-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+}
+
+.motion-demo__stage {
+  display: flex;
+  align-items: center;
+  min-height: calc(var(--spacing-24) * 1.5);
+  overflow: hidden;
+}
+
+.motion-demo__block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.motion-demo__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.motion-demo__chip {
+  padding: var(--spacing-1) var(--spacing-3);
+  border: var(--border-width-sm) solid var(--color-border-strong);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  color: var(--color-foreground);
+}
+
+.motion-demo__media-frame {
+  width: calc(var(--spacing-24) * 1.25);
+  aspect-ratio: var(--aspect-portrait);
+  overflow: hidden;
+  border-radius: var(--radius-md);
+}
+
+.motion-demo__media {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ─── Product tiles (scroll reveal + FLIP) ─────────────── */
+.motion-demo__tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, calc(var(--spacing-20) * 2)), 1fr));
+  gap: var(--spacing-6) var(--spacing-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.motion-demo__count {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Fly to cart ──────────────────────────────────────── */
+.motion-demo--store {
+  padding: 0;
+  overflow: hidden;
+}
+
+.motion-demo__store-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-3) var(--spacing-4);
+  border-bottom: var(--border-width-sm) solid var(--color-border);
+}
+
+.motion-demo__cart {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-hit-area);
+  height: var(--size-hit-area);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-foreground);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.motion-demo__cart:hover {
+  background: var(--color-background-subtle);
+}
+
+.motion-demo__cart:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.motion-demo__cart-count {
+  position: absolute;
+  top: var(--spacing-1);
+  right: var(--spacing-1);
+  min-width: var(--spacing-4);
+  height: var(--spacing-4);
+  padding: 0 var(--spacing-1);
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  font-size: var(--font-size-tight-2xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--spacing-4);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.motion-demo__store-body {
+  display: grid;
+  grid-template-columns: minmax(0, calc(var(--spacing-24) * 2)) minmax(0, 1fr);
+  align-items: end;
+  gap: var(--spacing-6);
+  padding: var(--spacing-6);
+}
+
+.motion-demo__store-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-4);
+}
+
+@media (min-width: 640px) {
+  .motion-demo--patterns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.motion-demo__logo {
+  display: block;
+  width: calc(var(--spacing-24) + var(--spacing-10));
+  height: auto;
+}
+
+.dark .motion-demo__logo {
+  filter: invert(1);
+}
+
+@media (max-width: 639px) {
+  .motion-demo__store-body {
+    grid-template-columns: minmax(0, 1fr);
+    padding: var(--spacing-4);
+  }
+
+  .motion-demo__store-card {
+    max-width: calc(var(--spacing-24) * 2);
+  }
+}

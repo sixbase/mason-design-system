@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useState } from 'react';
+import { forwardRef, useCallback, useState } from 'react';
 import type { HTMLAttributes } from 'react';
 import './Avatar.css';
 
@@ -25,6 +25,30 @@ export interface AvatarProps extends HTMLAttributes<HTMLSpanElement> {
   shape?: AvatarShape;
 }
 
+/** Minimal shape of Intl.Segmenter (not in the ES2020 lib typings). */
+type GraphemeSegmenter = { segment(input: string): Iterable<{ segment: string }> };
+type SegmenterCtor = new (
+  locales?: string,
+  options?: { granularity: 'grapheme' },
+) => GraphemeSegmenter;
+
+/**
+ * First user-perceived character of a word. `charAt(0)` splits emoji
+ * and other astral characters into a lone surrogate (renders as �);
+ * Intl.Segmenter keeps whole grapheme clusters (👩‍🚀, 🇯🇵, é), with a
+ * code-point fallback where Segmenter is unavailable.
+ */
+function firstGrapheme(word: string): string {
+  const Segmenter = (Intl as unknown as { Segmenter?: SegmenterCtor }).Segmenter;
+  if (Segmenter) {
+    for (const { segment } of new Segmenter(undefined, { granularity: 'grapheme' }).segment(word)) {
+      return segment;
+    }
+    return '';
+  }
+  return Array.from(word)[0] ?? '';
+}
+
 /** Derive up to 2 uppercase initials from a name. */
 function getInitials(name: string): string {
   const words = name.trim().split(/\s+/).filter(Boolean);
@@ -32,7 +56,7 @@ function getInitials(name: string): string {
   if (!first) return '';
   const last = words.length > 1 ? words[words.length - 1] : undefined;
   return (
-    first.charAt(0).toUpperCase() + (last ? last.charAt(0).toUpperCase() : '')
+    firstGrapheme(first).toUpperCase() + (last ? firstGrapheme(last).toUpperCase() : '')
   );
 }
 
@@ -67,14 +91,20 @@ export const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(function Avatar(
   { name, src, size = 'md', shape = 'circle', className, ...props },
   ref,
 ) {
-  const [failed, setFailed] = useState(false);
+  // Failure is tracked per src, so a new src gets a fresh attempt on
+  // its very first render (no effect-driven reset, no initials flash).
+  const [failedSrc, setFailedSrc] = useState<string>();
+  const showImage = Boolean(src) && failedSrc !== src;
 
-  // A new src deserves a fresh attempt.
-  useEffect(() => {
-    setFailed(false);
-  }, [src]);
-
-  const showImage = Boolean(src) && !failed;
+  // SSR: a server-rendered <img> can fail before React hydrates and
+  // attaches onError, leaving a broken-image glyph forever. On mount,
+  // an image that is already complete with no pixels has failed.
+  const imageRef = useCallback(
+    (img: HTMLImageElement | null) => {
+      if (img && img.complete && img.naturalWidth === 0) setFailedSrc(src);
+    },
+    [src],
+  );
 
   const classes = [
     'ds-avatar',
@@ -95,10 +125,11 @@ export const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(function Avatar(
     >
       {showImage ? (
         <img
+          ref={imageRef}
           className="ds-avatar__image"
           src={src}
           alt={name}
-          onError={() => setFailed(true)}
+          onError={() => setFailedSrc(src)}
         />
       ) : (
         <span className="ds-avatar__initials" aria-hidden="true">

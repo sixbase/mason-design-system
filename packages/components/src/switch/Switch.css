@@ -7,8 +7,14 @@
 }
 
 .ds-switch-root--disabled {
-  opacity: var(--opacity-medium);
   cursor: not-allowed;
+}
+
+/* Disabled fades the control and its label, not the hint: a hint often says
+   how to enable it ("Add a phone number to enable"), and at 0.382 opacity it
+   fell to 1.75:1. Same as Input, Select and Textarea, which fade only the field. */
+.ds-switch-root--disabled .ds-switch-field {
+  opacity: var(--opacity-medium);
 }
 
 /* ─── Field row (track + label side-by-side) ─────────────── */
@@ -16,6 +22,7 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-2);
+  min-width: 0;
 }
 
 /* ─── Track ──────────────────────────────────────────────── */
@@ -24,7 +31,12 @@
   --switch-track-height:  var(--spacing-phi-13);
   --switch-track-width:   var(--spacing-phi-21);
   --switch-track-padding: var(--spacing-phi-1);
-  --switch-bg:            var(--color-border-strong);
+  /* State rules below only swap these knobs — background-color and
+     box-shadow are declared once, so forced-colors can repaint them. */
+  --switch-bg:            var(--color-border-control);
+  --switch-edge:          0 0 0 0 transparent;
+  /* Thumb travel direction: flipped in RTL so "on" sits at the start. */
+  --switch-direction:     1;
 
   position: relative;
   flex-shrink: 0;
@@ -32,6 +44,7 @@
   height: var(--switch-track-height);
   padding: 0;
   background-color: var(--switch-bg);
+  box-shadow: var(--switch-edge);
   border: none;
   border-radius: var(--radius-full);
   outline: none;
@@ -42,26 +55,55 @@
     transform var(--transition-fast);
 }
 
+.ds-switch-track:dir(rtl) {
+  --switch-direction: -1;
+}
+
 /* Sizes */
 .ds-switch-track--sm {
   --switch-track-height: var(--spacing-phi-8);
   --switch-track-width:  var(--spacing-phi-13);
 }
 
-/* 44px hit area — invisible, centered on the track */
+/* ─── Hit area ───────────────────────────────────────────── */
+/* Same split as Checkbox. Every pointer gets at least the WCAG 2.5.8 (AA)
+   24px target, invisible and centered on the track: md (42×26) already
+   exceeds it, sm (26×16) grows 4px above and below. It used to be 44px
+   for every pointer, reaching 9–14px past the track, so switches stacked
+   less than that apart (a settings list without hints) overlapped and a
+   click near the edge flipped the neighbour. --spacing-6 = 24px, as in
+   Checkbox (token gap: no --size-target-min). */
 .ds-switch-track::after {
   content: '';
   position: absolute;
   top: 50%;
   left: 50%;
-  width: max(100%, var(--size-hit-area));
-  height: max(100%, var(--size-hit-area));
+  width: max(100%, var(--spacing-6));
+  height: max(100%, var(--spacing-6));
   transform: translate(-50%, -50%);
 }
 
-/* Hover */
-.ds-switch-track:hover:not([data-disabled]) {
-  background-color: var(--color-foreground-subtle);
+/* Touch: --size-hit-area (44px). The switch row grows to real 44px height
+   (like SegmentedControl) so the zone stays inside the switch's own box —
+   however tightly a page stacks switches, neighbours can't overlap. */
+@media (pointer: coarse) {
+  .ds-switch-track::after {
+    width: max(100%, var(--size-hit-area));
+    height: max(100%, var(--size-hit-area));
+  }
+
+  .ds-switch-field {
+    min-height: var(--size-hit-area);
+  }
+}
+
+/* Hover — only where a real pointer hovers: touch screens (iOS Safari)
+   keep :hover after a tap, so a switch just turned off kept a darker track
+   — half-way to the dark 'on' fill. */
+@media (hover: hover) {
+  .ds-switch-track:hover:not([data-disabled]) {
+    --switch-bg: var(--color-foreground-subtle);
+  }
 }
 
 /* Active (pressed) */
@@ -71,41 +113,51 @@
 
 /* Focus */
 .ds-switch-track:focus-visible {
-  box-shadow: var(--focus-ring);
+  box-shadow: var(--switch-edge), var(--focus-ring);
+  /* Invisible normally; the focus indicator in forced-colors mode below. */
+  outline: var(--border-width-lg) solid transparent;
+  outline-offset: var(--border-width-lg);
 }
 
 /* Checked */
 .ds-switch-track[data-state="checked"] {
-  background-color: var(--color-primary);
+  --switch-bg: var(--color-primary);
 }
 
-.ds-switch-track[data-state="checked"]:hover:not([data-disabled]) {
-  background-color: var(--color-primary-hover);
+@media (hover: hover) {
+  .ds-switch-track[data-state="checked"]:hover:not([data-disabled]) {
+    --switch-bg: var(--color-primary-hover);
+  }
 }
 
 .ds-switch-track[data-state="checked"]:active:not([data-disabled]) {
-  background-color: var(--color-primary-active);
+  --switch-bg: var(--color-primary-active);
 }
 
-/* Error state */
+/* Error state. Unchecked keeps the normal track and gains a destructive
+   edge. (It used to fill with --color-destructive-subtle, a near-white
+   tint: track and white thumb both vanished against the page, so the
+   error state made the control disappear.) Checked fills destructive. */
 .ds-switch-track--error {
-  background-color: var(--color-destructive-subtle);
+  --switch-edge: inset 0 0 0 var(--border-width-md) var(--color-destructive);
 }
 
 .ds-switch-track--error[data-state="checked"] {
-  background-color: var(--color-destructive);
+  --switch-bg: var(--color-destructive);
 }
 
-.ds-switch-track--error:hover:not([data-disabled]) {
-  background-color: var(--color-destructive-subtle);
+@media (hover: hover) {
+  .ds-switch-track--error[data-state="checked"]:hover:not([data-disabled]) {
+    --switch-bg: var(--color-destructive-hover);
+  }
 }
 
-.ds-switch-track--error[data-state="checked"]:hover:not([data-disabled]) {
-  background-color: var(--color-destructive-hover);
+.ds-switch-track--error[data-state="checked"]:active:not([data-disabled]) {
+  --switch-bg: var(--color-destructive-active);
 }
 
 .ds-switch-track--error:focus-visible {
-  box-shadow: var(--focus-ring-error);
+  box-shadow: var(--switch-edge), var(--focus-ring-error);
 }
 
 /* Disabled */
@@ -120,14 +172,18 @@
   height: calc(var(--switch-track-height) - var(--switch-track-padding) * 2);
   background-color: var(--color-background-surface);
   border-radius: var(--radius-full);
-  transform: translateX(var(--switch-track-padding));
-  transition: transform var(--transition-fast);
+  transform: translateX(calc(var(--switch-track-padding) * var(--switch-direction)));
+  /* A small overshoot as the thumb lands — spring is for ≤44px UI like this */
+  transition: transform var(--transition-duration-slow) var(--transition-easing-spring);
   will-change: transform;
 }
 
 .ds-switch-thumb[data-state="checked"] {
   transform: translateX(
-    calc(var(--switch-track-width) - var(--switch-track-height) + var(--switch-track-padding))
+    calc(
+      (var(--switch-track-width) - var(--switch-track-height) + var(--switch-track-padding)) *
+        var(--switch-direction)
+    )
   );
 }
 
@@ -141,12 +197,45 @@
   }
 }
 
+/* ─── Forced colors (Windows High Contrast) ──────────────── */
+/* Forced colors repaint backgrounds to the canvas colour and drop
+   box-shadow. The track has no border, so track and thumb both vanished.
+   Opt out and paint with system colours: outlined track, solid thumb,
+   highlight fill when on. */
+@media (forced-colors: active) {
+  .ds-switch-track {
+    forced-color-adjust: none;
+    background-color: Canvas;
+    box-shadow: inset 0 0 0 var(--border-width-sm) CanvasText;
+  }
+
+  .ds-switch-track[data-state="checked"] {
+    background-color: Highlight;
+    box-shadow: none;
+  }
+
+  .ds-switch-thumb {
+    background-color: CanvasText;
+  }
+
+  .ds-switch-thumb[data-state="checked"] {
+    background-color: HighlightText;
+  }
+
+  .ds-switch-track:focus-visible {
+    outline-color: CanvasText;
+  }
+}
+
 /* ─── Label ──────────────────────────────────────────────── */
 .ds-switch-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-size: var(--font-size-sm);
   color: var(--color-foreground);
   line-height: var(--line-height-snug);
   cursor: pointer;
+  -webkit-user-select: none; /* Safari ignores the unprefixed property */
   user-select: none;
   text-box-trim: both;
   text-box-edge: cap alphabetic;
@@ -168,17 +257,30 @@
   font-size: var(--font-size-xs);
   color: var(--color-foreground-secondary);
   line-height: var(--line-height-normal);
-  padding-left: calc(var(--spacing-phi-21) + var(--spacing-2));
+  padding-inline-start: calc(var(--spacing-phi-21) + var(--spacing-2));
+  overflow-wrap: anywhere;
 }
 
 .ds-switch-error {
   font-size: var(--font-size-xs);
   color: var(--color-destructive);
   line-height: var(--line-height-normal);
-  padding-left: calc(var(--spacing-phi-21) + var(--spacing-2));
+  padding-inline-start: calc(var(--spacing-phi-21) + var(--spacing-2));
+  overflow-wrap: anywhere;
 }
 
 .ds-switch-root--sm .ds-switch-hint,
 .ds-switch-root--sm .ds-switch-error {
-  padding-left: calc(var(--spacing-phi-13) + var(--spacing-2));
+  padding-inline-start: calc(var(--spacing-phi-13) + var(--spacing-2));
+}
+
+/* ─── Print ─────────────────────────────────────────────── */
+/* The track and thumb are fills: the switch printed as bare text, on/off unknowable. Browsers drop backgrounds when printing by default ("economy"), so
+   the state vanished on paper; exact keeps these fills. (-webkit- for
+   Safari < 15.4 and Chrome < 136, which only read the prefixed form.) */
+@media print {
+  .ds-switch-root {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }

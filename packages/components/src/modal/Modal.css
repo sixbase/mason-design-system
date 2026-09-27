@@ -4,11 +4,11 @@
   inset: 0;
   background-color: var(--color-overlay);
   z-index: var(--z-index-modal);
-  animation: ds-modal-overlay-in var(--transition-normal) forwards;
+  animation: ds-modal-overlay-in var(--transition-duration-slow) var(--transition-easing-default) forwards;
 }
 
 .ds-modal__overlay[data-state='closed'] {
-  animation: ds-modal-overlay-out var(--transition-normal) forwards;
+  animation: ds-modal-overlay-out var(--transition-duration-normal) var(--transition-easing-emphasized-in) forwards;
 }
 
 @keyframes ds-modal-overlay-in {
@@ -23,6 +23,14 @@
 
 /* ─── Content panel ───────────────────────────────────────── */
 .ds-modal__content {
+  /* Room the header reserves on its right so a long title never runs
+     under the absolutely positioned close button (inset + size + gap). */
+  --modal-close-clearance: calc(var(--spacing-4) + var(--size-control-sm) + var(--spacing-2));
+  /* Arrive on the long emphasized landing; leave quickly, accelerating —
+     an exit one step shorter than its enter (see 03-tokens → Easing). */
+  --modal-enter: var(--transition-duration-slow) var(--transition-easing-emphasized);
+  --modal-exit: var(--transition-duration-normal) var(--transition-easing-emphasized-in);
+
   position: fixed;
   top: 50%;
   left: 50%;
@@ -31,20 +39,28 @@
   font-family: var(--font-family-body);
 
   background-color: var(--color-background-surface);
-  border: 1px solid var(--color-border);
+  border: var(--border-width-sm) solid var(--color-border);
   border-radius: var(--radius-xl);
   box-shadow: var(--elevation-modal);
 
   width: calc(100% - var(--spacing-8));
   max-height: calc(100vh - var(--spacing-16));
   max-height: calc(100dvh - var(--spacing-16)); /* iOS Safari: track the dynamic toolbar */
+
+  /* Header and footer stay pinned; only ModalBody scrolls. When the whole
+     panel scrolled, the absolutely positioned close button and the footer
+     actions scrolled out of view on long content (and on landscape phones,
+     where the panel is ~300px tall). The panel keeps overflow-y as a
+     fallback for content composed without a ModalBody. */
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
 
-  animation: ds-modal-content-in var(--transition-normal) forwards;
+  animation: ds-modal-content-in var(--modal-enter) forwards;
 }
 
 .ds-modal__content[data-state='closed'] {
-  animation: ds-modal-content-out var(--transition-fast) forwards;
+  animation: ds-modal-content-out var(--modal-exit) forwards;
 }
 
 .ds-modal__content:focus-visible {
@@ -54,7 +70,7 @@
 @keyframes ds-modal-content-in {
   from {
     opacity: 0;
-    transform: translate(-50%, -48%) scale(0.96);
+    transform: translate(-50%, calc(-50% + var(--motion-distance-sm))) scale(var(--scale-enter));
   }
   to {
     opacity: 1;
@@ -69,7 +85,21 @@
   }
   to {
     opacity: 0;
-    transform: translate(-50%, -48%) scale(0.96);
+    transform: translate(-50%, calc(-50% + var(--motion-distance-sm))) scale(var(--scale-enter));
+  }
+}
+
+@keyframes ds-modal-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--motion-distance-lg));
+  }
+}
+
+@keyframes ds-modal-sheet-out {
+  to {
+    opacity: 0;
+    transform: translateY(var(--motion-distance-lg));
   }
 }
 
@@ -92,19 +122,32 @@
     border: none;
     border-radius: 0;
 
-    /* Centered scale animation doesn't apply to an inset-0 sheet — fade instead */
-    animation: ds-modal-overlay-in var(--transition-normal) forwards;
+    /* Centered scale animation doesn't apply to an inset-0 sheet — it
+       rises into place instead, and sinks away on close */
+    animation: ds-modal-sheet-in var(--modal-enter) forwards;
   }
 
   .ds-modal__content--full-screen-mobile[data-state='closed'] {
-    animation: ds-modal-overlay-out var(--transition-fast) forwards;
+    animation: ds-modal-sheet-out var(--modal-exit) forwards;
   }
 
   /* Section padding respects device safe areas (notch, home indicator) */
   .ds-modal__content--full-screen-mobile .ds-modal__header {
     padding-top: max(var(--spacing-6), var(--safe-area-top));
-    padding-left: max(var(--spacing-6), var(--safe-area-left));
-    padding-right: max(var(--spacing-6), var(--safe-area-right));
+    padding-inline-start: max(var(--spacing-6), var(--safe-area-left));
+    /* Clear the close button, which itself moves in by the safe area */
+    padding-inline-end: calc(
+      max(var(--spacing-4), var(--safe-area-right)) + var(--size-control-sm) + var(--spacing-2)
+    );
+  }
+
+  /* RTL: the close button sits on the left, so the clearance and the
+     button's inset follow the left safe area (safe areas are physical). */
+  .ds-modal__content--full-screen-mobile .ds-modal__header:dir(rtl) {
+    padding-inline-start: max(var(--spacing-6), var(--safe-area-right));
+    padding-inline-end: calc(
+      max(var(--spacing-4), var(--safe-area-left)) + var(--size-control-sm) + var(--spacing-2)
+    );
   }
 
   .ds-modal__content--full-screen-mobile .ds-modal__body {
@@ -120,7 +163,11 @@
 
   .ds-modal__content--full-screen-mobile .ds-modal__close {
     top: max(var(--spacing-4), var(--safe-area-top));
-    right: max(var(--spacing-4), var(--safe-area-right));
+    inset-inline-end: max(var(--spacing-4), var(--safe-area-right));
+  }
+
+  .ds-modal__content--full-screen-mobile .ds-modal__close:dir(rtl) {
+    inset-inline-end: max(var(--spacing-4), var(--safe-area-left));
   }
 }
 
@@ -128,7 +175,9 @@
 .ds-modal__close {
   position: absolute;
   top: var(--spacing-4);
-  right: var(--spacing-4);
+  /* Inline end: top-right in LTR, top-left in RTL — it sat on top of the
+     right-aligned RTL title. */
+  inset-inline-end: var(--spacing-4);
 
   display: inline-flex;
   align-items: center;
@@ -160,9 +209,11 @@
   transform: translate(-50%, -50%);
 }
 
-.ds-modal__close:hover {
-  background-color: var(--color-secondary);
-  color: var(--color-foreground);
+@media (hover: hover) {
+  .ds-modal__close:hover {
+    background-color: var(--color-secondary);
+    color: var(--color-foreground);
+  }
 }
 
 .ds-modal__close:active {
@@ -171,21 +222,62 @@
 }
 
 .ds-modal__close:focus-visible {
-  outline: none;
+  outline: var(--border-width-lg) solid transparent; /* painted in forced-colors mode, where box-shadow rings vanish */
   box-shadow: var(--focus-ring);
 }
 
 /* ─── Sections ────────────────────────────────────────────── */
 .ds-modal__header {
-  padding: var(--spacing-6) var(--spacing-6) var(--spacing-3);
+  flex-shrink: 0;
+  /* Logical: the close-button clearance belongs on the inline end, which
+     is the left in RTL (the close button moves there too). */
+  padding-block: var(--spacing-6) var(--spacing-3);
+  padding-inline: var(--spacing-6) var(--modal-close-clearance);
 }
 
 .ds-modal__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: var(--spacing-3) var(--spacing-6);
+
+  /* CSS-only scroll edges, same technique as the Table wrapper and Tabs
+     list: the surface-colored covers scroll with the content (local) and
+     slide over fixed border-colored shades, so an edge only shows when
+     there is more content that way. On short screens (landscape phones)
+     the body used to end mid-line against the footer with no hint that
+     it scrolls. */
+  background:
+    linear-gradient(var(--color-background-surface) 30%, transparent),
+    linear-gradient(transparent, var(--color-background-surface) 70%),
+    linear-gradient(var(--color-border), transparent),
+    linear-gradient(transparent, var(--color-border));
+  /* Shades start 1px in: the body's height is fractional, and a shade
+     flush with the edge peeked past the covers as a hairline even when
+     nothing scrolled. */
+  background-position:
+    top, bottom,
+    left 0 top var(--border-width-sm), left 0 bottom var(--border-width-sm);
+  background-repeat: no-repeat;
+  background-size:
+    100% var(--spacing-10), 100% var(--spacing-10),
+    100% var(--spacing-3), 100% var(--spacing-3);
+  background-attachment: local, local, scroll, scroll;
+}
+
+/* A body that overflows is a tab stop (ModalBody) so keyboard users can
+   scroll it. Inset outline, not the inset box-shadow token: the shadow
+   paints beneath the text and the scroll-edge covers. */
+.ds-modal__body:focus-visible {
+  outline: var(--border-width-lg) solid var(--color-focus-ring);
+  outline-offset: calc(var(--border-width-lg) * -1);
 }
 
 .ds-modal__footer {
+  flex-shrink: 0;
   display: flex;
+  flex-wrap: wrap; /* two long labels at 320px wrap instead of overflowing */
   justify-content: flex-end;
   gap: var(--spacing-3);
   padding: var(--spacing-3) var(--spacing-6) var(--spacing-6);
@@ -198,6 +290,9 @@
   line-height: var(--line-height-tight);
   color: var(--color-foreground);
   margin: 0;
+  /* Unbroken strings (order numbers, emails) wrap instead of forcing a
+     horizontal scrollbar on the panel */
+  overflow-wrap: anywhere;
 }
 
 /* ─── Description ─────────────────────────────────────────── */
@@ -206,6 +301,7 @@
   line-height: var(--line-height-normal);
   color: var(--color-foreground-secondary);
   margin: var(--spacing-1) 0 0;
+  overflow-wrap: anywhere;
 }
 
 /* ─── Optical centering fallback ─────────────────────────── */

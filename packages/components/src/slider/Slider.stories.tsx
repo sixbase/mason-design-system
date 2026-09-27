@@ -6,6 +6,14 @@ const meta: Meta<typeof Slider> = {
   title: 'Components/Slider',
   component: Slider,
   tags: ['autodocs'],
+  parameters: {
+    docs: {
+      description: {
+        component:
+          'A handle you drag along a track to pick a number or a range, like a price range.',
+      },
+    },
+  },
   argTypes: {
     disabled: { control: 'boolean' },
     showValue: { control: 'boolean' },
@@ -16,11 +24,19 @@ export default meta;
 type Story = StoryObj<typeof Slider>;
 
 export const Default: Story = {
-  args: { label: 'Volume', defaultValue: [60] },
+  args: { label: 'Gift card amount', min: 25, max: 200, step: 5, defaultValue: [50] },
 };
 
 export const WithValue: Story = {
-  args: { label: 'Brightness', defaultValue: [45], showValue: true },
+  args: {
+    label: 'Gift card amount',
+    min: 25,
+    max: 200,
+    step: 5,
+    defaultValue: [50],
+    formatValue: (v: number) => `$${v}`,
+    showValue: true,
+  },
 };
 
 export const Range: Story = {
@@ -35,8 +51,9 @@ export const Range: Story = {
 };
 
 export const Stepped: Story = {
+  name: 'Moves in steps of 5',
   args: {
-    label: 'Quantity',
+    label: 'Bulk order (mugs)',
     min: 0,
     max: 50,
     step: 5,
@@ -46,7 +63,7 @@ export const Stepped: Story = {
 };
 
 export const Disabled: Story = {
-  args: { label: 'Unavailable', defaultValue: [40], disabled: true },
+  args: { label: 'Gift card amount', min: 25, max: 200, defaultValue: [50], disabled: true },
 };
 
 export const DisabledRange: Story = {
@@ -60,10 +77,11 @@ export const DisabledRange: Story = {
 };
 
 export const PriceFilter: Story = {
+  name: 'Price filter in a narrow sidebar',
   render: function PriceFilterStory() {
     const [range, setRange] = useState([25, 80]);
     return (
-      <div style={{ width: '280px' }}>
+      <div style={{ width: '100%', maxWidth: 'var(--spacing-phi-89)' }}>
         <Slider
           label="Price"
           min={0}

@@ -17,6 +17,7 @@
   font-weight: var(--font-weight-medium);
   letter-spacing: var(--letter-spacing-wide);
   line-height: var(--line-height-none);
+  -webkit-user-select: none; /* Safari ignores the unprefixed property */
   user-select: none;
 }
 
@@ -99,14 +100,21 @@
   --avatar-fallback-fg: var(--color-warning-foreground);
 }
 
-/* brick.600 on brick.50 → 6.08:1 ✅ AA */
+/* brick.600 on brick.50 → 6.08:1 ✅ AA (light);
+   brick.400 on its 12% tint → 4.57:1 ✅ AA (dark, token-level since 2026-09-25) */
 .ds-avatar--tone-4 {
   --avatar-fallback-bg: var(--color-destructive-subtle);
   --avatar-fallback-fg: var(--color-destructive);
 }
 
-/* Dark mode: brick.500 fails on the 12% mix — lift to brick.400
-   (5.63:1 ✅ AA), same correction the Badge destructive variant uses. */
-:is(.dark, [data-theme="dark"]) .ds-avatar--tone-4 {
-  --avatar-fallback-fg: var(--color-destructive-hover);
+/* ─── Forced colors ──────────────────────────────────────── */
+/* The fallback disc is background-only; forced colors drops it and the
+   initials float with no avatar shape. An inset system-colour outline
+   restores the edge without changing the size. */
+@media (forced-colors: active) {
+  .ds-avatar {
+    outline: var(--border-width-sm) solid CanvasText;
+    outline-offset: calc(-1 * var(--border-width-sm));
+  }
 }
+

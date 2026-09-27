@@ -5,6 +5,14 @@ const meta: Meta<typeof Spinner> = {
   title: 'Components/Spinner',
   component: Spinner,
   tags: ['autodocs'],
+  parameters: {
+    docs: {
+      description: {
+        component:
+          'A small spinning circle that says something is loading.',
+      },
+    },
+  },
   argTypes: {
     size: { control: 'select', options: ['sm', 'md', 'lg'] },
   },
@@ -44,6 +52,7 @@ export const AllSizes: Story = {
 };
 
 export const EcommerceContext: Story = {
+  name: 'In the store (with visible labels)',
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}>
       <Spinner size="sm" label="Checking availability" showLabel />

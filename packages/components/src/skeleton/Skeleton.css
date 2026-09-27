@@ -1,35 +1,62 @@
 /* ─── Skeleton component tokens ─────────────────────────── */
 .ds-skeleton {
-  --skeleton-color: var(--color-background-subtle);
-  --skeleton-highlight: var(--color-background-surface);
+  /* Light: the old pair (subtle base, white highlight) swept a band that
+     was LIGHTER than the stone.50 page, so shapes lost their edges mid-
+     shimmer (a circle looked half-cut). Base one step darker, highlight
+     back to subtle — the sweep now stays darker than the page. */
+  --skeleton-color: var(--color-secondary);
+  --skeleton-highlight: var(--color-background-subtle);
   --skeleton-radius: var(--radius-sm);
-  --skeleton-duration: 1.5s;
+  /* Ambient loop: 686ms (--transition-duration-slowest) × φ² ≈ 1.8s, the
+     same calm rhythm as StockIndicator's pulse. Was a raw 1.5s — no token
+     reaches ambient lengths yet (see 03-tokens.md, "No ambient durations"). */
+  --skeleton-duration: calc(var(--transition-duration-slowest) * 1.618 * 1.618);
 }
 
 /* ─── Shimmer keyframes ─────────────────────────────────── */
+/* The sweep moves by transform, so it runs on the compositor. It used to
+   animate background-position, which repaints every skeleton on the main
+   thread every frame for as long as a page is loading — the moment the
+   main thread is busiest. Measured on a 12-card grid at 4× CPU slowdown:
+   16ms/s of style + paint work → 1.6ms/s.
+   Same travel as before: background-position −200% → 200% on a 200%-wide
+   image moves it from +2 to −2 skeleton widths, which is translateX(100%)
+   → translateX(−100%) of the 200%-wide band. */
 @keyframes ds-skeleton-shimmer {
-  0% {
-    background-position: -200% 0;
+  from {
+    transform: translateX(100%);
   }
-  100% {
-    background-position: 200% 0;
+  to {
+    transform: translateX(-100%);
   }
 }
 
 /* ─── Base styles ───────────────────────────────────────── */
 .ds-skeleton {
   display: block;
+  /* Clip the sweep to the shape and its rounded corners. `isolation`
+     makes older WebKit clip a composited child to the radius too. */
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
   background-color: var(--skeleton-color);
+  border-radius: var(--skeleton-radius);
+}
+
+.ds-skeleton::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 200%;
   background-image: linear-gradient(
     90deg,
     var(--skeleton-color) 0%,
     var(--skeleton-highlight) 40%,
     var(--skeleton-color) 80%
   );
-  background-size: 200% 100%;
-  background-repeat: no-repeat;
   animation: ds-skeleton-shimmer var(--skeleton-duration) var(--transition-easing-in-out) infinite;
-  border-radius: var(--skeleton-radius);
 }
 
 /* ─── Variant: text ─────────────────────────────────────── */
@@ -63,21 +90,40 @@
   width: 100%;
 }
 
-/* ─── Dark mode: surface = subtle, so override highlight ── */
+/* ─── Dark mode: keeps its own pair (secondary = border here,
+   which would leave no sweep) ─────────────────────────────── */
 :is(.dark, [data-theme="dark"]) .ds-skeleton {
+  --skeleton-color: var(--color-background-subtle);
   --skeleton-highlight: var(--color-border);
 }
 
 /* ─── Static (no animation) ─────────────────────────────── */
-.ds-skeleton--static {
-  animation: none;
-  background-image: none;
+.ds-skeleton--static::after {
+  content: none;
 }
 
 /* ─── Reduced motion ────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
+  .ds-skeleton::after {
+    content: none;
+  }
+}
+
+/* Same when the page switches motion off (<html data-motion="off">). The
+   global reset only ends the sweep instantly, which left the band parked
+   at translateX(0) — a light stripe frozen across every skeleton. */
+:root[data-motion="off"] .ds-skeleton::after {
+  content: none;
+}
+
+/* ─── Forced colors ─────────────────────────────────────── */
+/* Skeletons are pure background (fill + gradient), both dropped by forced
+   colors — loading layouts rendered as blank page. An inset outline in
+   GrayText (the system "not real content" colour) keeps the shapes
+   without changing their size. */
+@media (forced-colors: active) {
   .ds-skeleton {
-    animation: none;
-    background-image: none;
+    outline: var(--border-width-sm) solid GrayText;
+    outline-offset: calc(-1 * var(--border-width-sm));
   }
 }

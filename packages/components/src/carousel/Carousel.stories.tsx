@@ -1,11 +1,20 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { Text } from '../typography/Typography';
+import { ProductCard } from '../product-card/ProductCard';
+import { PRODUCTS } from '../story-fixtures';
 import { Carousel, CarouselSlide } from './Carousel';
 
 const meta: Meta<typeof Carousel> = {
   title: 'Components/Carousel',
   component: Carousel,
   tags: ['autodocs'],
+  parameters: {
+    docs: {
+      description: {
+        component:
+          'A row of items you swipe or scroll sideways through — product rows on the home page.',
+      },
+    },
+  },
   argTypes: {
     gap: { control: 'select', options: ['sm', 'md', 'lg'] },
     label: { control: 'text' },
@@ -18,26 +27,14 @@ export default meta;
 
 type Story = StoryObj<typeof Carousel>;
 
-/* ─── Placeholder product imagery ──────────────────────────────── */
+/* ─── Sample products (the shared story catalogue) ─────────────── */
+const products = Object.values(PRODUCTS).slice(0, 6);
 
-const placeholder = (label: string, bg: string, fg: string) =>
-  `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="500" viewBox="0 0 400 500"><rect width="400" height="500" fill="%23${bg}"/><text x="200" y="250" text-anchor="middle" fill="%23${fg}" font-size="20">${encodeURIComponent(label)}</text></svg>`;
-
-const products = [
-  { name: 'No. 8 Cast Iron Skillet', price: '$48.00', src: placeholder('Skillet', 'E3DED6', '847D73') },
-  { name: 'Walnut End-Grain Cutting Board', price: '$86.00', src: placeholder('Cutting board', 'C8C2B8', '675F56') },
-  { name: 'Enameled Dutch Oven, 5.5 qt', price: '$120.00', src: placeholder('Dutch oven', 'A59E94', '342F2A') },
-  { name: 'Forged Carbon Steel Chef Knife', price: '$95.00', src: placeholder('Chef knife', '847D73', 'FAF9F7') },
-  { name: 'Brass Cabinet Pull, Satin', price: '$14.00', src: placeholder('Cabinet pull', 'E3DED6', '675F56') },
-  { name: 'Copper Measuring Cups, Set of 4', price: '$52.00', src: placeholder('Measuring cups', 'C8C2B8', '342F2A') },
-];
-
-const ProductSlideContent = ({ name, price, src }: (typeof products)[number]) => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)' }}>
-    <img src={src} alt={name} style={{ width: '100%', borderRadius: 'var(--radius-md)' }} />
-    <Text size="sm">{name}</Text>
-    <Text size="sm" muted>{price}</Text>
-  </div>
+/* Slides compose the real ProductCard (fluid, so the slide owns the width)
+   rather than a hand-rolled image + name + price, so the carousel demos show
+   the same corners, insets and price typography as the store. */
+const ProductSlideContent = ({ name, price, image, imageAlt }: (typeof products)[number]) => (
+  <ProductCard fluid name={name} price={price} image={image} imageAlt={imageAlt} />
 );
 
 /* ─── Stories ──────────────────────────────────────────────────── */
@@ -55,6 +52,7 @@ export const Default: Story = {
 };
 
 export const WithControls: Story = {
+  name: 'With arrows',
   render: () => (
     <Carousel controls label="Featured products">
       {products.map((product) => (
@@ -67,6 +65,7 @@ export const WithControls: Story = {
 };
 
 export const WithIndicators: Story = {
+  name: 'With dots',
   render: () => (
     <Carousel indicators label="Featured products">
       {products.map((product) => (
@@ -79,6 +78,7 @@ export const WithIndicators: Story = {
 };
 
 export const ControlsAndIndicatorsLooping: Story = {
+  name: 'Arrows and dots, wrapping round at the end',
   render: () => (
     <Carousel controls indicators loop label="Featured products">
       {products.map((product) => (
@@ -116,7 +116,7 @@ export const LargeSlides: Story = {
 
 export const SmallGap: Story = {
   render: () => (
-    <Carousel gap="sm" aria-label="Kitchen essentials">
+    <Carousel gap="sm" aria-label="Everyday essentials">
       {products.map((product) => (
         <CarouselSlide key={product.name}>
           <ProductSlideContent {...product} />
@@ -128,7 +128,7 @@ export const SmallGap: Story = {
 
 export const LargeGap: Story = {
   render: () => (
-    <Carousel gap="lg" aria-label="Workshop picks">
+    <Carousel gap="lg" aria-label="Staff picks">
       {products.map((product) => (
         <CarouselSlide key={product.name}>
           <ProductSlideContent {...product} />

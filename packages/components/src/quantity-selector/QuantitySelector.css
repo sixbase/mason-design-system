@@ -1,11 +1,15 @@
 /* ─── QuantitySelector ───────────────────────────────────── */
 .ds-quantity-selector {
+  --quantity-selector-radius: var(--radius-md);
+
   display: inline-flex;
   align-items: center;
   width: fit-content;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  overflow: hidden;
+  border: var(--border-width-sm) solid var(--color-border-control);
+  border-radius: var(--quantity-selector-radius);
+  /* No overflow: hidden — it clipped the buttons' 44px touch hit areas
+     (below) to the 34/42px frame, so they never grew. The buttons round
+     their own outer corners instead. */
   background-color: var(--color-background-surface);
   transition:
     border-color var(--transition-fast),
@@ -13,11 +17,15 @@
 }
 
 /* Keyboard focus on the editable value lights up the whole control —
-   the input sits inside an overflow-hidden frame, so a ring on the
-   input itself would be clipped. */
+   a ring on the input alone would sit between the two buttons. */
 .ds-quantity-selector:has(.ds-quantity-selector__value:focus-visible) {
   border-color: var(--color-primary);
   box-shadow: var(--focus-ring);
+  /* Invisible normally. Forced-colors mode (Windows High Contrast) drops
+     box-shadow and repaints outlines in a system color, so this becomes
+     the focus indicator there instead of nothing. */
+  outline: var(--border-width-lg) solid transparent;
+  outline-offset: var(--border-width-lg);
 }
 
 .ds-quantity-selector--disabled {
@@ -39,8 +47,28 @@
   transition: background-color var(--transition-fast);
 }
 
-.ds-quantity-selector__btn:hover:not(:disabled) {
-  background-color: var(--color-background-subtle);
+/* Outer corners follow the frame (inner radius = outer − border), so the
+   hover fill never pokes past the rounded edge. Logical corners: correct
+   in RTL too. */
+.ds-quantity-selector__btn:first-child {
+  border-start-start-radius: calc(var(--quantity-selector-radius) - var(--border-width-sm));
+  border-end-start-radius: calc(var(--quantity-selector-radius) - var(--border-width-sm));
+}
+
+.ds-quantity-selector__btn:last-child {
+  border-start-end-radius: calc(var(--quantity-selector-radius) - var(--border-width-sm));
+  border-end-end-radius: calc(var(--quantity-selector-radius) - var(--border-width-sm));
+}
+
+/* Only where a real pointer hovers: touch screens (iOS Safari) keep :hover
+   after a tap, so a tapped + or − stayed shaded as if held down. */
+@media (hover: hover) {
+  /* --color-secondary, the ghost-button hover (Button ghost, Modal/Drawer
+     close, carousel arrows). background-subtle was 1.1:1 on the white
+     frame and identical to the surface in dark mode — no hover at all. */
+  .ds-quantity-selector__btn:hover:not(:disabled) {
+    background-color: var(--color-secondary);
+  }
 }
 
 .ds-quantity-selector__btn:disabled {
@@ -58,10 +86,21 @@
     content: '';
     position: absolute;
     top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translateY(-50%);
     width: max(100%, var(--size-hit-area));
     height: max(100%, var(--size-hit-area));
+  }
+
+  /* Grow outward only. Centred, the 44px zones reached 5px (sm) into the
+     value field from both sides: a tap on the right of "1" pressed "+"
+     (measured on every CartLineItem). Anchor each zone at the button's
+     inner edge (logical, so RTL mirrors). */
+  .ds-quantity-selector__btn:first-child::after {
+    inset-inline-end: 0;
+  }
+
+  .ds-quantity-selector__btn:last-child::after {
+    inset-inline-start: 0;
   }
 }
 
@@ -73,8 +112,8 @@
   color: var(--color-foreground);
   background: transparent;
   border: none;
-  border-left: 1px solid var(--color-border);
-  border-right: 1px solid var(--color-border);
+  border-left: var(--border-width-sm) solid var(--color-border);
+  border-right: var(--border-width-sm) solid var(--color-border);
   border-radius: 0;
   padding: 0;
   outline: none;
@@ -90,36 +129,48 @@
 }
 
 /* ─── Size variants ──────────────────────────────────────── */
+/* The frame's 1px border sits outside the buttons, so the parts are one
+   border shorter on each side — the whole control then measures exactly
+   --size-control-* (34/42/55), level with a Button or Input beside it.
+   It used to be 36/44/57. */
+.ds-quantity-selector {
+  --quantity-selector-inner: calc(var(--quantity-selector-size) - 2 * var(--border-width-sm));
+}
+
+.ds-quantity-selector--sm { --quantity-selector-size: var(--size-control-sm); }
+.ds-quantity-selector--md { --quantity-selector-size: var(--size-control-md); }
+.ds-quantity-selector--lg { --quantity-selector-size: var(--size-control-lg); }
+
 .ds-quantity-selector--sm .ds-quantity-selector__btn {
   width: var(--size-control-sm);
-  height: var(--size-control-sm);
+  height: var(--quantity-selector-inner);
 }
 
 .ds-quantity-selector--sm .ds-quantity-selector__value {
   width: var(--size-control-sm);
-  height: var(--size-control-sm);
+  height: var(--quantity-selector-inner);
   font-size: var(--font-size-xs);
 }
 
 .ds-quantity-selector--md .ds-quantity-selector__btn {
   width: var(--size-control-md);
-  height: var(--size-control-md);
+  height: var(--quantity-selector-inner);
 }
 
 .ds-quantity-selector--md .ds-quantity-selector__value {
   width: var(--size-control-md);
-  height: var(--size-control-md);
+  height: var(--quantity-selector-inner);
   font-size: var(--font-size-sm);
 }
 
 .ds-quantity-selector--lg .ds-quantity-selector__btn {
   width: var(--size-control-lg);
-  height: var(--size-control-lg);
+  height: var(--quantity-selector-inner);
 }
 
 .ds-quantity-selector--lg .ds-quantity-selector__value {
   width: var(--size-control-lg);
-  height: var(--size-control-lg);
+  height: var(--quantity-selector-inner);
   font-size: var(--font-size-base);
 }
 

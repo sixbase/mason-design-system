@@ -1,8 +1,11 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
+import { Modal, ModalContent, ModalTitle } from '../modal/Modal';
 import { CookieConsent } from './CookieConsent';
 import type { CookieCategory } from './CookieConsent';
 
@@ -272,5 +275,194 @@ describe('CookieConsent', () => {
     await user.click(screen.getByText('Manage Preferences'));
     const results = await axe(container);
     expect(results).toHaveNoViolations();
+  });
+
+  // ─── Regressions ────────────────────────────────────────
+
+  it('fires onAccept once when Accept All is double-clicked during the exit animation', () => {
+    // Bug: buttons stayed live while the banner animated out, so a
+    // double-click reported consent twice.
+    const realGetComputedStyle = window.getComputedStyle;
+    const spy = vi.spyOn(window, 'getComputedStyle').mockImplementation((el, pseudo) => {
+      const styles = realGetComputedStyle(el, pseudo);
+      // Simulate a browser where the exit animation is actually running
+      if ((el as Element).classList?.contains('ds-cookie-consent')) {
+        return { ...styles, animationName: 'ds-cookie-consent-out' } as CSSStyleDeclaration;
+      }
+      return styles;
+    });
+    try {
+      const onAccept = vi.fn();
+      render(<CookieConsent onAccept={onAccept} categories={defaultCategories} />);
+      const acceptAll = screen.getByText('Accept All');
+      fireEvent.click(acceptAll);
+      fireEvent.click(acceptAll);
+      expect(onAccept).toHaveBeenCalledTimes(1);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  // Bug: animationend bubbles, so a category's accordion fade finishing
+  // during the exit ended the close early (the slide-out was cut short).
+  it("closes only when the banner's own exit animation ends, not a child's", () => {
+    const realGetComputedStyle = window.getComputedStyle;
+    const spy = vi.spyOn(window, 'getComputedStyle').mockImplementation((el, pseudo) => {
+      const styles = realGetComputedStyle(el, pseudo);
+      if ((el as Element).classList?.contains('ds-cookie-consent')) {
+        return { ...styles, animationName: 'ds-cookie-consent-out' } as CSSStyleDeclaration;
+      }
+      return styles;
+    });
+    try {
+      render(<CookieConsent categories={defaultCategories} />);
+      fireEvent.click(screen.getByText('Accept All'));
+      const banner = screen.getByRole('dialog');
+      fireEvent.animationEnd(screen.getByText('Accept All'));
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      fireEvent.animationEnd(banner);
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('ignores an Escape already consumed by a nested overlay', async () => {
+    // Bug: closing a Modal with Escape also dismissed the banner (without
+    // a consent choice) — its document listener ignored defaultPrevented.
+    const user = userEvent.setup();
+    const onOpenChange = vi.fn();
+    render(
+      <>
+        <CookieConsent open onOpenChange={onOpenChange} />
+        <Modal defaultOpen>
+          <ModalContent aria-describedby={undefined}>
+            <ModalTitle>Size guide</ModalTitle>
+          </ModalContent>
+        </Modal>
+      </>,
+    );
+    await user.keyboard('{Escape}');
+    expect(screen.queryByText('Size guide')).not.toBeInTheDocument();
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it('applies required/defaultChecked to categories that arrive after mount', async () => {
+    // Bug: selection was seeded once from the initial `categories` — async
+    // config left "Strictly Necessary" unchecked and out of the saved list.
+    const user = userEvent.setup();
+    const onAccept = vi.fn();
+    function Harness() {
+      const [categories, setCategories] = useState<CookieCategory[] | undefined>(undefined);
+      return (
+        <>
+          <button type="button" onClick={() => setCategories(defaultCategories)}>
+            Load categories
+          </button>
+          <CookieConsent onAccept={onAccept} categories={categories} />
+        </>
+      );
+    }
+    render(<Harness />);
+    await user.click(screen.getByText('Load categories'));
+    await user.click(screen.getByText('Manage Preferences'));
+    await user.click(screen.getByText('Save Preferences'));
+    expect(onAccept).toHaveBeenCalledWith(['essential', 'functional', 'performance']);
+  });
+
+  it('never reports consent for an untouched category whose id is an Object.prototype name', async () => {
+    // Bug: toggles lived in a plain object, so `toggles['constructor']` was
+    // the inherited function (truthy) — "constructor" / "toString" read as
+    // ticked and landed in the accepted list without a click.
+    const user = userEvent.setup();
+    const onAccept = vi.fn();
+    render(
+      <CookieConsent
+        onAccept={onAccept}
+        categories={[
+          { id: 'essential', label: 'Essential', required: true },
+          { id: 'constructor', label: 'Ads' },
+          { id: 'toString', label: 'Analytics' },
+          { id: '__proto__', label: 'Social' },
+        ]}
+      />,
+    );
+    await user.click(screen.getByText('Manage Preferences'));
+    const boxes = screen.getAllByRole('checkbox');
+    expect(boxes.map((b) => b.getAttribute('aria-checked'))).toEqual(['true', 'false', 'false', 'false']);
+    await user.click(screen.getByText('Save Preferences'));
+    expect(onAccept).toHaveBeenCalledWith(['essential']);
+  });
+
+  // A blocked href used to leave a link-styled <a> with no href: it looked
+  // like a link but could not be focused or activated. Now it is left out,
+  // exactly as if no link was given.
+  it('drops javascript: learn-more links instead of rendering them', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      render(<CookieConsent learnMoreHref={'java\tscript:alert(1)'} />);
+      expect(screen.queryByText('Learn More')).not.toBeInTheDocument();
+      expect(screen.getByRole('dialog').querySelector('a')).toBeNull();
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('drops a blocked category link, and the empty panel with it', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const user = userEvent.setup();
+      render(
+        <CookieConsent
+          categories={[
+            { id: 'essential', label: 'Strictly Necessary Cookies', required: true },
+            { id: 'ads', label: 'Targeting Cookies', learnMoreHref: 'data:text/html,hi' },
+            { id: 'fn', label: 'Functional Cookies', description: 'Remembers choices.', learnMoreHref: 'javascript:alert(1)' },
+          ]}
+        />,
+      );
+      await user.click(screen.getByText('Manage Preferences'));
+      await user.click(screen.getByText('Targeting Cookies'));
+      await user.click(screen.getByText('Functional Cookies'));
+      expect(screen.getByText('Remembers choices.')).toBeInTheDocument();
+      expect(screen.queryByText('Learn More')).not.toBeInTheDocument();
+      // Only a real description earns a content panel.
+      expect(document.querySelectorAll('.ds-accordion__content')).toHaveLength(1);
+    } finally {
+      warn.mockRestore();
+    }
+  });
+});
+
+// Round 5 (shopper journeys): at the toast layer the banner covered an open
+// cart drawer's Subtotal and Checkout on phones — while the drawer made it
+// inert, so tapping "Accept All" hit the hidden Checkout link. It sits
+// below modal layers now.
+describe('CookieConsent stacking', () => {
+  it('stays under modal overlays (Drawer, Modal)', () => {
+    const css = readFileSync(resolve(__dirname, 'CookieConsent.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    const root = css.match(/(?:^|})\s*\.ds-cookie-consent\s*\{([^}]*)\}/)?.[1] ?? '';
+    expect(root).toMatch(/z-index: var\(--z-index-overlay\);/);
+  });
+});
+
+// Round 5 (shopper journeys): with the banner up, tabbing to the footer
+// (Contact, Privacy Policy) left the focused link entirely under it
+// (WCAG 2.4.11), and the end of the page could not be scrolled clear.
+describe('CookieConsent keeps the page reachable', () => {
+  it('publishes its height on <html> while it shows, and removes it after', async () => {
+    const user = userEvent.setup();
+    render(<CookieConsent />);
+    const root = document.documentElement;
+    expect(root.style.getPropertyValue('--cookie-consent-height')).toMatch(/^\d+px$/);
+    await user.click(screen.getByRole('button', { name: 'Accept All' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(root.style.getPropertyValue('--cookie-consent-height')).toBe('');
+  });
+
+  it('turns that height into scroll-padding and room at the end of the page', () => {
+    const css = readFileSync(resolve(__dirname, 'CookieConsent.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    expect(css).toMatch(/html:has\(\.ds-cookie-consent\)\s*\{[^}]*scroll-padding-bottom: var\(--cookie-consent-height\);/);
+    expect(css).toMatch(/html:has\(\.ds-cookie-consent\) body\s*\{\s*padding-bottom: var\(--cookie-consent-height\);/);
   });
 });

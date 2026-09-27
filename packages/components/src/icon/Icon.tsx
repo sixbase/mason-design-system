@@ -10,8 +10,10 @@ export interface IconProps extends SVGAttributes<SVGElement> {
   /** Accessible label — required when decorative={false} */
   label?: string;
   /**
-   * When true (default), the icon is decorative: it renders with
-   * `aria-hidden="true"` and is invisible to assistive technology.
+   * When true (the default when no `label` is passed), the icon is
+   * decorative: it renders with `aria-hidden="true"` and is invisible
+   * to assistive technology. Passing `label` makes the icon meaningful
+   * by default — a label on a hidden icon would be silently dropped.
    * Keep the default whenever the icon sits next to visible text that
    * already carries the meaning (e.g. a chevron in an accordion trigger,
    * the icon inside a labeled button).
@@ -44,7 +46,7 @@ export const Icon = forwardRef<SVGSVGElement, IconProps>(
     {
       size = 'md',
       label,
-      decorative = true,
+      decorative = label === undefined,
       children,
       className,
       ...props

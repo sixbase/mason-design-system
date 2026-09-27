@@ -1,8 +1,10 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'jest-axe';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Checkbox } from './Checkbox';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 describe('Checkbox', () => {
   it('renders a checkbox button', () => {
@@ -88,5 +90,64 @@ describe('Checkbox', () => {
       </div>,
     );
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+
+  // ─── Regressions (QA break pass) ─────────────────────────
+
+  describe('regressions', () => {
+    it('aria-describedby never points at the hidden hint while an error shows', () => {
+      render(<Checkbox label="Terms" hint="Read them" error="Must accept" />);
+      const ids = (screen.getByRole('checkbox').getAttribute('aria-describedby') ?? '').split(/\s+/).filter(Boolean);
+      expect(ids.length).toBeGreaterThan(0);
+      for (const id of ids) expect(document.getElementById(id), `dangling id ${id}`).not.toBeNull();
+    });
+
+    describe('with component CSS', () => {
+      let style: HTMLStyleElement;
+      beforeEach(() => {
+        style = document.createElement('style');
+        style.textContent = readFileSync(resolve(__dirname, 'Checkbox.css'), 'utf8');
+        document.head.appendChild(style);
+      });
+      afterEach(() => style.remove());
+
+      it('sm hint is indented to the 13px sm box, not the md box', () => {
+        render(<Checkbox size="sm" label="Small" hint="Hint" />);
+        const cs = getComputedStyle(screen.getByText('Hint'));
+        expect(cs.paddingInlineStart || cs.paddingLeft).toContain('--size-checkbox-sm');
+      });
+
+      // The dash used to be a ::before background, which forced-colors mode
+      // repaints to the canvas colour — indeterminate looked unchecked.
+      it('indeterminate shows a stroked dash glyph and hides the check', () => {
+        const { container } = render(<Checkbox label="All" checked="indeterminate" />);
+        const dash = container.querySelector('.ds-checkbox-icon--dash');
+        const check = container.querySelector('.ds-checkbox-icon--check');
+        expect(dash).not.toBeNull();
+        expect(getComputedStyle(dash!).display).not.toBe('none');
+        expect(getComputedStyle(check!).display).toBe('none');
+      });
+
+      it('checked shows the check and hides the dash', () => {
+        const { container } = render(<Checkbox label="One" checked />);
+        expect(getComputedStyle(container.querySelector('.ds-checkbox-icon--dash')!).display).toBe('none');
+        expect(getComputedStyle(container.querySelector('.ds-checkbox-icon--check')!).display).not.toBe('none');
+      });
+    });
+  });
+
+  // Regression: excluding error boxes from hover raised the hover rule to
+  // 0-4-0, above the 0-3-0 press rule, so a mouse press (also a hover) never
+  // showed the pressed edge. jsdom has no :hover/:active, so the cascade is
+  // checked in source: press rules match hover's weight and come after it.
+  it('orders the pressed edge after both hover rules', () => {
+    const css = readFileSync(resolve(__dirname, 'Checkbox.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    const lastHover = css.lastIndexOf(':hover:not([data-disabled])');
+    const press = css.indexOf('.ds-checkbox-box:active:not([data-disabled]):not(.ds-checkbox-box--error) {');
+    const checkedPress = css.indexOf('.ds-checkbox-box[data-state="checked"]:active:not([data-disabled])');
+    expect(lastHover).toBeGreaterThan(-1);
+    expect(press).toBeGreaterThan(lastHover);
+    expect(checkedPress).toBeGreaterThan(lastHover);
   });
 });

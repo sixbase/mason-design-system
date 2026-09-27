@@ -70,6 +70,7 @@ export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(function R
     className,
     disabled,
     children,
+    'aria-describedby': ariaDescribedBy,
     ...rootProps
   },
   ref,
@@ -80,8 +81,11 @@ export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(function R
   const hintId = `${id}-hint`;
   const errorId = `${id}-error`;
 
+  // Only reference ids that are actually rendered — the hint is hidden while
+  // an error shows. Consumer ids are kept, not replaced.
+  const showHint = Boolean(hint) && !error;
   const describedBy =
-    [hint && hintId, error && errorId].filter(Boolean).join(' ') || undefined;
+    [ariaDescribedBy, showHint && hintId, error && errorId].filter(Boolean).join(' ') || undefined;
 
   const rootClasses = [
     'ds-radio-group-root',
@@ -103,7 +107,13 @@ export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(function R
         ref={ref}
         id={id}
         className="ds-radio-group-items"
-        orientation={orientation}
+        // Orientation is layout only. Passed to Radix it also restricts the
+        // roving focus to one arrow pair — Left/Right did nothing in a
+        // vertical group — whereas native radios and the WAI-ARIA radio
+        // pattern move on all four arrows. Set the attributes by hand and
+        // leave Radix unrestricted.
+        aria-orientation={orientation}
+        data-orientation={orientation}
         disabled={disabled}
         aria-labelledby={label ? labelId : undefined}
         aria-describedby={describedBy}
@@ -115,7 +125,7 @@ export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(function R
         </RadioGroupContext.Provider>
       </RadixRadioGroup.Root>
 
-      {hint && !error && (
+      {showHint && (
         <span id={hintId} className="ds-radio-group-hint">
           {hint}
         </span>
@@ -146,7 +156,15 @@ export const RadioGroupItem = forwardRef<HTMLButtonElement, RadioGroupItemProps>
     const id = idProp ?? generatedId;
     const descriptionId = `${id}-description`;
 
-    const itemClasses = ['ds-radio-item', `ds-radio-item--${size}`].filter(Boolean).join(' ');
+    // A single disabled option needs its own dimmed look — the group-level
+    // `disabled` fades all the options, but an item-level one showed nothing.
+    const itemClasses = [
+      'ds-radio-item',
+      `ds-radio-item--${size}`,
+      itemProps.disabled && 'ds-radio-item--disabled',
+    ]
+      .filter(Boolean)
+      .join(' ');
 
     const circleClasses = [
       'ds-radio-item-circle',

@@ -1,7 +1,10 @@
 /* ─── Breadcrumb ─────────────────────────────────────────── */
+/* No overflow clipping on the nav: the list is exactly one line tall, so
+   clipping here cut off the top/bottom of every link's focus ring and the
+   44px coarse-pointer hit area. Overflow is contained per item instead
+   (labels truncate with an ellipsis). */
 .ds-breadcrumb {
   min-width: 0;
-  overflow: hidden;
   margin-bottom: var(--spacing-4);
 }
 
@@ -32,18 +35,28 @@
 }
 
 .ds-breadcrumb__link {
+  display: flex;
+  min-width: 0;
   color: var(--color-foreground-secondary);
   text-decoration: none;
   white-space: nowrap;
   transition: color var(--transition-fast);
 }
 
-a.ds-breadcrumb__link:hover {
-  color: var(--color-foreground);
+.ds-breadcrumb__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (hover: hover) {
+  a.ds-breadcrumb__link:hover {
+    color: var(--color-foreground);
+  }
 }
 
 a.ds-breadcrumb__link:focus-visible {
-  outline: none;
+  outline: var(--border-width-lg) solid transparent; /* painted in forced-colors mode, where box-shadow rings vanish */
   box-shadow: var(--focus-ring);
   border-radius: var(--radius-sm);
 }
@@ -79,12 +92,14 @@ a.ds-breadcrumb__link:focus-visible {
 
 .ds-breadcrumb__separator {
   color: var(--color-foreground-subtle);
+  -webkit-user-select: none; /* Safari ignores the unprefixed property */
   user-select: none;
   flex-shrink: 0;
 }
 
 .ds-breadcrumb__ellipsis {
   color: var(--color-foreground-subtle);
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -126,9 +141,14 @@ a.ds-breadcrumb__link:focus-visible {
     display: inline;
   }
 
+  /* The current page takes whatever the ancestors leave (basis 0), so
+     short ancestors keep their full labels — with proportional shrinking
+     every crumb truncated at once ("Ho… › … › Cookw…"). The floor (1/φ² of
+     the row) is what stops a long trail squeezing the current page to 0px:
+     past that point the ancestors give way and truncate instead. */
   .ds-breadcrumb__item:last-child {
-    flex: 1;
-    min-width: 0;
+    flex: 1 1 0;
+    min-width: 38.2%;
     overflow: hidden;
   }
 }

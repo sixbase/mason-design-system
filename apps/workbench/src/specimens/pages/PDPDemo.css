@@ -1,0 +1,87 @@
+/* ─── PDP Layout ─────────────────────────────────────────── */
+/* Product area uses ds-layout--golden (7+5) from layout-grid.css. */
+
+/* ─── Details column ─────────────────────────────────────── */
+.ds-pdp__details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-phi-8); /* 16px — tighter base rhythm */
+}
+
+/* ─── Header ─────────────────────────────────────────────── */
+.ds-pdp__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.ds-pdp__price-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+/* ─── Options group ──────────────────────────────────────── */
+.ds-pdp__options-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  padding-top: var(--spacing-phi-8);
+  border-top: var(--border-width-sm) solid var(--color-border);
+}
+
+.ds-pdp__option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-2);
+}
+
+/* ─── Actions ────────────────────────────────────────────── */
+.ds-pdp__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  padding-top: var(--spacing-phi-8);
+  border-top: var(--border-width-sm) solid var(--color-border);
+}
+
+.ds-pdp__trust-signals {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-2);
+  padding-top: var(--spacing-1);
+}
+
+/* ─── Accordion section ──────────────────────────────────── */
+.ds-pdp__accordion-section {
+  padding-top: var(--spacing-phi-5);
+}
+
+.ds-pdp__accordion-list {
+  margin: 0;
+  padding-left: var(--spacing-4);
+}
+
+.ds-pdp__accordion-list li {
+  padding-block: var(--spacing-1); /* 4px breathing room */
+}
+
+/* ─── Lifestyle carousel ─────────────────────────────────── */
+.ds-pdp__section-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-2);
+  text-align: center;
+  margin-bottom: var(--spacing-phi-13); /* 26px */
+}
+
+.ds-pdp__lifestyle-img {
+  width: 100%;
+  aspect-ratio: var(--aspect-landscape);
+  object-fit: cover;
+  display: block;
+  border-radius: var(--radius-lg);
+}
+

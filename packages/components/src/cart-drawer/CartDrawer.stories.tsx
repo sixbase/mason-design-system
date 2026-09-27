@@ -1,54 +1,81 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useState, useCallback } from 'react';
 import { Button } from '../button';
+import { PRODUCTS } from '../story-fixtures';
 import { Text } from '../typography';
 import { CartDrawer } from './CartDrawer';
-import type { CartDrawerItemData } from './CartDrawer';
+import type { CartDrawerItemData, CartDrawerProps } from './CartDrawer';
 
-// ─── Shared sample data ───────────────────────────────────
+// ─── Shared sample data (the story catalogue) ─────────────
 
-function makePlaceholder(label: string): string {
-  const encoded = encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">` +
-      `<rect width="400" height="400" fill="#c8bfae"/>` +
-      `<text x="200" y="200" text-anchor="middle" dominant-baseline="central" ` +
-      `font-family="system-ui,sans-serif" font-size="18" fill="#7a7262">${label}</text>` +
-      `</svg>`,
-  );
-  return `data:image/svg+xml,${encoded}`;
+function line(key: keyof typeof PRODUCTS, quantity: number, extra: Partial<CartDrawerItemData> = {}): CartDrawerItemData {
+  const p = PRODUCTS[key];
+  return {
+    id: p.id,
+    name: p.name,
+    price: p.price,
+    compareAtPrice: p.compareAtPrice,
+    quantity,
+    image: p.image,
+    imageAlt: p.imageAlt,
+    href: p.href,
+    ...extra,
+  };
 }
 
 const SAMPLE_ITEMS: CartDrawerItemData[] = [
-  {
-    id: 'tote-1',
-    name: 'Minimal Canvas Tote',
-    price: 4800,
-    quantity: 1,
-    image: makePlaceholder('Canvas Tote'),
-  },
-  {
-    id: 'shirt-1',
-    name: 'Relaxed Linen Shirt',
-    price: 8900,
-    quantity: 2,
-    image: makePlaceholder('Linen Shirt'),
-    compareAtPrice: 11200,
-    options: [
-      { name: 'Size', value: 'M' },
-      { name: 'Color', value: 'Oat' },
-    ],
-  },
-  {
-    id: 'wallet-1',
-    name: 'Vegetable-Tanned Wallet',
-    price: 6500,
-    quantity: 1,
-    image: makePlaceholder('Wallet'),
-  },
+  line('tote', 1),
+  line('shirt', 2, { options: [{ name: 'Size', value: 'M' }, { name: 'Color', value: 'Oat' }] }),
+  line('wallet', 1),
+];
+
+const MANY_ITEMS: CartDrawerItemData[] = [
+  ...SAMPLE_ITEMS,
+  line('mug', 4, { options: [{ name: 'Glaze', value: 'Speckled white' }] }),
+  line('apron', 1, { options: [{ name: 'Color', value: 'Olive' }] }),
+  line('beanie', 2, { options: [{ name: 'Color', value: 'Charcoal' }] }),
+  line('blanket', 1),
+  line('candle', 3),
 ];
 
 function computeSubtotal(items: CartDrawerItemData[]): number {
   return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+}
+
+/**
+ * The drawer with working quantity and remove. Opens on load so the state
+ * is visible without a click; the button brings it back after closing.
+ */
+function CartDemo({
+  initialItems,
+  buttonLabel = 'Open cart',
+  ...props
+}: { initialItems: CartDrawerItemData[]; buttonLabel?: string } & Partial<CartDrawerProps>) {
+  const [open, setOpen] = useState(true);
+  const [items, setItems] = useState(initialItems);
+
+  const handleUpdateQuantity = useCallback((id: string, quantity: number) => {
+    setItems((prev) => prev.map((item) => (item.id === id ? { ...item, quantity } : item)));
+  }, []);
+
+  const handleRemoveItem = useCallback((id: string) => {
+    setItems((prev) => prev.filter((item) => item.id !== id));
+  }, []);
+
+  return (
+    <>
+      <Button onClick={() => setOpen(true)}>{buttonLabel}</Button>
+      <CartDrawer
+        {...props}
+        open={open}
+        onOpenChange={setOpen}
+        items={items}
+        subtotal={computeSubtotal(items)}
+        onUpdateQuantity={handleUpdateQuantity}
+        onRemoveItem={handleRemoveItem}
+      />
+    </>
+  );
 }
 
 // ─── Meta ─────────────────────────────────────────────────
@@ -60,9 +87,12 @@ const meta: Meta<typeof CartDrawer> = {
   parameters: {
     layout: 'centered',
     docs: {
+      // Each state opens its drawer on load; in their own frames they don't
+      // cover the docs page or each other.
+      story: { inline: false, iframeHeight: 640 },
       description: {
         component:
-          'Slide-out cart panel that appears from the right edge. Composes Drawer, CartLineItem, Button, and typography primitives. Handles empty state, item management, and checkout flow.',
+          'The cart that slides in from the right: items, quantities, subtotal and the checkout button.',
       },
     },
   },
@@ -83,149 +113,36 @@ type Story = StoryObj<typeof CartDrawer>;
 // ─── Stories ──────────────────────────────────────────────
 
 export const Default: Story = {
-  render: function DefaultStory() {
-    const [open, setOpen] = useState(false);
-    const [items, setItems] = useState(SAMPLE_ITEMS);
+  render: () => <CartDemo initialItems={SAMPLE_ITEMS} />,
+};
 
-    const subtotal = computeSubtotal(items);
+/** Anything passed as children sits above the subtotal — a shipping note, a gift option. */
+export const WithFooterContent: Story = {
+  name: 'With a note above the subtotal',
+  render: () => (
+    <CartDemo initialItems={SAMPLE_ITEMS.slice(0, 1)}>
+      <Text size="xs" muted>
+        Free shipping on orders over $50
+      </Text>
+    </CartDemo>
+  ),
+};
 
-    const handleUpdateQuantity = useCallback((id: string, quantity: number) => {
-      setItems((prev) =>
-        prev.map((item) => (item.id === id ? { ...item, quantity } : item)),
-      );
-    }, []);
-
-    const handleRemoveItem = useCallback((id: string) => {
-      setItems((prev) => prev.filter((item) => item.id !== id));
-    }, []);
-
-    return (
-      <>
-        <Button onClick={() => setOpen(true)}>Open Cart</Button>
-        <CartDrawer
-          open={open}
-          onOpenChange={setOpen}
-          items={items}
-          subtotal={subtotal}
-          onUpdateQuantity={handleUpdateQuantity}
-          onRemoveItem={handleRemoveItem}
-        />
-      </>
-    );
-  },
+/** `currency` + `locale` format every price in the drawer: 48,00 € in Germany. */
+export const EuroPrices: Story = {
+  name: 'Prices in euros (Germany)',
+  render: () => <CartDemo initialItems={SAMPLE_ITEMS} currency="EUR" locale="de-DE" />,
 };
 
 export const EmptyCart: Story = {
-  render: function EmptyCartStory() {
-    const [open, setOpen] = useState(false);
-    return (
-      <>
-        <Button onClick={() => setOpen(true)}>Open Empty Cart</Button>
-        <CartDrawer
-          open={open}
-          onOpenChange={setOpen}
-          items={[]}
-          subtotal={0}
-          onUpdateQuantity={() => {}}
-          onRemoveItem={() => {}}
-        />
-      </>
-    );
-  },
+  render: () => <CartDemo initialItems={[]} />,
 };
 
 export const CustomEmptyMessage: Story = {
-  render: function CustomEmptyStory() {
-    const [open, setOpen] = useState(false);
-    return (
-      <>
-        <Button onClick={() => setOpen(true)}>Open Cart</Button>
-        <CartDrawer
-          open={open}
-          onOpenChange={setOpen}
-          items={[]}
-          subtotal={0}
-          onUpdateQuantity={() => {}}
-          onRemoveItem={() => {}}
-          emptyMessage="Your cart is looking a bit lonely"
-        />
-      </>
-    );
-  },
+  render: () => <CartDemo initialItems={[]} emptyMessage="Nothing in here yet — your next favourite mug is waiting." />,
 };
 
+/** Eight lines: the item list scrolls while the subtotal and checkout stay put. */
 export const ManyItems: Story = {
-  render: function ManyItemsStory() {
-    const manyItems: CartDrawerItemData[] = Array.from({ length: 12 }, (_, i) => ({
-      id: `item-${i}`,
-      name: `Product ${i + 1}`,
-      price: 2500 + i * 500,
-      quantity: 1 + (i % 3),
-      image: makePlaceholder(`Product ${i + 1}`),
-    }));
-
-    const [open, setOpen] = useState(false);
-    const [items, setItems] = useState(manyItems);
-    const subtotal = computeSubtotal(items);
-
-    const handleUpdateQuantity = useCallback((id: string, quantity: number) => {
-      setItems((prev) =>
-        prev.map((item) => (item.id === id ? { ...item, quantity } : item)),
-      );
-    }, []);
-
-    const handleRemoveItem = useCallback((id: string) => {
-      setItems((prev) => prev.filter((item) => item.id !== id));
-    }, []);
-
-    return (
-      <>
-        <Button onClick={() => setOpen(true)}>Open Cart (12 items)</Button>
-        <CartDrawer
-          open={open}
-          onOpenChange={setOpen}
-          items={items}
-          subtotal={subtotal}
-          onUpdateQuantity={handleUpdateQuantity}
-          onRemoveItem={handleRemoveItem}
-        />
-      </>
-    );
-  },
-};
-
-export const WithFooterContent: Story = {
-  render: function FooterContentStory() {
-    const [open, setOpen] = useState(false);
-    const [items, setItems] = useState(SAMPLE_ITEMS.slice(0, 1));
-    const subtotal = computeSubtotal(items);
-
-    const handleUpdateQuantity = useCallback((id: string, quantity: number) => {
-      setItems((prev) =>
-        prev.map((item) => (item.id === id ? { ...item, quantity } : item)),
-      );
-    }, []);
-
-    const handleRemoveItem = useCallback((id: string) => {
-      setItems((prev) => prev.filter((item) => item.id !== id));
-    }, []);
-
-    return (
-      <>
-        <Button onClick={() => setOpen(true)}>Open Cart</Button>
-        <CartDrawer
-          open={open}
-          onOpenChange={setOpen}
-          items={items}
-          subtotal={subtotal}
-          onUpdateQuantity={handleUpdateQuantity}
-          onRemoveItem={handleRemoveItem}
-        >
-          <Text size="xs" muted>
-            Free shipping on orders over $50
-          </Text>
-        </CartDrawer>
-      </>
-    );
-  },
+  render: () => <CartDemo initialItems={MANY_ITEMS} buttonLabel="Open cart (8 items)" />,
 };

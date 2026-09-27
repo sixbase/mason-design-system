@@ -23,6 +23,17 @@
   to { transform: rotate(360deg); }
 }
 
+/* Forced colors paints transparent borders in the text colour, closing the
+   gap — a full ring spinning reads as a static circle. System colours are
+   kept, so draw the gap in the canvas colour. (Reduced motion, below, still
+   swaps to its full-ring pulse.) */
+@media (forced-colors: active) {
+  .ds-spinner__circle {
+    border-color: CanvasText;
+    border-right-color: Canvas;
+  }
+}
+
 /* ─── Size variants — icon size scale ─────────────────────── */
 .ds-spinner--sm .ds-spinner__circle {
   width: var(--size-icon-sm);
@@ -44,6 +55,7 @@
   font-size: var(--font-size-sm);
   color: var(--spinner-color);
   line-height: var(--line-height-snug);
+  -webkit-user-select: none; /* Safari ignores the unprefixed property */
   user-select: none;
   text-box-trim: both;
   text-box-edge: cap alphabetic;
@@ -70,12 +82,21 @@
 }
 
 /* ─── Reduced motion — replace spin with a slow opacity pulse ── */
+/* The circle carries .ds-motion-safe, so the global reset leaves this pulse
+   running; it must therefore cover data-motion="off" as well as the OS
+   setting. The ring closes (no gap) — a pulsing full ring reads as "busy". */
 @media (prefers-reduced-motion: reduce) {
   .ds-spinner__circle {
     border-right-color: currentColor;
     animation: ds-spinner-pulse calc(var(--transition-duration-slowest) * 2)
       var(--transition-easing-in-out) infinite alternate;
   }
+}
+
+:root[data-motion="off"] .ds-spinner__circle {
+  border-right-color: currentColor;
+  animation: ds-spinner-pulse calc(var(--transition-duration-slowest) * 2)
+    var(--transition-easing-in-out) infinite alternate;
 }
 
 @keyframes ds-spinner-pulse {

@@ -1,12 +1,14 @@
 # 10 — Shopify Theme
 
-> How the design system is consumed by the Shopify storefront. The theme lives in `apps/theme/` and is the end goal of everything in `packages/`.
+> How the design system is consumed by the Shopify storefront — the end goal of everything in `packages/`.
+>
+> **The theme is no longer in this repo.** It was extracted on 2026-06-25 (commit `a30c5b4`) to its own repo, `sixbase/mason-storefront`, checked out at `/Users/alvinthong/Code/mason-storefront`, so Shopify can deploy it from the repo root. Read every `apps/theme/` path below as that repo's root. This chapter was written before the move; the 2026-09-26 pass fixed the paths and open questions but did not re-audit the storefront itself.
 
 ---
 
 ## Goal
 
-The design system exists to power a Shopify storefront. The theme is not a second design system — it is the **consumer** of `@ds/tokens` and the HTML/CSS patterns established by `@ds/components`. If something looks different between the docs site and the storefront, the theme is wrong.
+The design system exists to power a Shopify storefront. The theme is not a second design system — it is the **consumer** of `@ds/tokens` and the HTML/CSS patterns established by `@ds/components`. If something looks different between the workbench and the storefront, the theme is wrong.
 
 ---
 
@@ -16,13 +18,13 @@ The design system exists to power a Shopify storefront. The theme is not a secon
 tokens.json
     ↓
 @ds/tokens (dist/tokens.css)
-    ↓              ↓
-apps/docs     apps/theme (Shopify Liquid)
-    ↓              ↓
-Storybook    Mason storefront
+    ↓                          ↓  (copied by hand)
+apps/workbench + Storybook    mason-storefront repo (Shopify Liquid)
+                                ↓
+                              Mason storefront
 ```
 
-- **Tokens travel via CSS custom properties.** `tokens.css` is copied into `apps/theme/assets/tokens.css` and imported in `layout/theme.liquid`.
+- **Tokens travel via CSS custom properties.** `tokens.css` is copied into the storefront's `assets/tokens.css` and imported in `layout/theme.liquid`. The copy has drifted: on 2026-09-26 it lacked ~50 current DS tokens (`--color-border-control`, the aspect, elevation, fluid-spacing, motion, safe-area and scale families, `--measure-reading`, `--size-hit-area`, the φ easings…) and adds one of its own (`--size-container-ultra`). Sync surgically — don't overwrite wholesale. The re-sync is part of the storefront port item in `12`.
 - **Component CSS is ported, not imported.** React components can't render in Liquid. We copy the BEM CSS classes (`.ds-button`, `.ds-card`, etc.) into theme assets, and author Liquid sections/snippets that output matching HTML.
 - **The React package stays canonical.** If a component's CSS changes in `packages/components/`, it must be re-synced into `apps/theme/assets/`.
 
@@ -77,10 +79,10 @@ See [06-decisions-log.md](./06-decisions-log.md) — "Shopify Theme: Strip Dawn 
 
 ### Running the theme locally
 
-Always run `shopify theme dev` from inside `apps/theme/` — never from the monorepo root. The CLI syncs the current working directory to the remote dev theme; running from the wrong dir will try to sync an empty/partial directory and fail to delete required files.
+Always run `shopify theme dev` from the storefront repo root — never from this design-system repo. The CLI syncs the current working directory to the remote dev theme; running from the wrong dir will try to sync an empty/partial directory and fail to delete required files.
 
 ```bash
-cd apps/theme
+cd /Users/alvinthong/Code/mason-storefront
 shopify theme dev --store=mason-ufqqwrle.myshopify.com
 ```
 
@@ -119,7 +121,7 @@ When building a Shopify section for a pattern we already have as a React compone
 
 ### 5. One section per meaningful page region
 
-Mirror the React component boundaries. Header is one section, ProductCard is rendered by a collection section, AddToCartButton is a snippet called from the product template. If a pattern is a component in `packages/components/`, it is a section or snippet in `apps/theme/`.
+Mirror the React component boundaries. Header is one section, ProductCard is rendered by a collection section, AddToCartButton is a snippet called from the product template. If a pattern is a component in `packages/components/`, it is a section or snippet in the storefront.
 
 ---
 
@@ -242,14 +244,14 @@ Each section that maps to a page type includes the relevant JSON-LD schema inlin
 | Mega menu | Port MegaMenu for multi-level header navigation | Phase 2 — DS component not yet built |
 | Predictive search | Port PredictiveSearch as a header-triggered overlay | Phase 2 |
 | QA pass | Real browser testing, mobile sanity, checkout flow verification | Pending |
-| Tokens sync automation | Resolve the PENDING DECISION — likely a Turborepo task | Pending |
+| Tokens sync automation | Open — see Open Questions | Pending |
 
 ---
 
 ## Open Questions
 
-**[PENDING DECISION]** How do we sync `packages/tokens/dist/tokens.css` → `apps/theme/assets/tokens.css` automatically? Options: (a) manual copy, (b) build script in `apps/theme/package.json`, (c) Turborepo task that runs after `@ds/tokens` build. Currently manual.
+**Open — token sync.** How does `packages/tokens/dist/tokens.css` reach the storefront's `assets/tokens.css`? Still a manual copy. Option (c) "a Turborepo task" no longer fits now that the theme is a separate repo; the remaining choices are a copy script in the storefront repo, or publishing `@ds/tokens`. Tracked in `12-audit-2026-09-25.md` → "Open after five rounds".
 
-**[PENDING DECISION]** Where do ported component CSS files live? Options: (a) one combined `components.css` in theme assets, (b) one CSS file per component mirroring `packages/components/`. Leaning toward (b) for clarity.
+**Resolved — ported component CSS location:** option (b), one CSS file per component mirroring `packages/components/` (`assets/button.css`, `assets/badge.css`, `assets/cart-drawer.css`, …).
 
-**[PENDING DECISION]** Do we publish the theme as a public GitHub theme (shareable Dawn-style reference) or keep it private to the Mason store? Affects README, license, and whether we strip store-specific references.
+**Open — public or private theme?** Publish the theme as a public, Dawn-style reference, or keep it private to the Mason store? Affects README, license, and whether store-specific references are stripped. Tracked in `12`.

@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { axe } from 'jest-axe';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { Breadcrumb } from './Breadcrumb';
 
 const items = [
@@ -109,5 +109,77 @@ describe('Breadcrumb', () => {
   it('has no accessibility violations', async () => {
     const { container } = render(<Breadcrumb items={items} />);
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  // ── Regressions (QA break pass) ─────────────────────────
+
+  it('accepts repeated labels without React key collisions', () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    render(
+      <Breadcrumb
+        items={[
+          { label: 'Sale', href: '/sale' },
+          { label: 'Sale', href: '/sale/outlet' },
+          { label: 'Linen Apron' },
+        ]}
+      />,
+    );
+    expect(spy.mock.calls.flat().join(' ')).not.toMatch(/same key/);
+    spy.mockRestore();
+  });
+
+  it('wraps each label in a truncating span inside the link', () => {
+    // The ellipsis lives on the label span so the link keeps overflow
+    // visible (its focus ring and coarse-pointer hit area are not clipped).
+    render(<Breadcrumb items={items} />);
+    const link = screen.getByRole('link', { name: 'Women' });
+    expect(link.querySelector('.ds-breadcrumb__label')).toHaveTextContent('Women');
+  });
+
+  describe('structured data (schema)', () => {
+    const jsonLd = (container: HTMLElement) => {
+      const script = container.querySelector('script[type="application/ld+json"]');
+      return script ? JSON.parse(script.textContent ?? '') : null;
+    };
+
+    it('emits no JSON-LD unless asked', () => {
+      const { container } = render(<Breadcrumb items={items} />);
+      expect(jsonLd(container)).toBeNull();
+    });
+
+    it('emits a BreadcrumbList with absolute URLs from a base URL', () => {
+      const { container } = render(<Breadcrumb items={items} schema="https://shop.example" />);
+      expect(jsonLd(container)).toEqual({
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://shop.example/' },
+          { '@type': 'ListItem', position: 2, name: 'Women', item: 'https://shop.example/women' },
+          { '@type': 'ListItem', position: 3, name: 'Dresses', item: 'https://shop.example/women/dresses' },
+          // The current page is the page itself: no item URL
+          { '@type': 'ListItem', position: 4, name: 'Silk Wrap Dress' },
+        ],
+      });
+    });
+
+    it('keeps hrefs as written with schema={true}', () => {
+      const { container } = render(<Breadcrumb items={items} schema />);
+      expect(jsonLd(container).itemListElement[1].item).toBe('/women');
+    });
+
+    it('cannot be broken out of by a label containing </script>', () => {
+      const { container } = render(
+        <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: '</script><b>x</b>' }]} schema />,
+      );
+      const script = container.querySelector('script[type="application/ld+json"]');
+      expect(script?.innerHTML).not.toContain('</script>');
+      expect(jsonLd(container).itemListElement[1].name).toBe('</script><b>x</b>');
+    });
+
+    it('leaves the visible trail unchanged', () => {
+      render(<Breadcrumb items={items} schema="https://shop.example" />);
+      expect(screen.getAllByRole('listitem')).toHaveLength(4);
+      expect(screen.getAllByRole('link').map((a) => a.textContent)).toEqual(['Home', 'Women', 'Dresses']);
+    });
   });
 });

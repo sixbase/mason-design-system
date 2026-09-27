@@ -4,6 +4,41 @@
   font-family: var(--font-family-body);
 }
 
+/* ─── Size tokens ───────────────────────────────────────── */
+/* Sizes set component tokens on the root instead of descendant rules
+   (.ds-accordion--md .ds-accordion__trigger): custom properties resolve
+   from the nearest ancestor, so a nested accordion keeps its own size.
+   With descendant rules, an inner sm accordion inside an lg one got lg
+   padding/type because the later rule in source order won the tie.
+   The Trigger/Content `size` prop sets the same tokens on that element. */
+.ds-accordion,
+.ds-accordion--md,
+.ds-accordion__trigger--md,
+.ds-accordion__content--md {
+  --accordion-trigger-padding-y: var(--spacing-4);
+  --accordion-trigger-font-size: var(--font-size-base);
+  --accordion-content-padding-bottom: var(--spacing-4);
+  --accordion-content-font-size: var(--font-size-sm);
+}
+
+.ds-accordion--sm,
+.ds-accordion__trigger--sm,
+.ds-accordion__content--sm {
+  --accordion-trigger-padding-y: var(--spacing-2);
+  --accordion-trigger-font-size: var(--font-size-sm);
+  --accordion-content-padding-bottom: var(--spacing-2);
+  --accordion-content-font-size: var(--font-size-sm);
+}
+
+.ds-accordion--lg,
+.ds-accordion__trigger--lg,
+.ds-accordion__content--lg {
+  --accordion-trigger-padding-y: var(--spacing-5);
+  --accordion-trigger-font-size: var(--font-size-lg);
+  --accordion-content-padding-bottom: var(--spacing-5);
+  --accordion-content-font-size: var(--font-size-base);
+}
+
 /* ─── Item ──────────────────────────────────────────────── */
 /*
  * Inner-only dividers: borders appear between items but not at the
@@ -12,7 +47,7 @@
  * larger layout.
  */
 .ds-accordion__item {
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: var(--border-width-sm) solid var(--color-border);
 }
 
 .ds-accordion__item:last-child {
@@ -36,9 +71,11 @@
      tap zone must be real height (min-height), not a pseudo-element
      overlay — an overlay would overlap the adjacent item's trigger. */
   min-height: var(--size-hit-area);
+  padding: var(--accordion-trigger-padding-y) 0;
   border: none;
   background: transparent;
-  text-align: left;
+  font-size: var(--accordion-trigger-font-size);
+  text-align: start; /* `left` pinned RTL labels to the chevron's side */
   cursor: pointer;
   font-weight: var(--font-weight-medium);
   color: var(--color-foreground);
@@ -49,34 +86,46 @@
   text-box-edge: cap alphabetic;
 }
 
-.ds-accordion__trigger:hover {
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 2px;
+@media (hover: hover) {
+  .ds-accordion__trigger:hover {
+    text-decoration: underline;
+    text-decoration-thickness: var(--border-width-sm);
+    text-underline-offset: var(--spacing-phi-1);
+  }
 }
 
 .ds-accordion__trigger:focus-visible {
-  outline: none;
+  outline: var(--border-width-lg) solid transparent; /* painted in forced-colors mode, where box-shadow rings vanish */
   box-shadow: var(--focus-ring-inset);
   border-radius: var(--radius-sm);
 }
 
 .ds-accordion__trigger[data-disabled] {
-  color: var(--color-foreground-muted);
   cursor: not-allowed;
 }
 
-.ds-accordion__trigger[data-disabled]:hover {
-  text-decoration: none;
+@media (hover: hover) {
+  .ds-accordion__trigger[data-disabled]:hover {
+    text-decoration: none;
+  }
 }
 
 /* ─── Disabled item ─────────────────────────────────────── */
-.ds-accordion__item--disabled {
+/* One fade, like every other disabled control. The trigger used to turn
+   foreground-muted as well, so the title sat at muted × 0.382 (~1.3:1),
+   twice as faint as a disabled tab or menu item. [data-disabled] (set by
+   Radix) also covers a whole Accordion disabled from the root, which
+   never gets the modifier class. */
+.ds-accordion__item--disabled,
+.ds-accordion__item[data-disabled] {
   opacity: var(--opacity-medium);
 }
 
 .ds-accordion__trigger-text {
   flex: 1;
+  /* Long unbroken strings (SKUs, URLs) wrap instead of widening the row */
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 /* ─── Chevron ───────────────────────────────────────────── */
@@ -92,18 +141,56 @@
 }
 
 /* ─── Content ───────────────────────────────────────────── */
+/* Clipping is needed for the height animation, but a plain overflow:
+   hidden also cut off the focus ring of anything flush with the content
+   edge (the first filter checkbox, a leading button). `clip` + a clip
+   margin wide enough for the ring keeps rings visible. */
 .ds-accordion__content {
   overflow: hidden;
+  overflow: clip;
+  overflow-clip-margin: var(--spacing-1);
   color: var(--color-foreground-secondary);
   line-height: var(--line-height-relaxed);
 }
 
+/* Safari has no overflow-clip-margin, so the first filter checkbox's ring
+   lost its left side. Widen the clip box on both inline sides instead: an
+   equal negative margin and padding move the edge out by the ring's width
+   while the content stays exactly where it was. (Block axis untouched —
+   the height animation measures this box.) */
+@supports not (overflow-clip-margin: var(--spacing-1)) {
+  .ds-accordion__content {
+    margin-inline: calc(var(--spacing-1) * -1);
+    padding-inline: var(--spacing-1);
+  }
+}
+
+.ds-accordion__content-inner {
+  padding: 0 0 var(--accordion-content-padding-bottom);
+  font-size: var(--accordion-content-font-size);
+}
+
 .ds-accordion__content[data-state="open"] {
-  animation: ds-accordion-expand var(--transition-duration-normal) var(--transition-easing-out);
+  animation: ds-accordion-expand var(--transition-duration-slow) var(--transition-easing-emphasized);
 }
 
 .ds-accordion__content[data-state="closed"] {
-  animation: ds-accordion-collapse var(--transition-duration-normal) var(--transition-easing-out);
+  animation: ds-accordion-collapse var(--transition-duration-normal) var(--transition-easing-emphasized-in);
+}
+
+/* Text fades in a beat behind the height, so it never appears to be
+   sliced by the growing edge. Only on an open after the page rendered
+   (--enter, Accordion.tsx): a panel open from the start just shows, the
+   same way Radix skips the height animation on mount. */
+.ds-accordion__content[data-state="open"] > .ds-accordion__content-inner--enter {
+  animation: ds-accordion-fade var(--transition-duration-slower) var(--transition-easing-emphasized)
+    var(--transition-duration-fast) both;
+}
+
+@keyframes ds-accordion-fade {
+  from {
+    opacity: 0;
+  }
 }
 
 @keyframes ds-accordion-expand {
@@ -116,39 +203,6 @@
   to { height: 0; }
 }
 
-/* ─── Size: sm ──────────────────────────────────────────── */
-.ds-accordion--sm .ds-accordion__trigger {
-  padding: var(--spacing-2) 0;
-  font-size: var(--font-size-sm);
-}
-
-.ds-accordion--sm .ds-accordion__content-inner {
-  padding: 0 0 var(--spacing-2);
-  font-size: var(--font-size-sm);
-}
-
-/* ─── Size: md ──────────────────────────────────────────── */
-.ds-accordion--md .ds-accordion__trigger {
-  padding: var(--spacing-4) 0;
-  font-size: var(--font-size-base);
-}
-
-.ds-accordion--md .ds-accordion__content-inner {
-  padding: 0 0 var(--spacing-4);
-  font-size: var(--font-size-sm);
-}
-
-/* ─── Size: lg ──────────────────────────────────────────── */
-.ds-accordion--lg .ds-accordion__trigger {
-  padding: var(--spacing-5) 0;
-  font-size: var(--font-size-lg);
-}
-
-.ds-accordion--lg .ds-accordion__content-inner {
-  padding: 0 0 var(--spacing-5);
-  font-size: var(--font-size-base);
-}
-
 /* ─── Trigger row (checkbox variant) ──────────────────── */
 .ds-accordion__trigger-row {
   display: flex;
@@ -156,13 +210,21 @@
   gap: var(--spacing-2);
 }
 
-.ds-accordion__trigger-row .ds-accordion__trigger {
+/* The heading (holding the trigger) takes the rest of the row; the
+   checkbox sits beside it, outside the heading. */
+.ds-accordion__trigger-row > .ds-accordion__header {
   flex: 1;
+  min-width: 0;
 }
 
-/* Indent expanded content to align with the trigger text (past checkbox + gap) */
-.ds-accordion__item:has(.ds-accordion__trigger-row) > .ds-accordion__content .ds-accordion__content-inner {
-  padding-left: calc(var(--size-checkbox-sm) + var(--spacing-2));
+/* Indent expanded content to align with the trigger text (past checkbox + gap).
+   Child combinators scope it to this item's own row and content — a
+   descendant :has() matched checkbox rows in a NESTED accordion and
+   indented the outer item's content too. */
+.ds-accordion__item:has(> .ds-accordion__trigger-row)
+  > .ds-accordion__content
+  > .ds-accordion__content-inner {
+  padding-inline-start: calc(var(--size-checkbox-sm) + var(--spacing-2));
 }
 
 /* ─── Flush variant (legacy — now default behavior) ────── */
@@ -173,7 +235,7 @@
 .ds-accordion--bordered {
   padding: 0 var(--spacing-3);
   background-color: var(--color-background);
-  border: 1px solid var(--color-border);
+  border: var(--border-width-sm) solid var(--color-border);
   border-radius: var(--radius-md);
 }
 

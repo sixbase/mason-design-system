@@ -49,7 +49,10 @@ export const Spinner = forwardRef<HTMLSpanElement, SpinnerProps>(function Spinne
 
   return (
     <span ref={ref} role="status" className={classes} {...props}>
-      <span className="ds-spinner__circle" aria-hidden="true" />
+      {/* ds-motion-safe: exempt from the global reduced-motion reset, which
+          would freeze the pulse below on its first frame. Spinner.css swaps
+          the spin for a non-moving pulse under both reduce conditions. */}
+      <span className="ds-spinner__circle ds-motion-safe" aria-hidden="true" />
       <span className={showLabel ? 'ds-spinner__label' : 'ds-spinner__sr-only'}>
         {label}
       </span>

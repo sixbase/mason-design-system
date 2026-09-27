@@ -1,149 +1,165 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
+import { Button } from '../button';
+import { PRODUCTS, productImage } from '../story-fixtures';
 import { CartLineItem } from './CartLineItem';
 
 const meta: Meta<typeof CartLineItem> = {
   title: 'Ecommerce/CartLineItem',
   component: CartLineItem,
   tags: ['autodocs'],
+  parameters: {
+    docs: {
+      description: {
+        component:
+          'One product row in the cart: picture, name, options, price, quantity and remove.',
+      },
+    },
+  },
 };
 export default meta;
 
 type Story = StoryObj<typeof CartLineItem>;
 
+const { tote, shirt, wallet, beanie, blanket } = PRODUCTS;
+
+/** A line with working quantity and remove (and a way to bring it back). */
 function Controlled(props: Partial<React.ComponentProps<typeof CartLineItem>>) {
   const [quantity, setQuantity] = useState(props.quantity ?? 1);
   const [removed, setRemoved] = useState(false);
 
-  if (removed) return null;
-
   return (
-    <CartLineItem
-      id="demo-1"
-      name="Canvas Tote Bag"
-      price={4800}
-      onQuantityChange={setQuantity}
-      onRemove={() => setRemoved(true)}
-      {...props}
-      quantity={quantity}
-    />
+    <div style={{ maxWidth: 'var(--size-content-md)' }}>
+      {removed ? (
+        <Button variant="secondary" size="sm" onClick={() => setRemoved(false)}>
+          Put it back
+        </Button>
+      ) : (
+        <CartLineItem
+          id="demo-1"
+          name={tote.name}
+          price={tote.price}
+          image={tote.image}
+          imageAlt={tote.imageAlt}
+          onQuantityChange={setQuantity}
+          onRemove={() => setRemoved(true)}
+          {...props}
+          quantity={quantity}
+        />
+      )}
+    </div>
   );
 }
 
 export const Default: Story = {
-  render: () => (
-    <div style={{ maxWidth: '720px' }}>
-      <Controlled
-        image="https://images.unsplash.com/photo-1544816155-12df9643f363?w=200&h=200&fit=crop"
-        imageAlt="Canvas tote bag"
-      />
-    </div>
-  ),
+  render: () => <Controlled />,
 };
 
 export const WithOptions: Story = {
   render: () => (
-    <div style={{ maxWidth: '720px' }}>
-      <Controlled
-        name="Linen Button-Down Shirt"
-        price={8900}
-        image="https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=200&h=200&fit=crop"
-        options={[
-          { name: 'Size', value: 'XL' },
-          { name: 'Color', value: 'Stone' },
-        ]}
-      />
-    </div>
+    <Controlled
+      name={shirt.name}
+      price={shirt.price}
+      image={shirt.image}
+      imageAlt={shirt.imageAlt}
+      options={[
+        { name: 'Size', value: 'XL' },
+        { name: 'Color', value: 'Oat' },
+      ]}
+    />
   ),
 };
 
 export const OnSale: Story = {
   render: () => (
-    <div style={{ maxWidth: '720px' }}>
-      <Controlled
-        name="Leather Weekender"
-        price={12800}
-        compareAtPrice={16500}
-        image="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=200&h=200&fit=crop"
-        quantity={1}
-      />
-    </div>
+    <Controlled
+      name={blanket.name}
+      price={blanket.price}
+      compareAtPrice={blanket.compareAtPrice}
+      image={blanket.image}
+      imageAlt={blanket.imageAlt}
+    />
   ),
 };
 
+/** `href` makes the picture and name a link back to the product page. */
 export const WithLink: Story = {
   render: () => (
-    <div style={{ maxWidth: '720px' }}>
-      <Controlled
-        name="Merino Wool Beanie"
-        price={3200}
-        href="/products/beanie"
-        image="https://images.unsplash.com/photo-1576871337632-b9aef4c17ab9?w=200&h=200&fit=crop"
-      />
-    </div>
+    <Controlled
+      name={beanie.name}
+      price={beanie.price}
+      href={beanie.href}
+      image={beanie.image}
+      imageAlt={beanie.imageAlt}
+    />
+  ),
+};
+
+/** `currency` + `locale` format both prices: 128,00 € and the struck-through 160,00 €. */
+export const EuroPrices: Story = {
+  name: 'Prices in euros (Germany)',
+  render: () => (
+    <Controlled
+      name={blanket.name}
+      price={blanket.price}
+      compareAtPrice={blanket.compareAtPrice}
+      image={blanket.image}
+      imageAlt={blanket.imageAlt}
+      currency="EUR"
+      locale="de-DE"
+    />
   ),
 };
 
 export const NoImage: Story = {
-  render: () => (
-    <div style={{ maxWidth: '720px' }}>
-      <Controlled name="Gift Card" price={5000} />
-    </div>
-  ),
+  render: () => <Controlled name="Gift Card" price={5000} image={undefined} imageAlt={undefined} />,
 };
 
 export const LongName: Story = {
   render: () => (
-    <div style={{ maxWidth: '720px' }}>
-      <Controlled
-        name="Hand-Stitched Italian Leather Messenger Bag with Brass Hardware and Adjustable Shoulder Strap"
-        price={24500}
-        image="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=200&h=200&fit=crop"
-        options={[
-          { name: 'Color', value: 'Cognac' },
-          { name: 'Size', value: 'Large' },
-          { name: 'Monogram', value: 'A.T.' },
-        ]}
-      />
-    </div>
+    <Controlled
+      name="Hand-Stitched Vegetable-Tanned Leather Weekender Bag with Brass Hardware and Adjustable Shoulder Strap"
+      price={24500}
+      image={productImage('Weekender', 3)}
+      imageAlt="Tan leather weekender bag with brass buckles"
+      options={[
+        { name: 'Color', value: 'Cognac' },
+        { name: 'Size', value: 'Large' },
+        { name: 'Monogram', value: 'A.T.' },
+      ]}
+    />
   ),
 };
 
 export const MultipleItems: Story = {
-  render: () => {
-    function CartList() {
-      const [items, setItems] = useState([
-        { id: '1', name: 'Canvas Tote Bag', price: 4800, quantity: 1, image: 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=200&h=200&fit=crop' },
-        { id: '2', name: 'Linen Shirt', price: 8900, quantity: 2, image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=200&h=200&fit=crop', options: [{ name: 'Size', value: 'M' }] },
-        { id: '3', name: 'Leather Wallet', price: 6500, quantity: 1, compareAtPrice: 8500, image: 'https://images.unsplash.com/photo-1627123424574-724758594e93?w=200&h=200&fit=crop' },
-      ]);
+  render: function CartList() {
+    const [items, setItems] = useState([
+      { ...tote, quantity: 1, options: undefined },
+      { ...shirt, quantity: 2, options: [{ name: 'Size', value: 'M' }] },
+      { ...wallet, quantity: 1, options: undefined },
+    ]);
 
-      return (
-        <div style={{ maxWidth: '720px' }}>
-          {items.map((item) => (
-            <CartLineItem
-              key={item.id}
-              id={item.id}
-              name={item.name}
-              price={item.price}
-              compareAtPrice={item.compareAtPrice}
-              quantity={item.quantity}
-              image={item.image}
-              options={item.options}
-              onQuantityChange={(q) =>
-                setItems((prev) =>
-                  prev.map((i) => (i.id === item.id ? { ...i, quantity: q } : i)),
-                )
-              }
-              onRemove={() =>
-                setItems((prev) => prev.filter((i) => i.id !== item.id))
-              }
-            />
-          ))}
-        </div>
-      );
-    }
-
-    return <CartList />;
+    return (
+      <div style={{ maxWidth: 'var(--size-content-md)' }}>
+        {items.map((item) => (
+          <CartLineItem
+            key={item.id}
+            id={item.id}
+            name={item.name}
+            price={item.price}
+            compareAtPrice={item.compareAtPrice}
+            quantity={item.quantity}
+            image={item.image}
+            imageAlt={item.imageAlt}
+            options={item.options}
+            href={item.href}
+            onQuantityChange={(q) =>
+              setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, quantity: q } : i)))
+            }
+            onRemove={() => setItems((prev) => prev.filter((i) => i.id !== item.id))}
+          />
+        ))}
+      </div>
+    );
   },
 };

@@ -1,99 +1,113 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Decorator, Meta, StoryObj } from '@storybook/react';
+import { Text } from '../typography/Typography';
 import { Divider } from './Divider';
 
 const meta: Meta<typeof Divider> = {
   title: 'Components/Divider',
   component: Divider,
   tags: ['autodocs'],
+  parameters: {
+    docs: {
+      description: {
+        component:
+          'A thin line between pieces of content, optionally with a word in the middle like “OR”.',
+      },
+    },
+  },
   argTypes: {
-    orientation: { control: 'select' },
-    variant: { control: 'select' },
-    spacing: { control: 'select' },
+    orientation: { control: 'select', options: ['horizontal', 'vertical'] },
+    variant: { control: 'select', options: ['default', 'subtle'] },
+    spacing: { control: 'select', options: ['none', 'sm', 'md', 'lg'] },
   },
 };
 export default meta;
 
 type Story = StoryObj<typeof Divider>;
 
-/* ─── Basic ────────────────────────────────────────────────── */
+/** Text above and below, so the line — and the space it keeps around it — is visible. */
+const inContext: Decorator = (Story) => (
+  <div style={{ maxWidth: 'var(--measure-reading)' }}>
+    <Text>Handmade in Portland from organic cotton canvas.</Text>
+    <Story />
+    <Text>Ships in 1–2 business days.</Text>
+  </div>
+);
 
-export const Default: Story = {};
+export const Default: Story = { decorators: [inContext] };
 
-export const Subtle: Story = { args: { variant: 'subtle' } };
+export const Subtle: Story = { args: { variant: 'subtle' }, decorators: [inContext] };
 
-/* ─── Spacing variants ─────────────────────────────────────── */
+export const SpacingNone: Story = { args: { spacing: 'none' }, decorators: [inContext] };
 
-export const SpacingNone: Story = { args: { spacing: 'none' } };
-export const SpacingSm: Story = { args: { spacing: 'sm' } };
-export const SpacingMd: Story = { args: { spacing: 'md' } };
-export const SpacingLg: Story = { args: { spacing: 'lg' } };
+export const SpacingSm: Story = { args: { spacing: 'sm' }, decorators: [inContext] };
 
-/* ─── Labeled ("OR" pattern) ───────────────────────────────── */
+export const SpacingMd: Story = { args: { spacing: 'md' }, decorators: [inContext] };
 
-export const WithLabel: Story = { args: { label: 'OR' } };
+export const SpacingLg: Story = { args: { spacing: 'lg' }, decorators: [inContext] };
+
+export const AllSpacings: Story = {
+  render: () => (
+    <div>
+      <Text>No spacing</Text>
+      <Divider spacing="none" />
+      <Text>Small spacing</Text>
+      <Divider spacing="sm" />
+      <Text>Medium spacing (default)</Text>
+      <Divider spacing="md" />
+      <Text>Large spacing</Text>
+      <Divider spacing="lg" />
+      <Text>End</Text>
+    </div>
+  ),
+};
+
+export const WithLabel: Story = { args: { label: 'OR' }, decorators: [inContext] };
 
 export const CheckoutOrPattern: Story = {
+  name: '“OR” between checkout options',
   render: () => (
-    <div style={{ maxWidth: '400px' }}>
-      <p>Express checkout</p>
+    <div style={{ maxWidth: 'var(--measure-reading)' }}>
+      <Text>Express checkout</Text>
       <Divider label="OR" spacing="lg" />
-      <p>Pay with card</p>
+      <Text>Pay with card</Text>
     </div>
   ),
 };
 
 export const LabeledSubtle: Story = {
   args: { label: 'Continue as guest', variant: 'subtle', spacing: 'lg' },
+  decorators: [inContext],
 };
-
-/* ─── Vertical ─────────────────────────────────────────────── */
 
 export const Vertical: Story = {
   render: () => (
-    <div style={{ display: 'flex', alignItems: 'center', height: '48px' }}>
-      <span>Left</span>
+    <div style={{ display: 'flex', alignItems: 'center', height: 'var(--spacing-12)' }}>
+      <Text as="span">Left</Text>
       <Divider orientation="vertical" />
-      <span>Right</span>
+      <Text as="span">Right</Text>
     </div>
   ),
 };
 
 export const VerticalSubtle: Story = {
   render: () => (
-    <div style={{ display: 'flex', alignItems: 'center', height: '48px' }}>
-      <span>Left</span>
+    <div style={{ display: 'flex', alignItems: 'center', height: 'var(--spacing-12)' }}>
+      <Text as="span">Left</Text>
       <Divider orientation="vertical" variant="subtle" />
-      <span>Right</span>
+      <Text as="span">Right</Text>
     </div>
   ),
 };
-
-/* ─── In context ───────────────────────────────────────────── */
 
 export const BetweenSections: Story = {
+  name: 'Between lines of an order summary',
   render: () => (
     <div>
-      <p>Section one content goes here.</p>
+      <Text>Subtotal · $137.00</Text>
       <Divider />
-      <p>Section two content goes here.</p>
+      <Text>Shipping · Free</Text>
       <Divider variant="subtle" />
-      <p>Section three content goes here.</p>
-    </div>
-  ),
-};
-
-export const AllSpacings: Story = {
-  render: () => (
-    <div>
-      <p>No spacing</p>
-      <Divider spacing="none" />
-      <p>Small spacing</p>
-      <Divider spacing="sm" />
-      <p>Medium spacing (default)</p>
-      <Divider spacing="md" />
-      <p>Large spacing</p>
-      <Divider spacing="lg" />
-      <p>End</p>
+      <Text>Estimated tax · $11.30</Text>
     </div>
   ),
 };

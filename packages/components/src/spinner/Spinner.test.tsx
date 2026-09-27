@@ -34,6 +34,8 @@ describe('Spinner', () => {
   it('hides the circle from assistive technology', () => {
     render(<Spinner />);
     expect(document.querySelector('.ds-spinner__circle')).toHaveAttribute('aria-hidden', 'true');
+    // Opted out of the global reduced-motion reset, which froze the pulse
+    expect(document.querySelector('.ds-spinner__circle')).toHaveClass('ds-motion-safe');
   });
 
   it('applies md size by default', () => {

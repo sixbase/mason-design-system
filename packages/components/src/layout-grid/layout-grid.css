@@ -53,9 +53,15 @@
 
 /* ─── 12-Column Layout Grid ──────────────────────────────── */
 
+/*
+ * minmax(0, 1fr), matching Grid. Variant items span 3+ tracks, which
+ * grid sizing already keeps out of the intrinsic step, but any item
+ * placed in a single track (custom grid-column) would otherwise widen
+ * it with long unbroken content (bare 1fr = minmax(auto, 1fr)).
+ */
 .ds-layout {
   display: grid;
-  grid-template-columns: repeat(12, 1fr);
+  grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: var(--spacing-6);               /* 24px — universal gutter */
 }
 
@@ -73,17 +79,20 @@
  * no !important needed.
  */
 
-/* Equal halves: 6 + 6 */
-.ds-layout--halves > :where(:first-child)  { grid-column: span 6; }
-.ds-layout--halves > :where(:nth-child(2)) { grid-column: span 6; }
+/* Two-column splits repeat per row (odd / even children), so a third
+   or fourth child starts a new row with the same split instead of
+   collapsing into a single 1/12 column. */
+
+/* Equal halves: 6 + 6 (every child is a half — no odd/even needed) */
+.ds-layout--halves > * { grid-column: span 6; }
 
 /* Golden split: 7 + 5 — primary + secondary (7/12 ≈ 0.583) */
-.ds-layout--golden > :where(:first-child)  { grid-column: span 7; }
-.ds-layout--golden > :where(:nth-child(2)) { grid-column: span 5; }
+.ds-layout--golden > :where(:nth-child(odd))  { grid-column: span 7; }
+.ds-layout--golden > :where(:nth-child(even)) { grid-column: span 5; }
 
 /* Reverse golden: 5 + 7 — secondary + primary */
-.ds-layout--golden-reverse > :where(:first-child)  { grid-column: span 5; }
-.ds-layout--golden-reverse > :where(:nth-child(2)) { grid-column: span 7; }
+.ds-layout--golden-reverse > :where(:nth-child(odd))  { grid-column: span 5; }
+.ds-layout--golden-reverse > :where(:nth-child(even)) { grid-column: span 7; }
 
 /* Thirds: 4 + 4 + 4 */
 .ds-layout--thirds > * { grid-column: span 4; }
@@ -92,8 +101,19 @@
 .ds-layout--quarters > * { grid-column: span 3; }
 
 /* Wide + narrow: 8 + 4 — heavy primary + sidebar */
-.ds-layout--wide-narrow > :where(:first-child)  { grid-column: span 8; }
-.ds-layout--wide-narrow > :where(:nth-child(2)) { grid-column: span 4; }
+.ds-layout--wide-narrow > :where(:nth-child(odd))  { grid-column: span 8; }
+.ds-layout--wide-narrow > :where(:nth-child(even)) { grid-column: span 4; }
+
+/* Span-all rows (a section title above a golden split) must not shift
+   the odd/even count — otherwise primary lands in the 5-column slot.
+   `of S` is Chrome 111+ / Safari 9+ / Firefox 113+; :where() is
+   forgiving, so older browsers ignore these and keep the rules above. */
+.ds-layout--golden > :where(:nth-child(odd of :not(.ds-layout__span-all)))          { grid-column: span 7; }
+.ds-layout--golden > :where(:nth-child(even of :not(.ds-layout__span-all)))         { grid-column: span 5; }
+.ds-layout--golden-reverse > :where(:nth-child(odd of :not(.ds-layout__span-all)))  { grid-column: span 5; }
+.ds-layout--golden-reverse > :where(:nth-child(even of :not(.ds-layout__span-all))) { grid-column: span 7; }
+.ds-layout--wide-narrow > :where(:nth-child(odd of :not(.ds-layout__span-all)))     { grid-column: span 8; }
+.ds-layout--wide-narrow > :where(:nth-child(even of :not(.ds-layout__span-all)))    { grid-column: span 4; }
 
 /* ─── Span Utility ───────────────────────────────────────── */
 
@@ -104,9 +124,12 @@
 /* ─── Sticky Sidebar ─────────────────────────────────────── */
 /* Common pattern for PDP details or cart summary columns */
 
+/* Clears a sticky Header: it publishes --sticky-header-height on <html>
+   (0 without one). At a flat 24px the column's top 45px sat under the
+   69px bar for as long as it stayed stuck. */
 .ds-layout__sticky {
   position: sticky;
-  top: var(--spacing-6);
+  top: calc(var(--sticky-header-height, var(--spacing-0)) + var(--spacing-6));
   align-self: start;
 }
 
@@ -129,13 +152,15 @@
     gap: var(--spacing-4);              /* 16px gutters on tablet */
   }
 
-  /* Quarters collapse to 2-up on tablet */
-  .ds-layout--quarters > * {
+  /* Quarters collapse to 2-up on tablet. Span-all rows (a section title)
+     stay full width: at `> *` these later rules outranked
+     .ds-layout__span-all by order and halved the title row. */
+  .ds-layout--quarters > :not(.ds-layout__span-all) {
     grid-column: span 6;
   }
 
   /* Thirds collapse to 2-up on tablet (third item wraps) */
-  .ds-layout--thirds > * {
+  .ds-layout--thirds > :not(.ds-layout__span-all) {
     grid-column: span 6;
   }
 }
@@ -144,6 +169,13 @@
    Wins over the variant rules above at equal specificity because
    it comes last in the cascade (variants use :where()). */
 @media (max-width: 767px) {
+  /* One track, not 12: twelve tracks keep eleven 24px gutters
+     (264px) even when stacked, so a LayoutGrid nested in anything
+     narrower than that — a card at 320px — overflowed its parent. */
+  .ds-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .ds-layout > * {
     grid-column: 1 / -1;
   }

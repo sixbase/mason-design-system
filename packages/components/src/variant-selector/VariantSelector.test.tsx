@@ -4,6 +4,9 @@ import { axe, toHaveNoViolations } from 'jest-axe';
 import { describe, expect, it, vi } from 'vitest';
 import { VariantSelector } from './VariantSelector';
 import type { VariantOption } from './VariantSelector';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { Heading } from '../typography';
 
 expect.extend(toHaveNoViolations);
 
@@ -101,6 +104,17 @@ describe('VariantSelector', () => {
       render(<VariantSelector {...defaultProps} />);
       const colorGroup = screen.getAllByRole('radiogroup')[0];
       expect(colorGroup).toHaveAttribute('aria-label', 'Color');
+    });
+
+    it('leaves disabled colors out of the swatch group', () => {
+      const withDisabled: VariantOption = {
+        ...colorOption,
+        values: colorOption.values.map((v) => (v.value === 'navy' ? { ...v, disabled: true } : v)),
+      };
+      render(<VariantSelector {...defaultProps} options={[withDisabled]} />);
+      const colorGroup = screen.getByRole('radiogroup', { name: 'Color' });
+      expect(within(colorGroup).getAllByRole('radio')).toHaveLength(2);
+      expect(within(colorGroup).queryByRole('radio', { name: /Navy/ })).not.toBeInTheDocument();
     });
   });
 
@@ -210,6 +224,26 @@ describe('VariantSelector', () => {
       mButton.focus();
       await user.keyboard('{ArrowRight}');
       expect(onValueChange).toHaveBeenCalledWith('Size', 'l');
+      // Focus follows the arrow (roving tabindex), even before the parent
+      // re-renders with the new selection.
+      expect(screen.getByRole('radio', { name: 'L' })).toHaveFocus();
+    });
+
+    it('swaps the horizontal arrows in right-to-left layouts', async () => {
+      const user = userEvent.setup();
+      const onValueChange = vi.fn();
+      render(
+        <div dir="rtl">
+          <VariantSelector
+            options={[sizeOption]}
+            selectedValues={{ Size: 'm' }}
+            onValueChange={onValueChange}
+          />
+        </div>,
+      );
+      screen.getByRole('radio', { name: 'M' }).focus();
+      await user.keyboard('{ArrowLeft}');
+      expect(onValueChange).toHaveBeenCalledWith('Size', 'l');
     });
 
     it('wraps around when reaching the end', async () => {
@@ -266,6 +300,85 @@ describe('VariantSelector', () => {
       radios.forEach((radio) => {
         expect(radio).toHaveAttribute('aria-checked', 'false');
       });
+    });
+  });
+
+
+  // ─── Regressions (QA break pass) ─────────────────────────
+
+  describe('regressions', () => {
+    it('has a single tab stop per button group (not the group AND the selected option)', async () => {
+      const user = userEvent.setup();
+      render(
+        <>
+          <button type="button">before</button>
+          <VariantSelector options={[sizeOption]} selectedValues={{ Size: 'm' }} onValueChange={vi.fn()} />
+          <button type="button">after</button>
+        </>,
+      );
+      await user.click(screen.getByText('before'));
+      await user.tab();
+      expect(screen.getByRole('radio', { name: 'M' })).toHaveFocus();
+      await user.tab();
+      expect(screen.getByText('after')).toHaveFocus();
+    });
+
+    it('with nothing selected, Tab lands on the first enabled option', async () => {
+      const user = userEvent.setup();
+      const withDisabledFirst: VariantOption = {
+        ...sizeOption,
+        values: [{ label: 'XS', value: 'xs', disabled: true }, ...sizeOption.values],
+      };
+      render(
+        <>
+          <button type="button">before</button>
+          <VariantSelector options={[withDisabledFirst]} selectedValues={{}} onValueChange={vi.fn()} />
+        </>,
+      );
+      await user.click(screen.getByText('before'));
+      await user.tab();
+      expect(screen.getByRole('radio', { name: 'S' })).toHaveFocus();
+    });
+
+    // Group labels were a hard-coded <h4>: under a PDP h1 that is an axe
+    // heading-order violation.
+    it('group labels are not headings, so the page outline stays intact', async () => {
+      const { container } = render(
+        <main>
+          <Heading as="h1">Aramid case</Heading>
+          <VariantSelector {...defaultProps} />
+        </main>,
+      );
+      expect(within(container).queryAllByRole('heading')).toHaveLength(1);
+      expect(await axe(container)).toHaveNoViolations();
+    });
+
+    // Out-of-stock options stay focusable/selectable, so their text needs
+    // 4.5:1 — opacity 0.382 failed that.
+    it('does not fade out-of-stock options with opacity', () => {
+      const css = readFileSync(resolve(__dirname, 'VariantSelector.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+      for (const [, selector, body] of css.matchAll(/([^{}]*--unavailable[^{}]*)\{([^}]*)\}/g)) {
+        expect(body, selector).not.toMatch(/opacity/);
+      }
+    });
+
+    it('group label renders at the sm text size regardless of stylesheet order', () => {
+      const own = document.createElement('style');
+      own.textContent = readFileSync(resolve(__dirname, 'VariantSelector.css'), 'utf8');
+      const typography = document.createElement('style');
+      typography.textContent = readFileSync(resolve(__dirname, '../typography/Typography.css'), 'utf8');
+      // Worst case: the component sheet loads BEFORE Typography.
+      document.head.append(own, typography);
+      try {
+        const { container } = render(
+          <VariantSelector options={[sizeOption]} selectedValues={{}} onValueChange={vi.fn()} />,
+        );
+        const label = container.querySelector('.ds-variant-selector__label')!;
+        expect(getComputedStyle(label).fontSize).toBe('var(--font-size-sm)');
+      } finally {
+        own.remove();
+        typography.remove();
+      }
     });
   });
 });

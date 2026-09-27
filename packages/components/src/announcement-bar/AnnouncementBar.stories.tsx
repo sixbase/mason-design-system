@@ -1,11 +1,20 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
+import { Button } from '../button';
 import { AnnouncementBar } from './AnnouncementBar';
 
 const meta: Meta<typeof AnnouncementBar> = {
   title: 'Components/AnnouncementBar',
   component: AnnouncementBar,
   tags: ['autodocs'],
+  parameters: {
+    docs: {
+      description: {
+        component:
+          'The thin strip across the very top of the store for one short message, like a free-shipping offer.',
+      },
+    },
+  },
   argTypes: {
     dismissible: { control: 'boolean' },
   },
@@ -34,13 +43,9 @@ export const Dismissible: Story = {
 
       if (!visible) {
         return (
-          <button
-            type="button"
-            onClick={() => setVisible(true)}
-            style={{ fontFamily: 'var(--font-family-body)', fontSize: 'var(--font-size-sm)' }}
-          >
+          <Button variant="secondary" size="sm" onClick={() => setVisible(true)}>
             Show announcement again
-          </button>
+          </Button>
         );
       }
 
@@ -61,13 +66,9 @@ export const DismissibleWithLink: Story = {
 
       if (!visible) {
         return (
-          <button
-            type="button"
-            onClick={() => setVisible(true)}
-            style={{ fontFamily: 'var(--font-family-body)', fontSize: 'var(--font-size-sm)' }}
-          >
+          <Button variant="secondary" size="sm" onClick={() => setVisible(true)}>
             Show announcement again
-          </button>
+          </Button>
         );
       }
 

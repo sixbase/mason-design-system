@@ -1,7 +1,17 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { render, screen } from '@testing-library/react';
 import { axe } from 'jest-axe';
 import { describe, expect, it } from 'vitest';
 import { Grid } from './Grid';
+
+/** Loads a component stylesheet into jsdom (no @media support) for computed-style checks. */
+function injectCss(file: string): () => void {
+  const style = document.createElement('style');
+  style.textContent = readFileSync(resolve(__dirname, file), 'utf8');
+  document.head.appendChild(style);
+  return () => style.remove();
+}
 
 describe('Grid', () => {
   it('renders children', () => {
@@ -83,6 +93,16 @@ describe('Grid', () => {
     const el = container.firstChild as HTMLElement;
     expect(el.style.color).toBe('red');
     expect(el.style.getPropertyValue('--grid-cols')).toBe('2');
+  });
+
+  // Regression: bare 1fr tracks (= minmax(auto, 1fr)) let one child with
+  // long unbroken content widen its column and push the grid past its
+  // container at 320px.
+  it('uses zero-minimum tracks so content cannot blow out columns', () => {
+    const removeCss = injectCss('Grid.css');
+    render(<Grid data-testid="grid"><div>https://example.com/a-very-long-unbroken-url</div></Grid>);
+    expect(getComputedStyle(screen.getByTestId('grid')).gridTemplateColumns).toContain('minmax(0, 1fr)');
+    removeCss();
   });
 
   it('forwards ref', () => {

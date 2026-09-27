@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { axe } from 'jest-axe';
 import { describe, expect, it } from 'vitest';
 import { Icon } from './Icon';
+import { Heart } from './icons';
 
 /* Sample SVG content for testing */
 const HeartPath = () => (
@@ -140,6 +141,23 @@ describe('Icon', () => {
   });
 
   /* ─── Accessibility audit ────────────────────────── */
+
+  // Regression: `label` without decorative={false} rendered aria-hidden
+  // and the label was silently dropped.
+  it('treats a labelled Icon as meaningful by default', () => {
+    render(<Icon label="Favorite"><HeartPath /></Icon>);
+    expect(screen.getByRole('img', { name: 'Favorite' })).toBeInTheDocument();
+  });
+
+  it('treats a labelled registry icon as meaningful by default', () => {
+    render(<Heart label="Favorite" />);
+    expect(screen.getByRole('img', { name: 'Favorite' })).toBeInTheDocument();
+  });
+
+  it('lets an explicit decorative override a label', () => {
+    const { container } = render(<Heart label="Favorite" decorative />);
+    expect(container.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+  });
 
   it('has no accessibility violations (decorative)', async () => {
     const { container } = render(

@@ -13,7 +13,7 @@
 /* ─── Header ──────────────────────────────────────────── */
 .ds-cart-drawer__header {
   padding-bottom: var(--cart-drawer-gap);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: var(--border-width-sm) solid var(--color-border);
 }
 
 /* ─── Items list ──────────────────────────────────────── */
@@ -27,7 +27,7 @@
   flex-direction: column;
   gap: var(--spacing-3);
   padding-top: var(--cart-drawer-gap);
-  border-top: 1px solid var(--color-border);
+  border-top: var(--border-width-sm) solid var(--color-border);
   margin-top: auto;
   position: sticky;
   bottom: calc(-1 * var(--spacing-6));
@@ -62,6 +62,9 @@
 }
 
 /* ─── Screen reader only ──────────────────────────────── */
+/* Global class, also declared in PredictiveSearch.css and PriceDisplay.css
+   so each component works when its CSS is loaded alone. Keep all three
+   copies identical — they share one selector, so any drift merges. */
 .ds-sr-only {
   position: absolute;
   width: 1px;

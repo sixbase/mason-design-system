@@ -1,6 +1,8 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { render, screen } from '@testing-library/react';
 import { axe } from 'jest-axe';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { Footer } from './Footer';
 
 const columns = [
@@ -94,5 +96,43 @@ describe('Footer', () => {
       />,
     );
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  // ── Regressions (QA break pass) ─────────────────────────
+
+  it('renders column headings as h2 by default so they never skip a level', () => {
+    render(<Footer logoSrc="/logo.svg" columns={columns} />);
+    expect(screen.getByRole('heading', { level: 2, name: 'Shop' })).toBeInTheDocument();
+  });
+
+  it('honours a custom headingLevel', () => {
+    render(<Footer logoSrc="/logo.svg" columns={columns} headingLevel="h3" />);
+    expect(screen.getByRole('heading', { level: 3, name: 'Shop' })).toBeInTheDocument();
+  });
+
+  it('accepts repeated column headings without React key collisions', () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    render(
+      <Footer
+        logoSrc="/logo.svg"
+        columns={[
+          { heading: 'Shop', links: [{ label: 'Kitchen', href: '/k' }] },
+          { heading: 'Shop', links: [{ label: 'Garden', href: '/g' }] },
+        ]}
+      />,
+    );
+    expect(spy.mock.calls.flat().join(' ')).not.toMatch(/same key/);
+    spy.mockRestore();
+  });
+
+  // Regression: print always uses the light tokens, but the dark-mode logo
+  // invert still applied, so a page printed from dark mode had a white logo
+  // on white paper. The invert is screen-only (and honours data-theme too).
+  it('inverts the dark-mode logo on screen only', () => {
+    const css = readFileSync(resolve(__dirname, 'Footer.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    expect(css).toMatch(
+      /@media screen\s*\{\s*:is\(\.dark, \[data-theme="dark"\]\) \.ds-footer__logo-img\s*\{\s*filter: invert\(1\);\s*\}\s*\}/,
+    );
+    expect(css.match(/invert\(1\)/g)).toHaveLength(1);
   });
 });

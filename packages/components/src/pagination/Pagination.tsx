@@ -1,9 +1,13 @@
-import { forwardRef, useMemo } from 'react';
+import { forwardRef, useCallback, useEffect, useMemo, useRef } from 'react';
 import type { HTMLAttributes } from 'react';
 import { Button } from '../button';
 import { ChevronLeft, ChevronRight } from '../icon';
 import { Text } from '../typography';
+import { safeHref } from '../internal/safe-url';
 import './Pagination.css';
+
+/** Control height step. */
+export type PaginationSize = 'sm' | 'md';
 
 export interface PaginationProps extends Omit<HTMLAttributes<HTMLElement>, 'onChange'> {
   /** Current active page (1-indexed) */
@@ -17,7 +21,7 @@ export interface PaginationProps extends Omit<HTMLAttributes<HTMLElement>, 'onCh
   /** Number of pages shown around the current page (default: 1) */
   siblingCount?: number;
   /** Size of the pagination controls */
-  size?: 'sm' | 'md';
+  size?: PaginationSize;
 }
 
 /**
@@ -41,8 +45,11 @@ function buildPageRange(
   const leftSibling = Math.max(currentPage - siblingCount, 1);
   const rightSibling = Math.min(currentPage + siblingCount, totalPages);
 
-  const showLeftEllipsis = leftSibling > 2;
-  const showRightEllipsis = rightSibling < totalPages - 1;
+  // An ellipsis must stand in for at least two pages. When the gap is a
+  // single page, render that page instead — "1 … 3" would spend a slot
+  // hiding exactly the number it replaces.
+  const showLeftEllipsis = leftSibling > 3;
+  const showRightEllipsis = rightSibling < totalPages - 2;
 
   const pages: (number | '…')[] = [];
 
@@ -99,33 +106,80 @@ function buildPageRange(
 export const Pagination = forwardRef<HTMLElement, PaginationProps>(
   function Pagination(
     {
-      currentPage,
+      currentPage: currentPageProp,
       totalPages,
       onPageChange,
       baseUrl,
-      siblingCount = 1,
+      siblingCount: siblingCountProp = 1,
       size = 'md',
       className,
       ...props
     },
     ref,
   ) {
+    // Clamp out-of-range input (page 0, -1, beyond the last page — e.g. a
+    // stale `?page=` query after the collection shrank). Unclamped, no page
+    // is marked current and Previous/Next request pages that don't exist.
+    const currentPage = Math.min(
+      Math.max(Math.trunc(currentPageProp) || 1, 1),
+      Math.max(totalPages, 1),
+    );
+    const siblingCount = Math.max(Math.trunc(siblingCountProp) || 0, 0);
+
     const pages = useMemo(
       () => buildPageRange(currentPage, totalPages, siblingCount),
       [currentPage, totalPages, siblingCount],
     );
 
-    // Hide when only 1 page or invalid
-    if (totalPages <= 1) return null;
+    // ─── Keep keyboard focus across a page change ──────────
+    // The pressed control often doesn't survive the change: a page number
+    // becomes the (non-interactive) current marker and unmounts, and Next
+    // on the last page becomes disabled — both dropped focus to <body>, so
+    // the next Tab restarted at the top of the document (WCAG 2.4.3). After
+    // a change started here, if focus was lost, it moves to the current
+    // page marker (tabIndex -1), from where Tab continues in the pagination.
+    const navRef = useRef<HTMLElement | null>(null);
+    const refocusRef = useRef(false);
+    const setNavRef = useCallback(
+      (node: HTMLElement | null) => {
+        navRef.current = node;
+        if (typeof ref === 'function') ref(node);
+        else if (ref) ref.current = node;
+      },
+      [ref],
+    );
+    const changePage = (page: number) => {
+      refocusRef.current = true;
+      onPageChange?.(page);
+    };
+    useEffect(() => {
+      if (!refocusRef.current) return;
+      refocusRef.current = false;
+      const nav = navRef.current;
+      const focused = document.activeElement as HTMLElement | null;
+      const lost =
+        !focused ||
+        focused === document.body ||
+        (nav?.contains(focused) && (focused as HTMLButtonElement).disabled);
+      if (!nav || !lost) return;
+      // Desktop marker or the mobile "Page X of Y" — whichever is displayed
+      const markers = Array.from(nav.querySelectorAll<HTMLElement>('[data-pagination-current]'));
+      (markers.find((el) => el.getClientRects().length > 0) ?? markers[0])?.focus();
+    }, [currentPage]);
+
+    // Hide when only 1 page or invalid. NaN (a count divided by a missing
+    // page size) slipped past `<= 1` and rendered "Page NaN of NaN";
+    // Infinity (divided by 0) rendered a last page called "Infinity".
+    if (!(totalPages > 1) || !Number.isFinite(totalPages)) return null;
 
     const isFirstPage = currentPage === 1;
     const isLastPage = currentPage === totalPages;
     const isSSR = !!baseUrl;
 
-    function getPageUrl(page: number): string {
+    function getPageUrl(page: number): string | undefined {
       if (!baseUrl) return '#';
       const separator = baseUrl.includes('?') ? '&' : '?';
-      return page === 1 ? baseUrl : `${baseUrl}${separator}page=${page}`;
+      return safeHref(page === 1 ? baseUrl : `${baseUrl}${separator}page=${page}`);
     }
 
     const classes = [
@@ -137,7 +191,7 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>(
       .join(' ');
 
     return (
-      <nav ref={ref} className={classes} aria-label="Pagination" {...props}>
+      <nav ref={setNavRef} className={classes} aria-label="Pagination" {...props}>
         {/* Desktop: full page numbers */}
         <div className="ds-pagination__desktop">
           {/* Previous button */}
@@ -158,7 +212,7 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>(
               variant="secondary"
               size={size}
               disabled={isFirstPage}
-              onClick={!isSSR ? () => onPageChange?.(currentPage - 1) : undefined}
+              onClick={!isSSR ? () => changePage(currentPage - 1) : undefined}
               aria-label="Go to previous page"
             >
               <ChevronLeft size="sm" />
@@ -187,8 +241,13 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>(
                     `ds-pagination__page--${size}`,
                   ].join(' ')}
                   aria-current="page"
-                  aria-label={`Page ${page}`}
+                  tabIndex={-1}
+                  data-pagination-current=""
                 >
+                  {/* aria-label is ignored on a plain span (no role), so
+                      screen readers heard only "5". Hidden text makes it
+                      "Page 5, current page". */}
+                  <span className="ds-pagination__sr-only">Page </span>
                   {page}
                 </span>
               ) : isSSR ? (
@@ -208,7 +267,7 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>(
                   variant="ghost"
                   size={size}
                   iconOnly
-                  onClick={() => onPageChange?.(page)}
+                  onClick={() => changePage(page)}
                   aria-label={`Go to page ${page}`}
                 >
                   {page}
@@ -235,7 +294,7 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>(
               variant="secondary"
               size={size}
               disabled={isLastPage}
-              onClick={!isSSR ? () => onPageChange?.(currentPage + 1) : undefined}
+              onClick={!isSSR ? () => changePage(currentPage + 1) : undefined}
               aria-label="Go to next page"
             >
               <span className="ds-pagination__next-label">Next</span>
@@ -263,7 +322,7 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>(
               variant="secondary"
               size={size}
               disabled={isFirstPage}
-              onClick={!isSSR ? () => onPageChange?.(currentPage - 1) : undefined}
+              onClick={!isSSR ? () => changePage(currentPage - 1) : undefined}
               aria-label="Go to previous page"
             >
               <ChevronLeft size="sm" />
@@ -271,7 +330,7 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>(
             </Button>
           )}
 
-          <Text size="sm" className="ds-pagination__info">
+          <Text size="sm" className="ds-pagination__info" tabIndex={-1} data-pagination-current="">
             Page {currentPage} of {totalPages}
           </Text>
 
@@ -292,7 +351,7 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>(
               variant="secondary"
               size={size}
               disabled={isLastPage}
-              onClick={!isSSR ? () => onPageChange?.(currentPage + 1) : undefined}
+              onClick={!isSSR ? () => changePage(currentPage + 1) : undefined}
               aria-label="Go to next page"
             >
               Next

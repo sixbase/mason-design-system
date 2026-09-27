@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { render, screen } from '@testing-library/react';
 import { axe } from 'jest-axe';
 import { describe, expect, it } from 'vitest';
@@ -125,5 +127,25 @@ describe('Skeleton', () => {
       </div>,
     );
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  /* ─── Regressions ─────────────────────────────────────────── */
+
+  it('floors a fractional line count and still shortens the last line', () => {
+    // Bug: lines={2.5} rendered 2 lines, but `i === lines - 1` never
+    // matched, so no line got the natural-looking short ending.
+    const { container } = render(<Skeleton variant="text" lines={2.5} />);
+    const lines = container.querySelectorAll('.ds-skeleton--text');
+    expect(lines).toHaveLength(2);
+    expect(lines[1]).toHaveClass('ds-skeleton--text-last');
+  });
+
+  // Regression: under <html data-motion="off"> the global reset only ended
+  // the sweep instantly, parking a light band across every skeleton. Like
+  // prefers-reduced-motion, motion-off now drops the band (jsdom can't
+  // compute ::after, so the rule is checked in source).
+  it('drops the shimmer band when the page switches motion off', () => {
+    const css = readFileSync(resolve(__dirname, 'Skeleton.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    expect(css).toMatch(/:root\[data-motion="off"\] \.ds-skeleton::after\s*\{\s*content: none;\s*\}/);
   });
 });

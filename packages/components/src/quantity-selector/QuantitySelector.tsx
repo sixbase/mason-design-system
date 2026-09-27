@@ -3,19 +3,22 @@ import type { ChangeEvent, HTMLAttributes, KeyboardEvent } from 'react';
 import { Minus, Plus } from '../icon';
 import './QuantitySelector.css';
 
+/** Control height step — matches `--size-control-sm/md/lg`. */
+export type QuantitySelectorSize = 'sm' | 'md' | 'lg';
+
 export interface QuantitySelectorProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onChange'> {
   /** Current value (controlled) */
   value: number;
-  /** Called when value changes */
+  /** Called with the new number (not an event), already clamped to min/max */
   onChange: (value: number) => void;
-  /** Minimum value */
+  /** Minimum value (default 1) */
   min?: number;
-  /** Maximum value */
+  /** Maximum value (default 99) */
   max?: number;
   /** Step increment */
   step?: number;
   /** Size variant */
-  size?: 'sm' | 'md' | 'lg';
+  size?: QuantitySelectorSize;
   /** Disabled state */
   disabled?: boolean;
 }
@@ -48,20 +51,34 @@ export const QuantitySelector = forwardRef<HTMLDivElement, QuantitySelectorProps
     // Draft holds in-progress typed text; null means "display the value prop".
     const [draft, setDraft] = useState<string | null>(null);
 
+    // Non-finite input (a NaN quantity from bad cart data) lands on min:
+    // Math.max(min, NaN) is NaN, so "+" used to send onChange(NaN).
     const clamp = useCallback(
-      (next: number) => Math.min(max, Math.max(min, next)),
+      (next: number) => (Number.isFinite(next) ? Math.min(max, Math.max(min, next)) : min),
       [min, max],
     );
+    const validValue = Number.isFinite(value);
 
-    const decrement = useCallback(() => {
-      const next = Math.max(min, value - step);
-      if (next !== value) onChange(next);
-    }, [value, min, step, onChange]);
+    // The value a step starts from. A pending typed draft wins over the
+    // prop: Safari never moves focus to a clicked button, so the input never
+    // blurred, the draft was never committed, and "+" stepped from the stale
+    // prop while the field kept showing the typed number.
+    const parsedDraft = draft === null ? Number.NaN : Number.parseInt(draft, 10);
+    const current = Number.isNaN(parsedDraft) ? value : clamp(parsedDraft);
 
-    const increment = useCallback(() => {
-      const next = Math.min(max, value + step);
-      if (next !== value) onChange(next);
-    }, [value, max, step, onChange]);
+    // Every step lands inside [min, max] — also when the prop itself is out
+    // of range (e.g. stock dropped below the quantity already in the cart).
+    const stepBy = useCallback(
+      (delta: number) => {
+        const next = clamp(current + delta);
+        if (next !== value) onChange(next);
+        setDraft(null);
+      },
+      [current, clamp, value, onChange],
+    );
+
+    const decrement = useCallback(() => stepBy(-step), [stepBy, step]);
+    const increment = useCallback(() => stepBy(step), [stepBy, step]);
 
     const commitDraft = useCallback(() => {
       if (draft === null) return;
@@ -74,37 +91,27 @@ export const QuantitySelector = forwardRef<HTMLDivElement, QuantitySelectorProps
     }, [draft, clamp, value, onChange]);
 
     const handleInputChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
-      // Digits only — quantities are positive integers.
-      setDraft(event.target.value.replace(/[^0-9]/g, ''));
+      // Digits only — quantities are positive integers. A decimal or exponent
+      // part is cut first: stripping alone turned a pasted "2.5" into 25 and
+      // "1e9" into 19.
+      setDraft(event.target.value.replace(/(\d)[.,eE].*$/, '$1').replace(/[^0-9]/g, ''));
     }, []);
 
     const handleInputKeyDown = useCallback(
       (event: KeyboardEvent<HTMLInputElement>) => {
-        const stepFrom = () => {
-          if (draft === null) return value;
-          const parsed = Number.parseInt(draft, 10);
-          return Number.isNaN(parsed) ? value : clamp(parsed);
-        };
-
         switch (event.key) {
           case 'Enter':
             event.preventDefault();
             commitDraft();
             break;
-          case 'ArrowUp': {
+          case 'ArrowUp':
             event.preventDefault();
-            const next = clamp(stepFrom() + step);
-            if (next !== value) onChange(next);
-            setDraft(null);
+            increment();
             break;
-          }
-          case 'ArrowDown': {
+          case 'ArrowDown':
             event.preventDefault();
-            const next = clamp(stepFrom() - step);
-            if (next !== value) onChange(next);
-            setDraft(null);
+            decrement();
             break;
-          }
           case 'Home':
             event.preventDefault();
             if (value !== min) onChange(min);
@@ -119,7 +126,7 @@ export const QuantitySelector = forwardRef<HTMLDivElement, QuantitySelectorProps
             break;
         }
       },
-      [draft, value, step, min, max, clamp, commitDraft, onChange],
+      [value, min, max, commitDraft, increment, decrement, onChange],
     );
 
     return (
@@ -143,7 +150,7 @@ export const QuantitySelector = forwardRef<HTMLDivElement, QuantitySelectorProps
           aria-label="Decrease quantity"
           tabIndex={-1}
           onClick={decrement}
-          disabled={disabled || value <= min}
+          disabled={disabled || current <= min}
         >
           <Minus size="sm" />
         </button>
@@ -153,9 +160,9 @@ export const QuantitySelector = forwardRef<HTMLDivElement, QuantitySelectorProps
           inputMode="numeric"
           autoComplete="off"
           className="ds-quantity-selector__value"
-          value={draft ?? String(value)}
+          value={draft ?? (validValue ? String(value) : '')}
           aria-label={ariaLabel}
-          aria-valuenow={value}
+          aria-valuenow={validValue ? value : undefined}
           aria-valuemin={min}
           aria-valuemax={max}
           disabled={disabled}
@@ -169,7 +176,7 @@ export const QuantitySelector = forwardRef<HTMLDivElement, QuantitySelectorProps
           aria-label="Increase quantity"
           tabIndex={-1}
           onClick={increment}
-          disabled={disabled || value >= max}
+          disabled={disabled || current >= max}
         >
           <Plus size="sm" />
         </button>

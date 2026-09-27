@@ -3,6 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { Slider } from './Slider';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 // Radix Slider measures thumbs with ResizeObserver, which jsdom lacks
 class ResizeObserverMock {
@@ -182,5 +184,55 @@ describe('Slider', () => {
       </div>,
     );
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+
+  // ─── Regressions (QA break pass) ─────────────────────────
+
+  describe('regressions', () => {
+    it('clamps a controlled value above max (aria-valuenow and shown value)', () => {
+      render(<Slider label="Price" min={0} max={200} value={[500]} showValue />);
+      expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', '200');
+      expect(screen.getByText('200')).toBeInTheDocument();
+    });
+
+    it('clamps a controlled range value below min', () => {
+      render(<Slider label="Price" min={10} max={200} value={[-5, 80]} showValue />);
+      expect(screen.getAllByRole('slider')[0]).toHaveAttribute('aria-valuenow', '10');
+    });
+
+    // The clamp above only covered `value`: an uncontrolled defaultValue
+    // above max still printed and announced 500 beside a thumb pinned at 200.
+    it('clamps an uncontrolled defaultValue above max (aria-valuenow and shown value)', () => {
+      render(<Slider label="Price" min={0} max={200} defaultValue={[500]} showValue />);
+      expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', '200');
+      expect(screen.getByText('200')).toBeInTheDocument();
+      expect(screen.queryByText('500')).not.toBeInTheDocument();
+    });
+
+    // Fading the whole root dropped label/value text below 4.5:1, and that
+    // text sits outside the disabled control, so no contrast exemption.
+    it('disabled fades the control only, not the label/value text', () => {
+      // jsdom's CSS parser drops `opacity: var(...)`, so read the rule text.
+      const css = readFileSync(resolve(__dirname, 'Slider.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+      const faded = [...css.matchAll(/([^{}]+)\{[^}]*opacity:\s*var\(--opacity-medium\)/g)].map((m) =>
+        m[1]!.trim(),
+      );
+      expect(faded).not.toContain('.ds-slider--disabled');
+      expect(faded).toContain('.ds-slider--disabled .ds-slider__root');
+    });
+
+    // Every product the same price (min === max) made Radix divide by zero:
+    // the thumb style became `left: calc(0px + (% * nan))`, off the track.
+    it.each([
+      [4800, 4800, [4800]],
+      [100, 0, [50]],
+    ])('a zero-width scale (min %i, max %i) renders disabled with a valid thumb position', (min, max, defaultValue) => {
+      const { container } = render(<Slider label="Price" min={min} max={max} defaultValue={defaultValue} />);
+      const styles = Array.from(container.querySelectorAll('[style]')).map((el) => el.getAttribute('style') ?? '');
+      expect(styles.join(' ')).not.toMatch(/nan|left: calc\(-|left: -/i);
+      expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', String(min));
+      expect(container.querySelector('.ds-slider--disabled')).not.toBeNull();
+    });
   });
 });

@@ -9,4 +9,11 @@ export {
   ModalTitle,
   ModalTrigger,
 } from './Modal';
-export type { ModalContentProps, ModalProps, ModalSize } from './Modal';
+export type {
+  ModalBodyProps,
+  ModalContentProps,
+  ModalFooterProps,
+  ModalHeaderProps,
+  ModalProps,
+  ModalSize,
+} from './Modal';

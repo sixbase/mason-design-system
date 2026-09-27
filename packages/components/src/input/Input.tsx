@@ -42,6 +42,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
     required,
     disabled,
     className,
+    'aria-describedby': ariaDescribedBy,
     ...props
   },
   ref,
@@ -64,7 +65,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
 
   const fieldClasses = ['ds-input-field', `ds-input-field--${size}`, className].filter(Boolean).join(' ');
 
-  const describedBy = [hint && hintId, error && errorId].filter(Boolean).join(' ') || undefined;
+  // Only reference ids that are actually rendered — the hint is hidden while
+  // an error shows. Consumer ids are kept, not replaced.
+  const showHint = Boolean(hint) && !error;
+  const describedBy =
+    [ariaDescribedBy, showHint && hintId, error && errorId].filter(Boolean).join(' ') || undefined;
 
   return (
     <div className="ds-input-root">
@@ -102,7 +107,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         )}
       </div>
 
-      {hint && !error && (
+      {showHint && (
         <span id={hintId} className="ds-input-hint">
           {hint}
         </span>

@@ -55,14 +55,24 @@
 }
 
 /* Override Card interactive hover — image zoom only, no lift/shadow */
-.ds-product-card.ds-card--interactive:hover {
-  transform: none;
-  box-shadow: none;
+@media (hover: hover) {
+  .ds-product-card.ds-card--interactive:hover {
+    transform: none;
+    box-shadow: none;
+  }
 }
 
 .ds-product-card.ds-card--interactive:active {
   transform: none;
   box-shadow: none;
+}
+
+/* The no-shadow hover and press above outrank Card's focus ring (0-3-0 vs
+   0-2-0), so a keyboard-focused card lost its only focus indicator while
+   the mouse rested on it. Restated here at the same weight, later. */
+.ds-product-card.ds-card--interactive:focus-visible,
+:focus-visible > .ds-product-card.ds-card--interactive {
+  box-shadow: var(--focus-ring);
 }
 
 .ds-product-card .ds-card-body {
@@ -94,7 +104,8 @@
 .ds-product-card__badge {
   position: absolute;
   top: var(--spacing-phi-8);
-  left: var(--spacing-phi-8);
+  /* Logical: badge leads (top-right in RTL), action slot trails. */
+  inset-inline-start: var(--spacing-phi-8);
   z-index: var(--z-index-raised);
 }
 
@@ -105,7 +116,7 @@
 .ds-product-card__action {
   position: absolute;
   top: var(--spacing-phi-8);
-  right: var(--spacing-phi-8);
+  inset-inline-end: var(--spacing-phi-8);
   z-index: var(--z-index-raised);
   display: flex;
   align-items: center;
@@ -136,6 +147,18 @@
   padding: var(--spacing-phi-5) var(--spacing-phi-8) 0;
 }
 
+/* ─── No-image placeholder ───────────────────────────────── */
+/* Fills the 4:5 tile (which already carries the subtle surface color) with a
+   centered image glyph — same treatment as CartLineItem's placeholder. */
+.ds-product-card__placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--color-foreground-subtle);
+}
+
 /* ─── Hover image swap — pointer devices only ────────────── */
 /* On touch (hover: none) the swap is disabled entirely: the first image
    stays, and no sticky-hover flash occurs after tapping. */
@@ -150,8 +173,12 @@
 }
 
 @media (hover: hover) {
+  /* Adds the opacity cross-fade; the zoom keeps Card's own timing
+     (Card.css .ds-card-image__img), so both card kinds lean in alike. */
   .ds-product-card--has-hover-image .ds-card-image__img {
-    transition: opacity var(--transition-normal), transform var(--transition-slow);
+    transition:
+      opacity var(--transition-normal),
+      transform var(--transition-duration-slowest) var(--transition-easing-emphasized);
   }
 
   .ds-product-card--has-hover-image:hover .ds-card-image__img:not(.ds-product-card__hover-image) {
@@ -219,12 +246,12 @@
 
   .ds-product-card__badge {
     top: var(--spacing-phi-5);
-    left: var(--spacing-phi-5);
+    inset-inline-start: var(--spacing-phi-5);
   }
 
   .ds-product-card__action {
     top: var(--spacing-phi-5);
-    right: var(--spacing-phi-5);
+    inset-inline-end: var(--spacing-phi-5);
   }
 }
 

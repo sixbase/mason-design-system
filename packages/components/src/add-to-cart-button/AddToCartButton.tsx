@@ -4,12 +4,20 @@ import type { ButtonHTMLAttributes } from 'react';
 import './AddToCartButton.css';
 
 export type AddToCartStatus = 'idle' | 'loading' | 'success' | 'sold-out' | 'pre-order';
+/** Button height — `md` or `lg` (default `lg`, the PDP primary action). */
+export type AddToCartButtonSize = 'md' | 'lg';
 
+/** Button text per status. Any label left out falls back to the English default. */
 export interface AddToCartButtonLabels {
+  /** Ready to add — default "Add to Bag" */
   idle?: string;
+  /** While the request runs — default "Adding…" */
   loading?: string;
+  /** Brief confirmation after success — default "Added!" */
   success?: string;
+  /** `status="sold-out"` — default "Sold Out" */
   soldOut?: string;
+  /** `status="pre-order"` — default "Pre-Order" */
   preOrder?: string;
 }
 
@@ -28,7 +36,7 @@ export interface AddToCartButtonProps
   /** Stretch to fill parent container width */
   fullWidth?: boolean;
   /** Size of the button */
-  size?: 'md' | 'lg';
+  size?: AddToCartButtonSize;
   /** Override default labels for each status */
   labels?: AddToCartButtonLabels;
 }
@@ -43,6 +51,8 @@ const CheckIcon = () => (
     className="ds-add-to-cart__icon"
   >
     <path
+      className="ds-add-to-cart__check"
+      pathLength={1}
       d="M3 8.5l3.5 3.5L13 4"
       stroke="currentColor"
       strokeWidth="1.5"
@@ -81,11 +91,14 @@ export const AddToCartButton = forwardRef<HTMLButtonElement, AddToCartButtonProp
     const liveRef = useRef<HTMLSpanElement>(null);
     const prevStatusRef = useRef(status);
 
-    // Announce status changes to screen readers
+    // Announce status changes to screen readers. Returning to idle is not
+    // news: "Added!" was followed ~2s later by "Add to Bag" read out on its
+    // own, which sounds like a second action. Clearing an aria-live region
+    // is silent, so idle just empties it for the next cycle.
     useEffect(() => {
       if (prevStatusRef.current !== status && liveRef.current) {
-        const label = getLabelForStatus(status, mergedLabels);
-        liveRef.current.textContent = label;
+        liveRef.current.textContent =
+          status === 'idle' ? '' : getLabelForStatus(status, mergedLabels);
       }
       prevStatusRef.current = status;
     }, [status, mergedLabels]);

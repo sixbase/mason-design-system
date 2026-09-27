@@ -4,3 +4,17 @@
   href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=JetBrains+Mono:wght@400;500&display=swap"
   rel="stylesheet"
 />
+<!--
+  The page a component sits on: body font and colours from tokens, as on a
+  real storefront page and in the workbench frame. Without it, anything a
+  story doesn't wrap in a component (a label, a wrapper's text) fell back to
+  the browser's Times and stayed black in dark mode.
+-->
+<style>
+  html {
+    font-family: var(--font-family-body);
+    color: var(--color-foreground);
+    background-color: var(--color-background);
+    -webkit-font-smoothing: antialiased;
+  }
+</style>

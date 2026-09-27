@@ -13,7 +13,11 @@
   font-family: var(--font-family-body);
 }
 
-.ds-slider--disabled {
+/* Disabled fades the control only — like Input, the label and value stay
+   readable. (Fading the whole root dropped the label/value text below
+   4.5:1, and that text isn't part of the disabled control, so the
+   inactive-component contrast exemption doesn't cover it.) */
+.ds-slider--disabled .ds-slider__root {
   opacity: var(--opacity-medium);
 }
 
@@ -26,6 +30,8 @@
 }
 
 .ds-slider__label {
+  min-width: 0;
+  overflow-wrap: anywhere;
   color: var(--color-foreground);
 }
 
@@ -35,6 +41,9 @@
   font-family: var(--font-family-numeric);
   font-variant-numeric: tabular-nums;
   color: var(--color-foreground-secondary);
+  /* The value never wraps mid-range; a long label gives way instead. */
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* ─── Root — 44px tall for a comfortable touch target ─────── */
@@ -45,6 +54,7 @@
   width: 100%;
   height: var(--size-hit-area);
   touch-action: none;
+  -webkit-user-select: none; /* Safari ignores the unprefixed property */
   user-select: none;
   cursor: pointer;
 }
@@ -100,8 +110,10 @@
   border-radius: var(--slider-radius);
 }
 
-.ds-slider__thumb:hover:not([data-disabled]) {
-  border-color: var(--color-primary-hover);
+@media (hover: hover) {
+  .ds-slider__thumb:hover:not([data-disabled]) {
+    border-color: var(--color-primary-hover);
+  }
 }
 
 .ds-slider__thumb:active:not([data-disabled]) {
@@ -111,15 +123,46 @@
 
 .ds-slider__thumb:focus-visible {
   box-shadow: var(--focus-ring);
+  /* Invisible normally. Forced-colors mode (Windows High Contrast) drops
+     box-shadow and repaints outlines in a system color, so this becomes
+     the focus indicator there instead of nothing. */
+  outline: var(--border-width-lg) solid transparent;
+  outline-offset: var(--border-width-lg);
 }
 
 .ds-slider__thumb[data-disabled] {
   cursor: not-allowed;
 }
 
+/* ─── Forced colors (Windows High Contrast) ───────────────── */
+/* Forced colors repaint backgrounds to the canvas colour: the track and
+   the filled range both vanished, leaving floating thumbs. Paint them
+   with system colours instead. */
+@media (forced-colors: active) {
+  .ds-slider__track {
+    forced-color-adjust: none;
+    background-color: CanvasText;
+  }
+
+  .ds-slider__range {
+    background-color: Highlight;
+  }
+}
+
 /* ─── Reduced motion ──────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .ds-slider__thumb {
     transition: none;
+  }
+}
+
+/* ─── Print ─────────────────────────────────────────────── */
+/* The range and thumbs are fills: the selected range printed as nothing. Browsers drop backgrounds when printing by default ("economy"), so
+   the state vanished on paper; exact keeps these fills. (-webkit- for
+   Safari < 15.4 and Chrome < 136, which only read the prefixed form.) */
+@media print {
+  .ds-slider {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }

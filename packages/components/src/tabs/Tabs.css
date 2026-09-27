@@ -18,12 +18,17 @@
 }
 
 /* ─── List ──────────────────────────────────────────────── */
+/* The divider is an inset shadow, not a border, and triggers no longer use
+   margin-bottom: -1px to sit on it. In a scroll container (overflow-x:
+   auto forces overflow-y: auto) that overlap made the list 1–2px
+   vertically scrollable and clipped the bottom of the active indicator.
+   The shadow paints beneath the triggers, so the 2px indicator still
+   covers the 1px line exactly where it should. */
 .ds-tabs__list {
   display: flex;
-  border-bottom: 1px solid var(--tabs-border-color);
+  box-shadow: inset 0 calc(-1 * var(--border-width-sm)) 0 var(--tabs-border-color);
   overflow-x: auto;
   scrollbar-width: none; /* Firefox */
-  -webkit-overflow-scrolling: touch;
 }
 
 .ds-tabs__list::-webkit-scrollbar {
@@ -62,8 +67,7 @@
   min-height: var(--size-hit-area);
   padding: var(--spacing-3) var(--spacing-4);
   border: none;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
+  border-bottom: var(--border-width-lg) solid transparent;
   background: transparent;
   font-family: var(--font-family-body);
   font-size: var(--font-size-sm);
@@ -80,8 +84,10 @@
 }
 
 /* Hover */
-.ds-tabs__trigger:hover:not([data-disabled]) {
-  color: var(--color-foreground);
+@media (hover: hover) {
+  .ds-tabs__trigger:hover:not([data-disabled]) {
+    color: var(--color-foreground);
+  }
 }
 
 /* Active/selected */
@@ -92,6 +98,11 @@
 
 /* Focus */
 .ds-tabs__trigger:focus-visible {
+  /* Transparent outline paints nothing normally; forced-colors mode drops
+     box-shadow and repaints the outline, so the focused tab stays visible
+     (without it only the selected underline showed in High Contrast). */
+  outline: var(--border-width-lg) solid transparent;
+  outline-offset: calc(-1 * var(--border-width-lg));
   box-shadow: var(--focus-ring-inset);
   border-radius: var(--radius-sm);
 }
@@ -132,15 +143,49 @@
   line-height: var(--line-height-relaxed);
 }
 
+/* The newly active panel rises in on every switch — not on page load
+   (--switched, Tabs.tsx): the first panel just shows, where it used to
+   start invisible and fade in on every visit. */
+.ds-tabs--switched .ds-tabs__content[data-state='active'] {
+  animation: ds-tabs-panel-in var(--transition-duration-slow) var(--transition-easing-emphasized);
+}
+
+@keyframes ds-tabs-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--motion-distance-sm));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-tabs--switched .ds-tabs__content[data-state='active'] {
+    animation: none;
+  }
+}
+
 .ds-tabs__content:focus-visible {
+  outline: var(--border-width-lg) solid transparent; /* painted in forced-colors mode, where box-shadow rings vanish */
+  outline-offset: var(--border-width-lg);
   box-shadow: var(--focus-ring);
   border-radius: var(--radius-sm);
 }
 
 /* ─── Optical centering fallback ───────────────────────── */
+/* Nudge the label, never the trigger: the trigger carries the active
+   indicator, and translating it pushed the indicator past the bottom of
+   the scroll container. */
 @supports not (text-box-trim: both) {
-  .ds-tabs__trigger {
+  .ds-tabs__trigger-label {
     transform: translateY(0.05em);
+  }
+}
+
+/* ─── Forced colors ────────────────────────────────────── */
+/* Box-shadows are dropped in forced-colors mode; restore the divider as a
+   real border (currentColor resolves to the forced text colour). */
+@media (forced-colors: active) {
+  .ds-tabs__list {
+    border-bottom: var(--border-width-sm) solid;
   }
 }
 

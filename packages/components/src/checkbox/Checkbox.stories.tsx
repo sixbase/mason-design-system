@@ -1,12 +1,21 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { Text } from '../typography/Typography';
 import { Checkbox } from './Checkbox';
 
 const meta: Meta<typeof Checkbox> = {
   title: 'Components/Checkbox',
   component: Checkbox,
   tags: ['autodocs'],
+  parameters: {
+    docs: {
+      description: {
+        component:
+          'A tick box for yes/no choices, with an optional hint or error below it.',
+      },
+    },
+  },
   argTypes: {
-    size: { control: 'select' },
+    size: { control: 'select', options: ['sm', 'md'] },
     checked: { control: 'select', options: [true, false, 'indeterminate'] },
   },
 };
@@ -19,11 +28,15 @@ export const Default: Story = {
 };
 
 export const Checked: Story = {
-  args: { label: 'Accepted', defaultChecked: true },
+  args: { label: 'Gift wrap this order', defaultChecked: true },
 };
 
 export const Indeterminate: Story = {
   args: { label: 'Select all items', checked: 'indeterminate' },
+};
+
+export const Small: Story = {
+  args: { label: 'In stock only', size: 'sm' },
 };
 
 export const WithHint: Story = {
@@ -48,16 +61,22 @@ export const DisabledChecked: Story = {
   args: { label: 'Included', disabled: true, defaultChecked: true },
 };
 
-export const Small: Story = {
-  args: { label: 'Small checkbox', size: 'sm' },
+/** A disabled box keeps its hint readable, so the reason it's unavailable still shows. */
+export const DisabledWithHint: Story = {
+  args: {
+    label: 'Express delivery',
+    hint: 'Not available for oversized items',
+    disabled: true,
+  },
 };
 
 export const FilterPanel: Story = {
+  name: 'In a filter list',
   render: () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)', width: '240px' }}>
-      <p style={{ fontFamily: 'var(--font-family-body)', fontSize: 'var(--font-size-xs)', fontWeight: 'var(--font-weight-semibold)', textTransform: 'uppercase', letterSpacing: 'var(--letter-spacing-wider)', color: 'var(--color-foreground-muted)', margin: 0 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)', width: '100%', maxWidth: 'var(--size-modal-sm)' }}>
+      <Text size="xs" weight="semibold" muted style={{ textTransform: 'uppercase', letterSpacing: 'var(--letter-spacing-wider)' }}>
         Size
-      </p>
+      </Text>
       <Checkbox size="sm" label="XS" defaultChecked />
       <Checkbox size="sm" label="S" defaultChecked />
       <Checkbox size="sm" label="M" />
@@ -68,8 +87,9 @@ export const FilterPanel: Story = {
 };
 
 export const CheckoutForm: Story = {
+  name: 'In a checkout form',
   render: () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)', width: '320px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)', width: '100%', maxWidth: 'var(--size-modal-sm)' }}>
       <Checkbox
         label="Save this card for future purchases"
         hint="Your card is encrypted and stored securely"

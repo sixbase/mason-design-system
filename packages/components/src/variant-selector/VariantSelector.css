@@ -32,12 +32,12 @@
 }
 
 /* ─── Label ──────────────────────────────────────────────── */
-.ds-variant-selector__label {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+/* Size and weight come from <Text size="sm" weight="medium">; only the
+   label's own treatment lives here. Two-class selector so it can never tie
+   with a Typography class (0,1,0) and lose on import order. */
+.ds-variant-selector .ds-variant-selector__label {
   letter-spacing: var(--letter-spacing-wide);
   text-transform: uppercase;
-  color: var(--color-foreground);
 }
 
 .ds-variant-selector__selected-value {
@@ -68,11 +68,14 @@
   line-height: var(--line-height-none);
   color: var(--color-foreground);
   background-color: transparent;
-  border: 1px solid var(--color-border);
+  /* border-control: the chip's edge is the only thing that shows where it
+     is (WCAG 1.4.11, 3:1) — the same edge as Input, Select and friends */
+  border: var(--border-width-sm) solid var(--color-border-control);
   border-radius: var(--variant-selector-option-radius);
   cursor: pointer;
   transition: var(--variant-selector-transition);
   white-space: nowrap;
+  -webkit-user-select: none; /* Safari ignores the unprefixed property */
   user-select: none;
   outline: none;
   position: relative;
@@ -101,9 +104,14 @@
 }
 
 /* ─── Interactive states ─────────────────────────────────── */
-.ds-variant-selector__option:hover:not(:disabled) {
-  background-color: var(--color-secondary);
-  border-color: var(--color-border-strong);
+/* Hover only where a real pointer hovers: touch screens (iOS Safari) keep
+   :hover after a tap, which left a chip shaded like a half-selected
+   option. */
+@media (hover: hover) {
+  .ds-variant-selector__option:hover:not(:disabled) {
+    background-color: var(--color-secondary);
+    border-color: var(--color-foreground-subtle); /* darker than the resting edge */
+  }
 }
 
 .ds-variant-selector__option:active:not(:disabled) {
@@ -114,6 +122,11 @@
 /* ─── Focus ──────────────────────────────────────────────── */
 .ds-variant-selector__option:focus-visible {
   box-shadow: var(--focus-ring);
+  /* Invisible normally. Forced-colors mode (Windows High Contrast) drops
+     box-shadow and repaints outlines in a system color, so this becomes
+     the focus indicator there instead of nothing. */
+  outline: var(--border-width-lg) solid transparent;
+  outline-offset: var(--border-width-lg);
 }
 
 /* ─── Selected state ─────────────────────────────────────── */
@@ -123,9 +136,11 @@
   border-color: var(--color-primary);
 }
 
-.ds-variant-selector__option--selected:hover:not(:disabled) {
-  background-color: var(--color-primary-hover);
-  border-color: var(--color-primary-hover);
+@media (hover: hover) {
+  .ds-variant-selector__option--selected:hover:not(:disabled) {
+    background-color: var(--color-primary-hover);
+    border-color: var(--color-primary-hover);
+  }
 }
 
 .ds-variant-selector__option--selected:focus-visible {
@@ -133,8 +148,12 @@
 }
 
 /* ─── Unavailable state (out of stock but browsable) ─────── */
-.ds-variant-selector__option--unavailable {
-  opacity: var(--opacity-medium);
+/* Muted text + strikethrough, NOT opacity. These options stay focusable
+   and selectable (only `disabled` ones are inert), so their text must meet
+   4.5:1 — opacity 0.382 dropped it far below. A selected out-of-stock
+   option keeps the selected colours. */
+.ds-variant-selector__option--unavailable:not(.ds-variant-selector__option--selected) {
+  color: var(--color-foreground-secondary);
 }
 
 .ds-variant-selector__option--unavailable .ds-variant-selector__option-label {
@@ -146,27 +165,6 @@
   opacity: var(--opacity-medium);
   cursor: not-allowed;
   pointer-events: none;
-}
-
-/* ─── Horizontal scroll for many options ─────────────────── */
-.ds-variant-selector__buttons--scrollable {
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -webkit-mask-image: linear-gradient(
-    to right,
-    black calc(100% - var(--spacing-8)),
-    transparent 100%
-  );
-  mask-image: linear-gradient(
-    to right,
-    black calc(100% - var(--spacing-8)),
-    transparent 100%
-  );
-}
-
-.ds-variant-selector__buttons--scrollable::-webkit-scrollbar {
-  display: none;
 }
 
 /* ─── Optical centering fallback ─────────────────────────── */
@@ -194,12 +192,9 @@
     height: max(100%, var(--size-hit-area));
   }
 
-  /* Swatches too — ::before because ::after is the unavailable slash below */
-  .ds-variant-selector .ds-color-picker__btn {
-    position: relative;
-  }
-
-  .ds-variant-selector .ds-color-picker__btn::before {
+  /* Swatches get theirs from ColorPicker (its ::after) — except an
+     unavailable one, whose ::after is the slash below. It takes ::before. */
+  .ds-variant-selector .ds-color-picker__btn[aria-label$="(out of stock)"]::before {
     content: '';
     position: absolute;
     top: 50%;
@@ -217,10 +212,6 @@
    proper prop, match on that attribute here — both halves of the contract
    live in this component. The slash makes unavailability visible without
    relying on opacity alone. */
-.ds-variant-selector .ds-color-picker__btn[aria-label$="(out of stock)"] {
-  position: relative;
-}
-
 .ds-variant-selector .ds-color-picker__btn[aria-label$="(out of stock)"]::after {
   content: '';
   position: absolute;
@@ -234,9 +225,37 @@
   pointer-events: none;
 }
 
+/* ─── Forced colors (Windows High Contrast) ──────────────── */
+/* Forced colors repaint the selected fill to the canvas colour and every
+   label to the same text colour — the chosen size became invisible. */
+@media (forced-colors: active) {
+  .ds-variant-selector__option--selected,
+  .ds-variant-selector__option--selected:hover:not(:disabled) {
+    forced-color-adjust: none;
+    background-color: Highlight;
+    border-color: Highlight;
+    color: HighlightText;
+  }
+
+  .ds-variant-selector__option:focus-visible {
+    outline-color: CanvasText;
+  }
+}
+
 /* ─── Reduced motion ─────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .ds-variant-selector__option:active:not(:disabled) {
     transform: none;
+  }
+}
+
+/* ─── Print ─────────────────────────────────────────────── */
+/* Colour swatches and the selected size are fills: swatches printed blank, the selected size as white-on-white. Browsers drop backgrounds when printing by default ("economy"), so
+   the state vanished on paper; exact keeps these fills. (-webkit- for
+   Safari < 15.4 and Chrome < 136, which only read the prefixed form.) */
+@media print {
+  .ds-variant-selector {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }

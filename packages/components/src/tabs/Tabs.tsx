@@ -1,5 +1,5 @@
 import * as TabsPrimitive from '@radix-ui/react-tabs';
-import { forwardRef } from 'react';
+import { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 import { Badge } from '../badge';
 import './Tabs.css';
@@ -42,9 +42,34 @@ export interface TabsContentProps extends ComponentPropsWithoutRef<typeof TabsPr
  * ```
  */
 export const Tabs = forwardRef<HTMLDivElement, TabsProps>(
-  function Tabs({ className, ...props }, ref) {
-    const classes = ['ds-tabs', className].filter(Boolean).join(' ');
-    return <TabsPrimitive.Root ref={ref} className={classes} {...props} />;
+  function Tabs({ className, onValueChange, ...props }, ref) {
+    // Panels rise in when the tab changes, not on page load: the first panel
+    // (often above the fold — product details) just shows. A switch is a
+    // tab picked here, or a controlled `value` that moved since mount (a
+    // "Read reviews" link).
+    const [picked, setPicked] = useState(false);
+    const initialValue = useRef(props.value);
+    const valueMoved = useRef(false); // sticky: a/b/a still counts as switched
+    if (props.value !== initialValue.current) valueMoved.current = true;
+    const switched = picked || valueMoved.current;
+    const handleValueChange = useCallback(
+      (value: string) => {
+        setPicked(true);
+        onValueChange?.(value);
+      },
+      [onValueChange],
+    );
+    const classes = ['ds-tabs', switched && 'ds-tabs--switched', className]
+      .filter(Boolean)
+      .join(' ');
+    return (
+      <TabsPrimitive.Root
+        ref={ref}
+        className={classes}
+        onValueChange={handleValueChange}
+        {...props}
+      />
+    );
   },
 );
 Tabs.displayName = 'Tabs';
@@ -54,7 +79,55 @@ Tabs.displayName = 'Tabs';
 export const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
   function TabsList({ className, ...props }, ref) {
     const classes = ['ds-tabs__list', className].filter(Boolean).join(' ');
-    return <TabsPrimitive.List ref={ref} className={classes} {...props} />;
+    const listRef = useRef<HTMLDivElement | null>(null);
+
+    // Merge forwarded ref with internal ref
+    const setListRef = useCallback(
+      (node: HTMLDivElement | null) => {
+        listRef.current = node;
+        if (typeof ref === 'function') {
+          ref(node);
+        } else if (ref) {
+          ref.current = node;
+        }
+      },
+      [ref],
+    );
+
+    // Keep the selected tab inside the scrollable list. Keyboard focus
+    // already scrolls itself into view, but a selection that doesn't move
+    // focus — an off-screen `defaultValue`, or a controlled change from a
+    // "Read reviews" link — left the active tab hidden past the edge on
+    // narrow screens. Adjusts scrollLeft only (never scrollIntoView, which
+    // would also scroll the page vertically).
+    useEffect(() => {
+      const list = listRef.current;
+      if (!list) return;
+
+      const revealActive = () => {
+        const active = list.querySelector<HTMLElement>('[role="tab"][data-state="active"]');
+        if (!active) return;
+        const listBox = list.getBoundingClientRect();
+        const tabBox = active.getBoundingClientRect();
+        if (tabBox.left < listBox.left) {
+          list.scrollLeft -= listBox.left - tabBox.left;
+        } else if (tabBox.right > listBox.right) {
+          list.scrollLeft += tabBox.right - listBox.right;
+        }
+      };
+
+      revealActive();
+      if (typeof MutationObserver === 'undefined') return;
+      const observer = new MutationObserver(revealActive);
+      observer.observe(list, {
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['data-state'],
+      });
+      return () => observer.disconnect();
+    }, []);
+
+    return <TabsPrimitive.List ref={setListRef} className={classes} {...props} />;
   },
 );
 TabsList.displayName = 'TabsList';

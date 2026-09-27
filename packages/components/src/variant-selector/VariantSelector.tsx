@@ -1,8 +1,9 @@
 import { forwardRef, useCallback } from 'react';
 import type { HTMLAttributes, KeyboardEvent } from 'react';
-import { Heading } from '../typography';
+import { Text } from '../typography';
 import { ColorPicker } from '../color-picker';
 import type { ColorOption } from '../color-picker';
+import { isRtl } from '../internal/direction';
 import './VariantSelector.css';
 
 // ─── Types ──────────────────────────────────────────────────
@@ -29,6 +30,9 @@ export interface VariantOption {
   values: VariantOptionValue[];
 }
 
+/** Swatch/chip size step. */
+export type VariantSelectorSize = 'sm' | 'md';
+
 export interface VariantSelectorProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onChange'> {
   /** Product option groups to render */
   options: VariantOption[];
@@ -37,7 +41,7 @@ export interface VariantSelectorProps extends Omit<HTMLAttributes<HTMLDivElement
   /** Called when a value is selected */
   onValueChange: (optionName: string, value: string) => void;
   /** Size of controls */
-  size?: 'sm' | 'md';
+  size?: VariantSelectorSize;
 }
 
 // ─── Component ──────────────────────────────────────────────
@@ -57,7 +61,9 @@ export const VariantSelector = forwardRef<HTMLDivElement, VariantSelectorProps>(
 
     return (
       <div ref={ref} className={classes} {...props}>
-        {options.map((option) => (
+        {/* An option with no values list (bad product data) has nothing to
+            pick and used to throw on `values.find`, blanking the PDP. */}
+        {options.filter((option) => Array.isArray(option.values)).map((option) => (
           <OptionGroup
             key={option.name}
             option={option}
@@ -92,14 +98,18 @@ function OptionGroup({ option, selectedValue, onValueChange, size }: OptionGroup
     [onValueChange, option.name],
   );
 
+  // The group label is a caption for a form control, not a document
+  // heading. It used to be a hard-coded <h4>, which broke the heading
+  // outline wherever the selector landed (h1 product title → h4 "Color").
+  // The radiogroup below carries the accessible name via aria-label.
   return (
     <div className="ds-variant-selector__group">
-      <Heading as="h4" size="xl" className="ds-variant-selector__label">
+      <Text as="span" size="sm" weight="medium" className="ds-variant-selector__label">
         {option.name}
         {selectedLabel && (
           <span className="ds-variant-selector__selected-value">: {selectedLabel}</span>
         )}
-      </Heading>
+      </Text>
 
       {option.type === 'color' ? (
         <ColorOptionGroup
@@ -159,29 +169,47 @@ interface ButtonOptionGroupProps {
 }
 
 function ButtonOptionGroup({ option, selectedValue, onChange, size: _size }: ButtonOptionGroupProps) {
+  const enabledValues = option.values.filter((v) => !v.disabled);
+
+  // Roving tabindex: exactly one tab stop — the selected option, else the
+  // first enabled one. (The group itself used to be tabIndex=0 as well, so
+  // Tab stopped twice per option group, and with nothing selected no option
+  // was reachable except through the group.)
+  const selectedIsEnabled = enabledValues.some((v) => v.value === selectedValue);
+  const tabStopValue = selectedIsEnabled ? selectedValue : enabledValues[0]?.value;
+
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLDivElement>) => {
-      const enabledValues = option.values.filter((v) => !v.disabled);
-      const currentIndex = enabledValues.findIndex((v) => v.value === selectedValue);
+      const group = e.currentTarget;
+      const buttons = Array.from(
+        group.querySelectorAll<HTMLButtonElement>('[role="radio"]:not([disabled])'),
+      );
+      if (buttons.length === 0) return;
+      const enabled = option.values.filter((v) => !v.disabled);
+
+      // Move from the focused option (it may not be selected yet), falling
+      // back to the selected one.
+      const focusedIndex = buttons.findIndex((b) => b === document.activeElement);
+      const currentIndex =
+        focusedIndex >= 0 ? focusedIndex : enabled.findIndex((v) => v.value === selectedValue);
+
+      // Options lay out right-to-left in RTL, so the horizontal arrows swap.
+      const rtl = isRtl(group);
+      const forwardKey = rtl ? 'ArrowLeft' : 'ArrowRight';
+      const backwardKey = rtl ? 'ArrowRight' : 'ArrowLeft';
 
       let nextIndex: number | null = null;
-
-      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-        e.preventDefault();
-        nextIndex = currentIndex < enabledValues.length - 1 ? currentIndex + 1 : 0;
-      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-        e.preventDefault();
-        nextIndex = currentIndex > 0 ? currentIndex - 1 : enabledValues.length - 1;
+      if (e.key === forwardKey || e.key === 'ArrowDown') {
+        nextIndex = currentIndex < buttons.length - 1 ? currentIndex + 1 : 0;
+      } else if (e.key === backwardKey || e.key === 'ArrowUp') {
+        nextIndex = currentIndex > 0 ? currentIndex - 1 : buttons.length - 1;
       }
+      if (nextIndex === null) return;
 
-      if (nextIndex !== null) {
-        const nextValue = enabledValues[nextIndex];
-        if (nextValue) onChange(nextValue.value);
-        // Focus the next button
-        const group = e.currentTarget;
-        const buttons = group.querySelectorAll<HTMLButtonElement>('[role="radio"]:not([disabled])');
-        buttons[nextIndex]?.focus();
-      }
+      e.preventDefault();
+      const nextValue = enabled[nextIndex];
+      if (nextValue && nextValue.value !== selectedValue) onChange(nextValue.value);
+      buttons[nextIndex]?.focus();
     },
     [option.values, selectedValue, onChange],
   );
@@ -191,7 +219,9 @@ function ButtonOptionGroup({ option, selectedValue, onChange, size: _size }: But
       className="ds-variant-selector__buttons"
       role="radiogroup"
       aria-label={option.name}
-      tabIndex={0}
+      // Focusable for the keydown listener (lint requirement) but out of
+      // the tab order — the roving tabindex on the options owns it.
+      tabIndex={-1}
       onKeyDown={handleKeyDown}
     >
       {option.values.map((optionValue) => {
@@ -220,7 +250,7 @@ function ButtonOptionGroup({ option, selectedValue, onChange, size: _size }: But
             aria-checked={isSelected}
             aria-label={ariaLabel}
             disabled={isDisabled}
-            tabIndex={isSelected ? 0 : -1}
+            tabIndex={optionValue.value === tabStopValue ? 0 : -1}
             onClick={() => onChange(optionValue.value)}
           >
             <span className="ds-variant-selector__option-label">{optionValue.label}</span>

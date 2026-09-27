@@ -1,7 +1,9 @@
 import * as Dialog from '@radix-ui/react-dialog';
-import { forwardRef } from 'react';
+import { forwardRef, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { X } from '../icon';
+import { dialogOpener, returnFocus, trackDialogOpeners } from '../internal/dialog-opener';
+import { useOverflowTabStop } from '../internal/use-overflow-tab-stop';
 import './Drawer.css';
 
 // ─── Types ────────────────────────────────────────────────
@@ -56,6 +58,16 @@ export const Drawer = forwardRef<HTMLDivElement, DrawerProps>(
   ) {
     const isBottom = side === 'bottom';
 
+    // Drawer is controlled and has no Dialog.Trigger, so Radix's close
+    // handler focused `triggerRef.current` — null — and keyboard focus fell
+    // to <body> (WCAG 2.4.3). Remember what had focus when the drawer
+    // opened (usually the button that opened it) and hand focus back to it.
+    const returnFocusRef = useRef<HTMLElement | null>(null);
+    // Safari never focuses the button that was clicked/tapped, so the opener
+    // is taken from the last press there (see internal/dialog-opener).
+    useEffect(() => trackDialogOpeners(), []);
+    const [setBodyNode, bodyOverflows] = useOverflowTabStop();
+
     const classes = [
       'ds-drawer__panel',
       `ds-drawer__panel--${side}`,
@@ -73,9 +85,21 @@ export const Drawer = forwardRef<HTMLDivElement, DrawerProps>(
             ref={ref}
             className={classes}
             aria-label={title}
-            // Radix auto-wires aria-describedby to a Description element.
-            // Without one, explicitly opt out so no dangling reference is emitted.
-            {...(description ? {} : { 'aria-describedby': undefined })}
+            // No aria-describedby override: Radix (≥1.1.23) only sets it
+            // while a Dialog.Description is mounted, which is exactly when
+            // `description` is given.
+            // Fires before focus moves in, so activeElement is still the opener
+            onOpenAutoFocus={() => {
+              returnFocusRef.current = dialogOpener();
+            }}
+            onCloseAutoFocus={(event) => {
+              const opener = returnFocusRef.current;
+              returnFocusRef.current = null;
+              if (opener?.isConnected) {
+                event.preventDefault();
+                returnFocus(opener);
+              }
+            }}
             style={
               width && !isBottom
                 ? ({ '--drawer-width': width } as React.CSSProperties)
@@ -99,7 +123,14 @@ export const Drawer = forwardRef<HTMLDivElement, DrawerProps>(
               <X size="sm" />
             </Dialog.Close>
 
-            <div className="ds-drawer__body">
+            <div
+              ref={setBodyNode}
+              className="ds-drawer__body"
+              // A scrollable region must be keyboard-focusable (WCAG 2.1.1,
+              // axe scrollable-region-focusable) — see useOverflowTabStop.
+              // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+              tabIndex={bodyOverflows ? 0 : undefined}
+            >
               {children}
             </div>
           </Dialog.Content>

@@ -1,3 +1,4 @@
+import * as RadixDropdownMenu from '@radix-ui/react-dropdown-menu';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'jest-axe';
@@ -188,17 +189,41 @@ describe('DropdownMenu', () => {
     expect(onSelect).not.toHaveBeenCalled();
   });
 
+  // The open menu portals to <body>; scanning `container` checked only the trigger.
   it('has no accessibility violations when open', async () => {
     const user = userEvent.setup();
-    const { container } = render(<TestMenu />);
+    const { baseElement } = render(<TestMenu />);
 
     await user.click(screen.getByText('Account'));
     await screen.findByRole('menu');
-    expect(await axe(container)).toHaveNoViolations();
+    expect(await axe(baseElement)).toHaveNoViolations();
   });
 
   it('has no accessibility violations when closed', async () => {
     const { container } = render(<TestMenu />);
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it('passes side and align through to the positioned content', async () => {
+    const user = userEvent.setup();
+    render(
+      <DropdownMenu>
+        <DropdownMenuTrigger>Sort</DropdownMenuTrigger>
+        <DropdownMenuContent side="top" align="end">
+          <DropdownMenuItem>Newest</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>,
+    );
+    await user.click(screen.getByText('Sort'));
+    const menu = await screen.findByRole('menu');
+    expect(menu).toHaveAttribute('data-side', 'top');
+    expect(menu).toHaveAttribute('data-align', 'end');
+  });
+
+  it('wraps (does not rename) the shared Radix parts', () => {
+    expect(DropdownMenuTrigger.displayName).toBe('DropdownMenuTrigger');
+    expect(DropdownMenuRadioGroup.displayName).toBe('DropdownMenuRadioGroup');
+    expect(RadixDropdownMenu.Trigger).not.toBe(DropdownMenuTrigger);
+    expect(RadixDropdownMenu.RadioGroup).not.toBe(DropdownMenuRadioGroup);
   });
 });

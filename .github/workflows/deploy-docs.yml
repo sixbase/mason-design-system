@@ -1,4 +1,4 @@
-name: Deploy Docs
+name: Deploy Workbench
 
 on:
   push:
@@ -38,13 +38,13 @@ jobs:
       - name: Build packages
         run: pnpm turbo build --filter='./packages/*'
 
-      - name: Build docs
-        run: pnpm --filter @ds/docs build
+      - name: Build workbench
+        run: pnpm --filter @ds/workbench build
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: apps/docs/dist
+          path: apps/workbench/dist
 
   deploy:
     needs: build

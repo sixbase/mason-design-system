@@ -3,7 +3,22 @@
   --drawer-width: var(--size-content-sm);
   --drawer-padding: var(--spacing-6);
   --drawer-close-size: var(--size-control-sm);
-  --drawer-radius: 0;
+  --drawer-close-top: var(--spacing-4);
+  --drawer-close-right: var(--spacing-4);
+}
+
+/* Safe areas for the close button. Full-height side panels touch the top
+   edge — with viewport-fit=cover the close button sat under the iPhone
+   status bar / notch. Panels touching the right edge (right drawer,
+   full-width bottom sheet) clear a landscape notch. */
+.ds-drawer__panel--left,
+.ds-drawer__panel--right {
+  --drawer-close-top: max(var(--spacing-4), var(--safe-area-top));
+}
+
+.ds-drawer__panel--right,
+.ds-drawer__panel--bottom {
+  --drawer-close-right: max(var(--spacing-4), var(--safe-area-right));
 }
 
 /* ─── Overlay ──────────────────────────────────────────── */
@@ -11,12 +26,16 @@
   position: fixed;
   inset: 0;
   background-color: var(--color-overlay);
-  z-index: var(--z-index-overlay);
-  animation: ds-drawer-overlay-in var(--transition-normal) forwards;
+  /* Same plane as the panel (and as Modal's backdrop). At
+     --z-index-overlay (100) a drawer opened from inside a Modal left the
+     modal undimmed above its own backdrop. Overlay precedes the panel in
+     the portal, so DOM order keeps the panel on top. */
+  z-index: var(--z-index-modal);
+  animation: ds-drawer-overlay-in var(--transition-duration-slow) var(--transition-easing-default) forwards;
 }
 
 .ds-drawer__overlay[data-state='closed'] {
-  animation: ds-drawer-overlay-out var(--transition-normal) forwards;
+  animation: ds-drawer-overlay-out var(--drawer-exit) forwards;
 }
 
 @keyframes ds-drawer-overlay-in {
@@ -30,6 +49,15 @@
 }
 
 /* ─── Panel ────────────────────────────────────────────── */
+/* A panel travels a long way, so it arrives on the long emphasized
+   landing (most of the distance covered in the first third) and leaves
+   one step faster, accelerating away. */
+.ds-drawer__overlay,
+.ds-drawer__panel {
+  --drawer-enter: var(--transition-duration-slower) var(--transition-easing-emphasized);
+  --drawer-exit: var(--transition-duration-slow) var(--transition-easing-emphasized-in);
+}
+
 .ds-drawer__panel {
   position: fixed;
   top: 0;
@@ -54,22 +82,22 @@
 /* ─── Side variants ────────────────────────────────────── */
 .ds-drawer__panel--right {
   right: 0;
-  border-left: 1px solid var(--color-border);
-  animation: ds-drawer-slide-in-right var(--transition-normal) forwards;
+  border-left: var(--border-width-sm) solid var(--color-border);
+  animation: ds-drawer-slide-in-right var(--drawer-enter) forwards;
 }
 
 .ds-drawer__panel--right[data-state='closed'] {
-  animation: ds-drawer-slide-out-right var(--transition-normal) forwards;
+  animation: ds-drawer-slide-out-right var(--drawer-exit) forwards;
 }
 
 .ds-drawer__panel--left {
   left: 0;
-  border-right: 1px solid var(--color-border);
-  animation: ds-drawer-slide-in-left var(--transition-normal) forwards;
+  border-right: var(--border-width-sm) solid var(--color-border);
+  animation: ds-drawer-slide-in-left var(--drawer-enter) forwards;
 }
 
 .ds-drawer__panel--left[data-state='closed'] {
-  animation: ds-drawer-slide-out-left var(--transition-normal) forwards;
+  animation: ds-drawer-slide-out-left var(--drawer-exit) forwards;
 }
 
 /* ─── Bottom sheet variant ─────────────────────────────── */
@@ -81,13 +109,13 @@
   width: 100%;
   max-height: 85vh;
   max-height: 85dvh; /* iOS Safari: track the dynamic toolbar */
-  border-top: 1px solid var(--color-border);
+  border-top: var(--border-width-sm) solid var(--color-border);
   border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
-  animation: ds-drawer-slide-in-up var(--transition-normal) forwards;
+  animation: ds-drawer-slide-in-up var(--drawer-enter) forwards;
 }
 
 .ds-drawer__panel--bottom[data-state='closed'] {
-  animation: ds-drawer-slide-out-down var(--transition-normal) forwards;
+  animation: ds-drawer-slide-out-down var(--drawer-exit) forwards;
 }
 
 /* Drag-handle affordance — visual only, no drag physics */
@@ -154,8 +182,10 @@
 /* ─── Close button ─────────────────────────────────────── */
 .ds-drawer__close {
   position: absolute;
-  top: var(--spacing-4);
-  right: var(--spacing-4);
+  top: var(--drawer-close-top);
+  /* Inline end (top-left in RTL). --drawer-close-right is the end-side
+     inset; the :dir(rtl) rules below point it at the left safe area. */
+  inset-inline-end: var(--drawer-close-right);
 
   display: inline-flex;
   align-items: center;
@@ -188,9 +218,11 @@
   transform: translate(-50%, -50%);
 }
 
-.ds-drawer__close:hover {
-  background-color: var(--color-secondary);
-  color: var(--color-foreground);
+@media (hover: hover) {
+  .ds-drawer__close:hover {
+    background-color: var(--color-secondary);
+    color: var(--color-foreground);
+  }
 }
 
 .ds-drawer__close:active {
@@ -199,7 +231,7 @@
 }
 
 .ds-drawer__close:focus-visible {
-  outline: none;
+  outline: var(--border-width-lg) solid transparent; /* painted in forced-colors mode, where box-shadow rings vanish */
   box-shadow: var(--focus-ring);
 }
 
@@ -208,7 +240,15 @@
   flex: 1;
   overflow-y: auto;
   padding: var(--drawer-padding);
-  padding-top: calc(var(--drawer-close-size) + var(--spacing-4) + var(--spacing-2));
+  padding-top: calc(var(--drawer-close-size) + var(--drawer-close-top) + var(--spacing-2));
+}
+
+/* A body that overflows is a tab stop (Drawer.tsx) so keyboard users can
+   scroll it. Inset outline: the panel edge would clip an outer ring, and an
+   inset box-shadow paints beneath the content. */
+.ds-drawer__body:focus-visible {
+  outline: var(--border-width-lg) solid var(--color-focus-ring);
+  outline-offset: calc(var(--border-width-lg) * -1);
 }
 
 /* Safe-area padding on the anchored edge (notch / rounded corners) */
@@ -230,6 +270,7 @@
   .ds-drawer__panel--left,
   .ds-drawer__panel--right {
     width: 100%;
+    --drawer-close-right: max(var(--spacing-4), var(--safe-area-right));
   }
 
   /* Full-width panels touch both screen edges — pad for both safe areas */
@@ -237,6 +278,23 @@
   .ds-drawer__panel--right .ds-drawer__body {
     padding-left: max(var(--drawer-padding), var(--safe-area-left));
     padding-right: max(var(--drawer-padding), var(--safe-area-right));
+  }
+}
+
+/* RTL: the close button sits on the left, so it clears the left safe area
+   wherever the panel touches the left screen edge. */
+.ds-drawer__panel--right:dir(rtl) {
+  --drawer-close-right: var(--spacing-4);
+}
+
+.ds-drawer__panel--left:dir(rtl),
+.ds-drawer__panel--bottom:dir(rtl) {
+  --drawer-close-right: max(var(--spacing-4), var(--safe-area-left));
+}
+
+@media (max-width: 767px) {
+  .ds-drawer__panel--right:dir(rtl) {
+    --drawer-close-right: max(var(--spacing-4), var(--safe-area-left));
   }
 }
 

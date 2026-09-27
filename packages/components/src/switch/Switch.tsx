@@ -42,6 +42,7 @@ export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch
     id: idProp,
     className,
     disabled,
+    'aria-describedby': ariaDescribedBy,
     ...rootProps
   },
   ref,
@@ -51,8 +52,11 @@ export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch
   const hintId = `${id}-hint`;
   const errorId = `${id}-error`;
 
+  // Only reference ids that are actually rendered — the hint is hidden while
+  // an error shows. Consumer ids are kept, not replaced.
+  const showHint = Boolean(hint) && !error;
   const describedBy =
-    [hint && hintId, error && errorId].filter(Boolean).join(' ') || undefined;
+    [ariaDescribedBy, showHint && hintId, error && errorId].filter(Boolean).join(' ') || undefined;
 
   const rootClasses = [
     'ds-switch-root',
@@ -93,7 +97,7 @@ export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch
         )}
       </div>
 
-      {hint && !error && (
+      {showHint && (
         <span id={hintId} className="ds-switch-hint">
           {hint}
         </span>

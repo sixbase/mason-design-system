@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { useEffect, useRef } from 'react';
 import { Text } from '../typography/Typography';
 import { SkipLink } from './SkipLink';
 
@@ -6,6 +7,14 @@ const meta: Meta<typeof SkipLink> = {
   title: 'Components/SkipLink',
   component: SkipLink,
   tags: ['autodocs'],
+  parameters: {
+    docs: {
+      description: {
+        component:
+          'A hidden “Skip to content” link that appears when a keyboard user presses Tab.',
+      },
+    },
+  },
 };
 export default meta;
 
@@ -36,4 +45,28 @@ export const CustomTarget: Story = {
       </Text>
     </div>
   ),
+};
+
+/**
+ * Focused on load, so its look can be checked without pressing Tab. It
+ * shows at the top-left of the screen (where it would on a real page) and
+ * hides again as soon as focus moves on.
+ */
+export const Focused: Story = {
+  name: 'As it looks after pressing Tab',
+  parameters: { docs: { story: { inline: false, iframeHeight: 160 } } },
+  render: function FocusedStory() {
+    const ref = useRef<HTMLAnchorElement>(null);
+    useEffect(() => {
+      ref.current?.focus({ preventScroll: true });
+    }, []);
+    return (
+      <div>
+        <SkipLink ref={ref} />
+        <Text size="sm">
+          The link is focused — it sits at the top-left of the screen until you click or tab away.
+        </Text>
+      </div>
+    );
+  },
 };

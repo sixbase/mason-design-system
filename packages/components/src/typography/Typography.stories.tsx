@@ -5,6 +5,12 @@ const meta: Meta = {
   title: 'Components/Typography',
   tags: ['autodocs'],
   parameters: {
+    docs: {
+      description: {
+        component:
+          'The text styles: heading sizes, body sizes, weights, muted text and cutting off long lines.',
+      },
+    },
     layout: 'padded',
   },
 };
@@ -69,6 +75,7 @@ export const Muted: StoryObj = {
 };
 
 export const CaptionAndCode: StoryObj = {
+  name: 'Caption and code',
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)' }}>
       <Caption>Last modified March 14, 2026 · 2 min read</Caption>
@@ -81,10 +88,11 @@ export const CaptionAndCode: StoryObj = {
 };
 
 export const Truncate: StoryObj = {
+  name: 'Cut off on one line',
   render: () => (
-    <div style={{ width: '200px' }}>
-      <Text truncate>This is a very long line of text that should be truncated with an ellipsis</Text>
-      <Heading as="h4" truncate>A very long heading that gets a single-line ellipsis</Heading>
+    <div style={{ width: 'var(--spacing-phi-89)' }}>
+      <Text truncate>Hand-Stitched Vegetable-Tanned Leather Weekender Bag</Text>
+      <Heading as="h4" truncate>Cedar & Sage Soy Candle, Amber Glass</Heading>
     </div>
   ),
 };

@@ -7,6 +7,14 @@ const meta: Meta<typeof Tooltip> = {
   title: 'Components/Tooltip',
   component: Tooltip,
   tags: ['autodocs'],
+  parameters: {
+    docs: {
+      description: {
+        component:
+          'A tiny label that appears when you hover over or tab to a button, naming what it does.',
+      },
+    },
+  },
   argTypes: {
     side: { control: 'select', options: ['top', 'right', 'bottom', 'left'] },
     align: { control: 'select', options: ['start', 'center', 'end'] },
@@ -16,22 +24,27 @@ export default meta;
 
 type Story = StoryObj<typeof Tooltip>;
 
+/** Open on load so it can be seen without hovering; it closes like any tooltip once you move away. */
 export const Default: Story = {
   args: {
     content: 'Add to wishlist',
+    defaultOpen: true,
   },
   render: (args) => (
-    <Tooltip {...args}>
-      <Button variant="secondary" aria-label="Add to wishlist">
-        <Heart size="sm" />
-      </Button>
-    </Tooltip>
+    <div style={{ padding: 'var(--spacing-12) 0' }}>
+      <Tooltip {...args}>
+        <Button variant="secondary" iconOnly aria-label="Add to wishlist">
+          <Heart size="sm" />
+        </Button>
+      </Tooltip>
+    </div>
   ),
 };
 
 export const AllSides: Story = {
   render: () => (
-    <div style={{ display: 'flex', gap: 'var(--spacing-4)', padding: 'var(--spacing-16)' }}>
+    // Wraps on phones: four triggers plus 64px side padding overflowed 375px
+    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 'var(--spacing-4)', padding: 'var(--spacing-16) 0' }}>
       <Tooltip content="Tooltip on top" side="top">
         <Button variant="secondary">Top</Button>
       </Tooltip>
@@ -57,19 +70,10 @@ export const LongContent: Story = {
 };
 
 export const InstantOpen: Story = {
+  name: 'No delay before showing',
   render: () => (
-    <Tooltip content="No delay on this one" delayDuration={0}>
-      <Button variant="secondary">Hover me</Button>
+    <Tooltip content="Share this product" delayDuration={0}>
+      <Button variant="secondary">Share</Button>
     </Tooltip>
-  ),
-};
-
-export const DefaultOpen: Story = {
-  render: () => (
-    <div style={{ padding: 'var(--spacing-12)' }}>
-      <Tooltip content="Visible on mount" defaultOpen>
-        <Button variant="secondary">Trigger</Button>
-      </Tooltip>
-    </div>
   ),
 };

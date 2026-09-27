@@ -10,4 +10,5 @@ export type {
   AccordionTriggerProps,
   AccordionContentProps,
   AccordionSize,
+  AccordionHeadingLevel,
 } from './Accordion';

@@ -5,12 +5,22 @@
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: var(--z-index-toast);
-  animation: ds-cookie-consent-in var(--transition-duration-normal) var(--transition-easing-out) forwards;
+  /* Above the page and sticky header, below modal layers. At the toast
+     layer (300) it sat on top of an open cart drawer (200) on phones —
+     over Subtotal and Checkout — while the drawer made it inert
+     (aria-hidden, pointer-events: none), so a tap on its "Accept All"
+     landed on the hidden Checkout link underneath. Under the drawer's
+     backdrop it now reads as paused, like the rest of the page. */
+  z-index: var(--z-index-overlay);
+  /* Same motion as the bottom-sheet Drawer — both are panels travelling
+     their full height from the bottom edge. It used 162ms with the
+     generic ease-out/in, so a ~300px banner snapped in at twice the
+     speed of every other panel in the overlay family. */
+  animation: ds-cookie-consent-in var(--transition-duration-slower) var(--transition-easing-emphasized) forwards;
 }
 
 .ds-cookie-consent--closing {
-  animation: ds-cookie-consent-out var(--transition-duration-normal) var(--transition-easing-in) forwards;
+  animation: ds-cookie-consent-out var(--transition-duration-slow) var(--transition-easing-emphasized-in) forwards;
 }
 
 /* ─── Slide-in / Slide-out ─────────────────────────────────── */
@@ -33,6 +43,20 @@
   }
 }
 
+/* ─── Keep the page reachable under the banner ────────────── */
+/* --cookie-consent-height is the banner's measured height, set on <html>
+   while it shows (CookieConsent.tsx). scroll-padding makes focus (and
+   #anchor jumps) land above the banner instead of under it; the body
+   padding gives the end of the page room to scroll clear of it. */
+html:has(.ds-cookie-consent) {
+  --cookie-consent-height: 0;
+  scroll-padding-bottom: var(--cookie-consent-height);
+}
+
+html:has(.ds-cookie-consent) body {
+  padding-bottom: var(--cookie-consent-height);
+}
+
 /* ─── Content container ────────────────────────────────────── */
 
 .ds-cookie-consent__content {
@@ -42,12 +66,24 @@
   /* Keep actions clear of the home indicator on notched devices */
   padding-bottom: max(var(--spacing-4), var(--safe-area-bottom));
   background-color: var(--color-background-surface);
-  border-top: 1px solid var(--color-border);
+  /* Top and sides: from 640px up the banner is a floating card, and with
+     only a top border its sides dissolved into a dark page (the shadow
+     is invisible on near-black). */
+  border: var(--border-width-sm) solid var(--color-border);
+  border-bottom: none;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  box-shadow: var(--shadow-xl);
+  box-shadow: var(--elevation-modal);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-3);
+
+  /* Never taller than the screen. On short viewports (landscape phones,
+     preferences expanded) the banner used to grow past the top edge —
+     the heading was cut off and unreachable, since a fixed element can't
+     be scrolled into view. Now the preferences panel scrolls instead;
+     header and actions stay put. */
+  max-height: calc(100vh - var(--safe-area-top));
+  max-height: calc(100dvh - var(--safe-area-top));
 }
 
 /* ─── Header ───────────────────────────────────────────────── */
@@ -56,6 +92,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-1);
+  flex-shrink: 0;
 }
 
 /* Heading and description use <Text> primitives — no custom styles needed */
@@ -63,19 +100,24 @@
 .ds-cookie-consent__link {
   color: var(--color-foreground);
   text-decoration: underline;
-  text-underline-offset: 2px;
+  text-underline-offset: var(--spacing-phi-1);
   transition: color var(--transition-fast);
 }
 
-.ds-cookie-consent__link:hover {
-  color: var(--color-foreground-secondary);
+@media (hover: hover) {
+  .ds-cookie-consent__link:hover {
+    color: var(--color-foreground-secondary);
+  }
 }
 
 /* ─── Preferences panel ───────────────────────────────────── */
 
 .ds-cookie-consent__preferences {
-  /* No fixed max-height — panel grows to fit the bordered accordion content.
-     On short viewports the banner's own constraints naturally limit height. */
+  /* Grows to fit the accordion; shrinks and scrolls only when the banner
+     hits its max-height (see .ds-cookie-consent__content). */
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 /* Category description inside expanded accordion — inherits font/color from Accordion primitive */
@@ -92,6 +134,7 @@
 /* ─── Actions row ──────────────────────────────────────────── */
 
 .ds-cookie-consent__actions {
+  flex-shrink: 0;
   display: flex;
   justify-content: flex-end;
   gap: var(--spacing-2);
@@ -107,12 +150,12 @@
     padding: var(--spacing-3) var(--spacing-4);
     padding-bottom: max(var(--spacing-3), var(--safe-area-bottom));
     border-radius: 0;
+    border-inline: none; /* full-bleed: the screen edge is the edge */
   }
 
   /* Preferences panel: cap at 50vh on mobile to prevent covering the full screen */
   .ds-cookie-consent__preferences {
     max-height: 50vh;
-    overflow-y: auto;
   }
 
   .ds-cookie-consent__actions {
@@ -139,5 +182,20 @@
 
   .ds-cookie-consent--closing {
     animation: none;
+  }
+}
+
+/* The heading receives focus programmatically when the banner opens, so
+   screen readers start there. It isn't a control, so it shows no ring. */
+.ds-cookie-consent__heading:focus {
+  outline: none;
+}
+
+/* ─── Print ─────────────────────────────────────────────────── */
+/* A fixed banner prints on EVERY page in Chromium, covering the bottom of
+   each sheet of an order or product page. Consent is a screen concern. */
+@media print {
+  .ds-cookie-consent {
+    display: none;
   }
 }

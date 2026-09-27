@@ -6,6 +6,14 @@ const meta: Meta<typeof Stepper> = {
   title: 'Components/Stepper',
   component: Stepper,
   tags: ['autodocs'],
+  parameters: {
+    docs: {
+      description: {
+        component:
+          'Numbered steps across the top of checkout showing where you are.',
+      },
+    },
+  },
   argTypes: {
     activeStep: { control: { type: 'number', min: 0, max: 3 } },
   },
@@ -49,6 +57,7 @@ export const LastStep: Story = {
 };
 
 export const AllCompleted: Story = {
+  name: 'All steps done',
   render: () => (
     <Stepper activeStep={3} label="Order progress">
       <Step label="Ordered" />
@@ -58,7 +67,9 @@ export const AllCompleted: Story = {
   ),
 };
 
+/** Finished steps become links back (to fix an address, say); later steps never are. */
 export const ClickableCompleted: Story = {
+  name: 'Finished steps clickable',
   render: function ClickableStory() {
     const [activeStep, setActiveStep] = useState(2);
     return (

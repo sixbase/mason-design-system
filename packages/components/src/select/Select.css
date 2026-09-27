@@ -3,6 +3,10 @@
   display: inline-flex;
   flex-direction: column;
   gap: var(--spacing-1);
+  /* Never wider than the container: a long selected value truncates
+     inside the trigger instead of pushing the page sideways at 320px. */
+  max-width: 100%;
+  min-width: 0;
   font-family: var(--font-family-body);
 }
 
@@ -16,11 +20,12 @@
   font-weight: var(--font-weight-medium);
   color: var(--color-foreground);
   line-height: var(--line-height-snug);
+  overflow-wrap: anywhere;
 }
 
 /* ─── Trigger ────────────────────────────────────────────── */
 .ds-select-trigger {
-  --select-border-color: var(--color-border);
+  --select-border-color: var(--color-border-control);
   --select-bg: var(--color-background-surface);
   --select-radius: var(--radius-md);
 
@@ -33,7 +38,7 @@
   font-size: var(--font-size-sm);
   color: var(--color-foreground);
   background-color: var(--select-bg);
-  border: 1px solid var(--select-border-color);
+  border: var(--border-width-sm) solid var(--select-border-color);
   border-radius: var(--select-radius);
   cursor: pointer;
   outline: none;
@@ -41,10 +46,21 @@
     border-color var(--transition-fast),
     box-shadow var(--transition-fast);
   white-space: nowrap;
+  max-width: 100%;
 
   /* Optical centering: trim em-box to cap height + baseline */
   text-box-trim: both;
   text-box-edge: cap alphabetic;
+}
+
+/* The value takes the free space and truncates; the chevron never moves. */
+.ds-select-value {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: start;
 }
 
 .ds-select-trigger--full-width {
@@ -97,13 +113,16 @@
   }
 }
 
-/* Hover */
-.ds-select-trigger:hover:not([data-disabled]) {
-  border-color: var(--color-border-strong);
+/* Hover — skipped while in error, like Input/Textarea: the grey hover
+   edge replaced the red one, so the error vanished under the pointer. */
+@media (hover: hover) {
+  .ds-select-trigger:hover:not([data-disabled]):not(.ds-select-trigger--error) {
+    border-color: var(--color-foreground-subtle); /* darker than the resting border-control edge */
+  }
 }
 
 /* Active (pressed) */
-.ds-select-trigger:active:not([data-disabled]) {
+.ds-select-trigger:active:not([data-disabled]):not(.ds-select-trigger--error) {
   border-color: var(--color-primary);
 }
 
@@ -112,10 +131,18 @@
 .ds-select-trigger[data-state="open"] {
   border-color: var(--color-primary);
   box-shadow: var(--focus-ring);
+  /* Invisible normally. Forced-colors mode (Windows High Contrast) drops
+     box-shadow and repaints outlines in a system color, so this becomes
+     the focus indicator there instead of nothing. */
+  outline: var(--border-width-lg) solid transparent;
+  outline-offset: var(--border-width-lg);
 }
 
-/* Error */
-.ds-select-trigger--error {
+/* Error — the edge stays red while focused/open, matching Input and
+   Textarea (the focus rule above out-specified the plain error class). */
+.ds-select-trigger--error,
+.ds-select-trigger--error:focus-visible,
+.ds-select-trigger--error[data-state="open"] {
   border-color: var(--color-destructive);
 }
 
@@ -124,14 +151,17 @@
   box-shadow: var(--focus-ring-error);
 }
 
-/* Disabled */
+/* Disabled — same subtle fill as a disabled Input/Textarea */
 .ds-select-trigger[data-disabled] {
   opacity: var(--opacity-medium);
   cursor: not-allowed;
+  background-color: var(--color-background-subtle);
 }
 
-/* Placeholder text */
-.ds-select-trigger [data-placeholder] {
+/* Placeholder text — Radix puts data-placeholder on the trigger itself,
+   not on a descendant (the old descendant selector never matched, so the
+   placeholder rendered like a chosen value). */
+.ds-select-trigger[data-placeholder] {
   color: var(--color-foreground-secondary);
 }
 
@@ -151,22 +181,31 @@
 /* ─── Dropdown content ───────────────────────────────────── */
 .ds-select-content {
   background-color: var(--color-background-surface);
-  border: 1px solid var(--color-border);
+  border: var(--border-width-sm) solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--elevation-dropdown);
   overflow: hidden;
-  z-index: var(--z-index-overlay);
-  /* Match trigger width */
+  /* Popover plane — at overlay (100) a Select inside a Modal/Drawer
+     opened its list behind the dialog */
+  z-index: var(--z-index-popover);
+  /* Match trigger width, but never overflow the viewport — long option
+     labels wrap inside the available width instead. */
   min-width: var(--radix-select-trigger-width);
+  max-width: var(--radix-select-content-available-width);
   max-height: var(--radix-select-content-available-height);
 
   /* Animation */
   transform-origin: var(--radix-select-content-transform-origin);
-  animation: ds-select-open var(--transition-duration-fast) var(--transition-easing-out);
+  /* Same arrival as the other anchored lists (DropdownMenu, Popover,
+     Tooltip): normal duration on the emphasized curve — the overlay-opening
+     easing. Was fast + ease-out, the only floating panel on its own curve. */
+  animation: ds-select-open var(--transition-duration-normal) var(--transition-easing-emphasized);
 }
 
 @keyframes ds-select-open {
-  from { opacity: 0; transform: scale(0.97); }
+  /* --scale-enter: the entrance scale every other overlay (Popover,
+     DropdownMenu, Tooltip, Modal) starts from. Was a raw 0.97. */
+  from { opacity: 0; transform: scale(var(--scale-enter)); }
   to   { opacity: 1; transform: scale(1); }
 }
 
@@ -181,7 +220,6 @@
 .ds-select-viewport {
   padding: var(--spacing-1);
   overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
 }
 
 /* ─── Item ───────────────────────────────────────────────── */
@@ -189,20 +227,44 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--spacing-2);
   padding: var(--spacing-2) var(--spacing-3);
   font-family: var(--font-family-body);
   font-size: var(--font-size-sm);
   color: var(--color-foreground);
   border-radius: var(--radius-md);
   cursor: pointer;
+  -webkit-user-select: none; /* Safari ignores the unprefixed property */
   user-select: none;
   outline: none;
+  overflow-wrap: anywhere;
   transition: background-color var(--transition-fast);
 }
 
 .ds-select-item[data-highlighted] {
   background-color: var(--color-secondary);
   color: var(--color-foreground);
+  /* Forced colors erase the highlight background — the outline stands in
+     (inset, so the content's overflow: hidden can't clip it). */
+  outline: var(--border-width-lg) solid transparent;
+  outline-offset: calc(var(--border-width-lg) * -1);
+}
+
+/* Keyboard highlight: the background alone is 1.3:1 against the list. A
+   highlighted row the pointer is not on came from the keyboard (or is the
+   current value the list opened on), so it also paints the inset focus
+   ring. Under the pointer the background alone stays. Same rule as
+   DropdownMenu — see the note there on why not :focus-visible. */
+.ds-select-item[data-highlighted]:not(:hover) {
+  outline-color: var(--color-focus-ring);
+}
+
+/* Items are flush-stacked full-width rows: on touch, grow the real box to
+   the 44px hit area (an overlay would swallow the neighbour's edge). */
+@media (pointer: coarse) {
+  .ds-select-item {
+    min-height: var(--size-hit-area);
+  }
 }
 
 .ds-select-item[data-disabled] {
@@ -231,7 +293,7 @@
 
 /* ─── Separator ──────────────────────────────────────────── */
 .ds-select-separator {
-  height: 1px;
+  height: var(--border-width-sm);
   background-color: var(--color-border);
   margin: var(--spacing-1) 0;
 }
@@ -251,12 +313,14 @@
   font-size: var(--font-size-xs);
   color: var(--color-foreground-secondary);
   line-height: var(--line-height-normal);
+  overflow-wrap: anywhere;
 }
 
 .ds-select-error {
   font-size: var(--font-size-xs);
   color: var(--color-destructive);
   line-height: var(--line-height-normal);
+  overflow-wrap: anywhere;
 }
 
 /* ─── Optical centering fallback ─────────────────────────── */

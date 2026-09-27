@@ -7,9 +7,17 @@ const meta: Meta<typeof Tag> = {
   title: 'Components/Tag',
   component: Tag,
   tags: ['autodocs'],
+  parameters: {
+    docs: {
+      description: {
+        component:
+          'A small chip, often removable — used for active filters like “Size: M”.',
+      },
+    },
+  },
   argTypes: {
-    variant: { control: 'select' },
-    size: { control: 'select' },
+    variant: { control: 'select', options: ['default', 'outline'] },
+    size: { control: 'select', options: ['sm', 'md'] },
   },
 };
 export default meta;

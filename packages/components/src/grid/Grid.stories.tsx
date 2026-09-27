@@ -1,10 +1,19 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { Text } from '../typography/Typography';
 import { Grid } from './Grid';
 
 const meta: Meta<typeof Grid> = {
   title: 'Layout/Grid',
   component: Grid,
   tags: ['autodocs'],
+  parameters: {
+    docs: {
+      description: {
+        component:
+          'Lays items out in even columns that change with screen width — product grids, card rows.',
+      },
+    },
+  },
 };
 
 export default meta;
@@ -13,15 +22,12 @@ type Story = StoryObj<typeof Grid>;
 const Cell = ({ n }: { n: number }) => (
   <div style={{
     background: 'var(--color-background-subtle)',
-    border: '1px solid var(--color-border)',
+    border: 'var(--border-width-sm) solid var(--color-border)',
     borderRadius: 'var(--radius-md)',
     padding: 'var(--spacing-6)',
     textAlign: 'center',
-    fontFamily: 'var(--font-family-body)',
-    fontSize: 'var(--font-size-sm)',
-    color: 'var(--color-foreground-subtle)',
   }}>
-    {n}
+    <Text as="span" size="sm" muted>{n}</Text>
   </div>
 );
 
@@ -46,6 +52,7 @@ export const FixedTwoColumns: Story = {
 };
 
 export const CustomGap: Story = {
+  name: 'Wider gap',
   render: () => (
     <Grid gap={8}>
       {cells}
@@ -65,15 +72,12 @@ export const PerAxisGaps: Story = {
 const UnEvenCell = ({ n, tall }: { n: number; tall?: boolean }) => (
   <div style={{
     background: 'var(--color-background-subtle)',
-    border: '1px solid var(--color-border)',
+    border: 'var(--border-width-sm) solid var(--color-border)',
     borderRadius: 'var(--radius-md)',
     padding: tall ? 'var(--spacing-16) var(--spacing-6)' : 'var(--spacing-6)',
     textAlign: 'center',
-    fontFamily: 'var(--font-family-body)',
-    fontSize: 'var(--font-size-sm)',
-    color: 'var(--color-foreground-subtle)',
   }}>
-    {n}
+    <Text as="span" size="sm" muted>{n}</Text>
   </div>
 );
 

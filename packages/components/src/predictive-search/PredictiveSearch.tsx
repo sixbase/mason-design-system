@@ -3,11 +3,14 @@ import type { HTMLAttributes } from 'react';
 import { Search, X } from '../icon';
 import { Skeleton } from '../skeleton/Skeleton';
 import { Text } from '../typography/Typography';
+import { formatMoney } from '../internal/format-money';
 import './PredictiveSearch.css';
 
 // ─── Types ──────────────────────────────────────────────────
 
 export type SearchResultType = 'product' | 'collection' | 'page' | 'article';
+/** Input height step — same scale as `InputSize`. */
+export type PredictiveSearchSize = 'sm' | 'md' | 'lg';
 
 export interface SearchResult {
   /** Type of result */
@@ -48,12 +51,19 @@ export interface PredictiveSearchProps
   minChars?: number;
   /** Called when "View all results" footer link is clicked */
   onViewAll?: (query: string) => void;
-  /** Format price from cents for display */
+  /**
+   * Format price from cents for display. Overrides `currency`/`locale`;
+   * the default formats with them (was USD + en-US, hardcoded).
+   */
   formatPrice?: (cents: number) => string;
+  /** ISO 4217 currency code for result prices (default `'USD'`) */
+  currency?: string;
+  /** BCP 47 locale for result prices (default `'en-US'`) */
+  locale?: string;
   /** Accessible label for the search input (visually hidden) */
   label?: string;
   /** Size of the input */
-  size?: 'sm' | 'md' | 'lg';
+  size?: PredictiveSearchSize;
 }
 
 // ─── Helpers ────────────────────────────────────────────────
@@ -64,13 +74,6 @@ const GROUP_LABELS: Record<SearchResultType, string> = {
   page: 'Pages',
   article: 'Articles',
 };
-
-function defaultFormatPrice(cents: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(cents / 100);
-}
 
 interface FlatResult extends SearchResult {
   _flatIndex: number;
@@ -125,7 +128,8 @@ function groupResults(
  *   results={results}
  *   loading={isLoading}
  *   onSelect={(r) => navigate(r.url)}
- *   onViewAll={(q) => navigate(`/search?q=${q}`)}
+ *   // Encode the query: raw, "a&type=page" or "#" rewrites the search URL
+ *   onViewAll={(q) => navigate(`/search?q=${encodeURIComponent(q)}`)}
  * />
  */
 export const PredictiveSearch = forwardRef<HTMLInputElement, PredictiveSearchProps>(
@@ -141,7 +145,9 @@ export const PredictiveSearch = forwardRef<HTMLInputElement, PredictiveSearchPro
       debounce = 300,
       minChars = 2,
       onViewAll,
-      formatPrice = defaultFormatPrice,
+      formatPrice: formatPriceProp,
+      currency = 'USD',
+      locale,
       label = 'Search',
       size = 'md',
       className,
@@ -149,14 +155,28 @@ export const PredictiveSearch = forwardRef<HTMLInputElement, PredictiveSearchPro
     },
     ref,
   ) {
+    // Used only while rendering results (never an effect dependency), so a
+    // fresh closure per render costs nothing; the Intl instance is cached
+    // (internal/format-money) — it runs 2–3× per result on every keystroke.
+    const formatPrice = formatPriceProp ?? ((cents: number) => formatMoney(cents, currency, locale));
     const [query, setQuery] = useState('');
     const [isOpen, setIsOpen] = useState(false);
     const [activeIndex, setActiveIndex] = useState(-1);
     const [announcement, setAnnouncement] = useState('');
+    // The query the last onSearch call was made for. Until the debounce
+    // fires, the results on screen belong to an older query (or none).
+    const [searchedQuery, setSearchedQuery] = useState('');
 
     const internalInputRef = useRef<HTMLInputElement | null>(null);
     const rootRef = useRef<HTMLDivElement>(null);
     const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+    // Latest-ref for onSearch: consumers commonly pass an inline arrow
+    // (see the @example above). With onSearch in the debounce effect's
+    // deps, every parent re-render — including the one the consumer
+    // triggers by storing results — re-armed the timer and searched again,
+    // looping forever. The ref keeps the call current without re-arming.
+    const onSearchRef = useRef(onSearch);
+    onSearchRef.current = onSearch;
 
     // Merge forwarded ref with internal ref
     const setInputRef = useCallback(
@@ -178,6 +198,18 @@ export const PredictiveSearch = forwardRef<HTMLInputElement, PredictiveSearchPro
     const { groups, flat } = groupResults(results, showTypes, maxResults);
     const hasResults = flat.length > 0;
     const showDropdown = isOpen && query.length >= minChars;
+    // What is typed hasn't been searched yet (the debounce is still
+    // pending). An empty list then means "not asked", not "nothing found":
+    // every first search used to show "No results for “ca” — Try a
+    // different search term" for the whole debounce before results arrived.
+    const awaitingSearch = showDropdown && searchedQuery !== query;
+    const showSkeleton = loading || (awaitingSearch && !hasResults);
+    const showListbox = showDropdown && !loading && hasResults;
+    // The stored index can outlive the results it pointed at (results
+    // shrink after a late fetch, or the list is swapped for the loading
+    // skeleton). Resolve it against what is actually rendered so
+    // aria-activedescendant never references a missing option.
+    const currentIndex = showListbox && activeIndex < flat.length ? activeIndex : -1;
 
     // ─── Debounced search ─────────────────────────────────
     useEffect(() => {
@@ -187,7 +219,8 @@ export const PredictiveSearch = forwardRef<HTMLInputElement, PredictiveSearchPro
 
       if (query.length >= minChars) {
         debounceRef.current = setTimeout(() => {
-          onSearch(query);
+          setSearchedQuery(query);
+          onSearchRef.current(query);
         }, debounce);
       }
 
@@ -196,9 +229,15 @@ export const PredictiveSearch = forwardRef<HTMLInputElement, PredictiveSearchPro
           clearTimeout(debounceRef.current);
         }
       };
-    }, [query, minChars, debounce, onSearch]);
+    }, [query, minChars, debounce]);
 
     // ─── Announce results ─────────────────────────────────
+    // Keyed on the summary TEXT, not the `groups` array: groupResults()
+    // builds a new array every render, so every hover and arrow key re-ran
+    // this effect and its setState forced a second render of the whole list.
+    const resultSummary = groups
+      .map((g) => `${g.items.length} ${g.items.length === 1 ? g.type : `${g.type}s`}`)
+      .join(', ');
     useEffect(() => {
       if (!showDropdown) {
         setAnnouncement('');
@@ -211,30 +250,57 @@ export const PredictiveSearch = forwardRef<HTMLInputElement, PredictiveSearchPro
       }
 
       if (flat.length === 0 && query.length >= minChars) {
-        setAnnouncement(`No results for ${query}`);
+        // Only once this exact query has been searched. During the debounce
+        // the list is empty because nothing has run yet, and every keystroke
+        // announced "No results for c", "No results for ca", … before the
+        // search had even started.
+        if (searchedQuery === query) setAnnouncement(`No results for ${query}`);
         return;
       }
 
-      if (flat.length > 0) {
-        const parts = groups.map(
-          (g) => `${g.items.length} ${g.items.length === 1 ? g.type : `${g.type}s`}`,
-        );
-        setAnnouncement(`${parts.join(', ')} found`);
+      // Results still on screen from the previous query are not news while
+      // this one waits for its debounce: after clearing "card" and typing
+      // "zz", "1 product found" was read for results that didn't match.
+      if (flat.length > 0 && searchedQuery === query) {
+        setAnnouncement(`${resultSummary} found`);
       }
-    }, [flat.length, groups, loading, query, minChars, showDropdown]);
+    }, [flat.length, resultSummary, loading, query, searchedQuery, minChars, showDropdown]);
 
     // ─── Click outside ────────────────────────────────────
+    // pointerdown, not mousedown: iOS Safari only synthesizes mouse events
+    // for taps on "clickable" elements, so a tap on plain page content
+    // never reached a mousedown listener and the dropdown stayed open.
     useEffect(() => {
-      function handleClickOutside(e: MouseEvent) {
+      if (!isOpen) return;
+      function handlePointerDownOutside(e: PointerEvent) {
         if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
           setIsOpen(false);
           setActiveIndex(-1);
         }
       }
 
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+      document.addEventListener('pointerdown', handlePointerDownOutside);
+      return () => document.removeEventListener('pointerdown', handlePointerDownOutside);
+    }, [isOpen]);
+
+    // ─── Escape inside a parent overlay ───────────────────
+    // Radix Dialog/Drawer handle Escape on document in the capture phase —
+    // before this input's own keydown handler ever runs — so an Escape
+    // meant to close the suggestions closed the whole search drawer.
+    // A window-level capture listener runs first; preventDefault marks the
+    // key as consumed, which Radix layers respect.
+    useEffect(() => {
+      if (!showDropdown) return;
+      function handleEscapeCapture(e: KeyboardEvent) {
+        if (e.key !== 'Escape' || e.target !== internalInputRef.current) return;
+        e.preventDefault();
+        setIsOpen(false);
+        setActiveIndex(-1);
+      }
+
+      window.addEventListener('keydown', handleEscapeCapture, true);
+      return () => window.removeEventListener('keydown', handleEscapeCapture, true);
+    }, [showDropdown]);
 
     // ─── Handlers ─────────────────────────────────────────
     function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -269,13 +335,23 @@ export const PredictiveSearch = forwardRef<HTMLInputElement, PredictiveSearchPro
     }
 
     function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+      // Keys pressed while an IME composition is open (CJK input) belong to
+      // the composition — Enter commits the text, it must not select.
+      // keyCode 229 covers Safari, which reports isComposing=false there.
+      if (e.nativeEvent.isComposing || e.keyCode === 229) return;
+
       if (!showDropdown) {
         if (e.key === 'ArrowDown' && query.length >= minChars) {
           e.preventDefault();
           setIsOpen(true);
           if (hasResults) setActiveIndex(0);
         }
-        if (e.key === 'Escape' && query) {
+        // APG combobox: the first Escape closes the popup, a second one
+        // clears. In a real browser the window capture listener above closes
+        // the list and React re-renders before this handler runs (microtasks
+        // flush between listeners), so the same keypress arrived here as
+        // "closed" and wiped the query too. It already consumed the key.
+        if (e.key === 'Escape' && query && !e.nativeEvent.defaultPrevented) {
           e.preventDefault();
           handleClear();
         }
@@ -285,35 +361,38 @@ export const PredictiveSearch = forwardRef<HTMLInputElement, PredictiveSearchPro
       switch (e.key) {
         case 'ArrowDown': {
           e.preventDefault();
-          if (!hasResults) return;
-          setActiveIndex((prev) => (prev < flat.length - 1 ? prev + 1 : 0));
+          if (!showListbox) return;
+          setActiveIndex(currentIndex < flat.length - 1 ? currentIndex + 1 : 0);
           break;
         }
         case 'ArrowUp': {
           e.preventDefault();
-          if (!hasResults) return;
-          setActiveIndex((prev) => (prev > 0 ? prev - 1 : flat.length - 1));
+          if (!showListbox) return;
+          setActiveIndex(currentIndex > 0 ? currentIndex - 1 : flat.length - 1);
           break;
         }
         case 'Home': {
           e.preventDefault();
-          if (hasResults) setActiveIndex(0);
+          if (showListbox) setActiveIndex(0);
           break;
         }
         case 'End': {
           e.preventDefault();
-          if (hasResults) setActiveIndex(flat.length - 1);
+          if (showListbox) setActiveIndex(flat.length - 1);
           break;
         }
         case 'Enter': {
-          e.preventDefault();
-          const activeResult = activeIndex >= 0 ? flat[activeIndex] : undefined;
+          const activeResult = currentIndex >= 0 ? flat[currentIndex] : undefined;
           if (activeResult) {
+            e.preventDefault();
             handleSelect(activeResult);
           } else if (onViewAll) {
+            e.preventDefault();
             onViewAll(query);
             setIsOpen(false);
           }
+          // Otherwise leave Enter alone: a search input inside
+          // <form action="/search"> must still submit natively.
           break;
         }
         case 'Escape': {
@@ -348,7 +427,7 @@ export const PredictiveSearch = forwardRef<HTMLInputElement, PredictiveSearchPro
       .join(' ');
 
     const activeOptionId =
-      activeIndex >= 0 ? `${baseId}-option-${activeIndex}` : undefined;
+      currentIndex >= 0 ? `${baseId}-option-${currentIndex}` : undefined;
 
     // ─── Render ───────────────────────────────────────────
     return (
@@ -394,8 +473,17 @@ export const PredictiveSearch = forwardRef<HTMLInputElement, PredictiveSearchPro
         </div>
 
         {showDropdown && (
-          <div className="ds-predictive-search__dropdown">
-            {loading ? (
+          <div
+            className="ds-predictive-search__dropdown"
+            // Keep DOM focus on the input (combobox pattern): without this,
+            // pressing on a non-focusable option blurred the input and
+            // dropped focus to <body> after a mouse selection. The handler
+            // only catches bubbled presses — the wrapper itself is not
+            // interactive, hence role="presentation".
+            role="presentation"
+            onMouseDown={(e) => e.preventDefault()}
+          >
+            {showSkeleton ? (
               <div
                 className="ds-predictive-search__loading"
                 aria-busy="true"
@@ -439,7 +527,7 @@ export const PredictiveSearch = forwardRef<HTMLInputElement, PredictiveSearchPro
                       className="ds-predictive-search__group-list"
                     >
                       {group.items.map((item) => {
-                        const isActive = activeIndex === item._flatIndex;
+                        const isActive = currentIndex === item._flatIndex;
                         const itemClasses = [
                           'ds-predictive-search__result',
                           isActive && 'ds-predictive-search__result--active',
@@ -488,8 +576,20 @@ export const PredictiveSearch = forwardRef<HTMLInputElement, PredictiveSearchPro
                                 {item.title}
                               </Text>
                               {item.type === 'product' && item.price != null && (
-                                <div className="ds-predictive-search__result-price">
-                                  <Text size="sm" weight="medium">
+                                <div
+                                  className={[
+                                    'ds-predictive-search__result-price',
+                                    item.compareAtPrice != null &&
+                                      'ds-predictive-search__result-price--sale',
+                                  ]
+                                    .filter(Boolean)
+                                    .join(' ')}
+                                >
+                                  <Text
+                                    size="sm"
+                                    weight="medium"
+                                    className="ds-predictive-search__result-current"
+                                  >
                                     {formatPrice(item.price)}
                                   </Text>
                                   {item.compareAtPrice != null && (
@@ -530,8 +630,9 @@ export const PredictiveSearch = forwardRef<HTMLInputElement, PredictiveSearchPro
           </div>
         )}
 
-        {/* Always render listbox for aria-controls reference when dropdown is closed */}
-        {!showDropdown && (
+        {/* Placeholder listbox whenever the real one isn't rendered (closed,
+            loading, no results) so aria-controls never dangles */}
+        {!showListbox && (
           <ul id={listboxId} role="listbox" className="ds-sr-only" aria-label={`${label} results`} />
         )}
 

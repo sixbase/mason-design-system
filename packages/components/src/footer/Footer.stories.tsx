@@ -5,7 +5,15 @@ const meta: Meta<typeof Footer> = {
   title: 'Components/Footer',
   component: Footer,
   tags: ['autodocs'],
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component:
+          'The bottom of every page: logo, link columns, copyright and legal links.',
+      },
+    },
+  },
 };
 export default meta;
 
@@ -62,6 +70,40 @@ export const WithoutTagline: Story = {
     logoAlt: 'Mason Supply home',
     columns,
     copyright: '© 2026 Mason Supply Co. All rights reserved.',
+  },
+};
+
+/* Five link columns: at desktop the brand takes its own row and the
+   columns sit two grid columns wide beneath it; at tablet, four across. */
+export const ManyColumns: Story = {
+  args: {
+    logoSrc,
+    logoAlt: 'Mason Supply home',
+    tagline: 'Housewares and hardware built to outlast trends.',
+    columns: [
+      ...columns,
+      {
+        heading: 'Visit',
+        links: [
+          { label: 'Portland Store', href: '/pages/portland' },
+          { label: 'Workshops', href: '/pages/workshops' },
+        ],
+      },
+      {
+        heading: 'Trade',
+        links: [
+          { label: 'Wholesale', href: '/pages/wholesale' },
+          { label: 'Press', href: '/pages/press' },
+        ],
+      },
+    ],
+    copyright: '© 2026 Mason Supply Co. All rights reserved.',
+    legalLinks: [
+      { label: 'Privacy Policy', href: '/policies/privacy' },
+      { label: 'Terms of Service', href: '/policies/terms' },
+      { label: 'Refund Policy', href: '/policies/refund' },
+      { label: 'Shipping Policy', href: '/policies/shipping' },
+    ],
   },
 };
 

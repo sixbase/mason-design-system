@@ -5,7 +5,15 @@ const meta: Meta<typeof Header> = {
   title: 'Components/Header',
   component: Header,
   tags: ['autodocs'],
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component:
+          'The top of every page: logo, main links, theme switch and cart. On phones the links move into a menu.',
+      },
+    },
+  },
 };
 export default meta;
 
@@ -52,6 +60,33 @@ export const LogoOnly: Story = {
     logoSrc,
     logoAlt: 'Mason Supply home',
     showThemeToggle: false,
+  },
+};
+
+export const CurrentPage: Story = {
+  args: {
+    logoSrc,
+    logoAlt: 'Mason Supply home',
+    navItems: navItems.map((item) => ({ ...item, current: item.label === 'Hardware' })),
+    cartCount: 1,
+  },
+};
+
+/* A long menu: from 768px the links wrap on the centre track rather than
+   pushing the logo or the actions; below 768px they move into the drawer. */
+export const ManyLinks: Story = {
+  args: {
+    logoSrc,
+    logoAlt: 'Mason Supply home',
+    navItems: [
+      ...navItems,
+      { label: 'Outdoor', href: '/collections/outdoor' },
+      { label: 'Lighting', href: '/collections/lighting' },
+      { label: 'Textiles', href: '/collections/textiles' },
+      { label: 'Gift Cards', href: '/products/gift-card' },
+      { label: 'Sale', href: '/collections/sale' },
+    ],
+    cartCount: 12,
   },
 };
 

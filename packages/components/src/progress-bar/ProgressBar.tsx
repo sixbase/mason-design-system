@@ -1,6 +1,7 @@
-import { forwardRef } from 'react';
+import { forwardRef, useEffect } from 'react';
 import type { HTMLAttributes } from 'react';
 import { Text } from '../typography/Typography';
+import { devWarning } from '../internal/dev-warning';
 import './ProgressBar.css';
 
 export type ProgressBarVariant = 'default' | 'success';
@@ -11,14 +12,20 @@ export interface ProgressBarProps extends HTMLAttributes<HTMLDivElement> {
   value?: number;
   /**
    * Unknown-duration loading: shows a looping sweep animation instead of
-   * a fill. Exposes `aria-valuetext="Loading"` and no `aria-valuenow`.
-   * Under prefers-reduced-motion the sweep is replaced by a static
-   * mid-track fill. `value`, `showValue`, and `variant` are ignored.
+   * a fill. Exposes `aria-valuetext` (`valueText`, else "Loading") and no
+   * `aria-valuenow`.
+   * Under prefers-reduced-motion (or `<html data-motion="off">`) the sweep
+   * is replaced by a static mid-track fill. `value`, `showValue`, and
+   * `variant` are ignored.
    */
   indeterminate?: boolean;
   /** Maximum value (default: 100) */
   max?: number;
-  /** Accessible label for the progress bar */
+  /**
+   * Visible label, also the bar's accessible name. For a bar with no
+   * visible label, pass `aria-label` (or `aria-labelledby`) instead — both
+   * are put on the bar itself, not the wrapper.
+   */
   label?: string;
   /** Show percentage text below the bar */
   showValue?: boolean;
@@ -42,12 +49,32 @@ export const ProgressBar = forwardRef<HTMLDivElement, ProgressBarProps>(
       size = 'md',
       variant = 'default',
       className,
+      'aria-label': ariaLabel,
+      'aria-labelledby': ariaLabelledBy,
       ...props
     },
     ref,
   ) {
-    // Clamp percentage between 0 and 100
-    const percentage = Math.min(100, Math.max(0, ((value ?? 0) / max) * 100));
+    // The name belongs on the bar. On the wrapper <div> (where `...props`
+    // lands) an aria-label is ignored, and an unnamed bar was read as a
+    // bare "progress bar, 50%".
+    const barLabel = label ?? ariaLabel;
+    useEffect(() => {
+      if (!indeterminate && !barLabel && !ariaLabelledBy) {
+        devWarning(
+          'ProgressBar:name',
+          'ProgressBar has no accessible name — pass `label`, or `aria-label` when no ' +
+            'visible label is wanted.',
+        );
+      }
+    }, [indeterminate, barLabel, ariaLabelledBy]);
+
+    // Sanitize before any math: a NaN value (e.g. an unparsed API field)
+    // or a non-positive max used to leak "NaN" into aria-valuenow, the
+    // native value attribute, and the visible "NaN%" label.
+    const safeMax = Number.isFinite(max) && max > 0 ? max : 100;
+    const safeValue = Number.isFinite(value) ? Math.min(safeMax, Math.max(0, value as number)) : 0;
+    const percentage = (safeValue / safeMax) * 100;
     const isComplete = percentage >= 100;
 
     // Resolve variant: success at 100% if variant is 'success'
@@ -86,29 +113,34 @@ export const ProgressBar = forwardRef<HTMLDivElement, ProgressBarProps>(
           <div
             className="ds-progress-bar__track ds-progress-bar__track--indeterminate"
             role="progressbar"
-            aria-label={label ?? 'Loading'}
+            aria-label={ariaLabelledBy ? undefined : barLabel ?? 'Loading'}
+            aria-labelledby={ariaLabelledBy}
             aria-valuemin={0}
             aria-valuemax={100}
-            aria-valuetext="Loading"
+            aria-valuetext={valueText ?? 'Loading'}
           >
             <div className="ds-progress-bar__indeterminate-fill" />
           </div>
         ) : (
           <progress
             className="ds-progress-bar__track"
-            value={value ?? 0}
-            max={max}
-            aria-label={label}
+            value={safeValue}
+            max={safeMax}
+            aria-label={ariaLabelledBy ? undefined : barLabel}
+            aria-labelledby={ariaLabelledBy}
             aria-valuenow={Math.round(percentage)}
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuetext={valueText}
           />
         )}
+        {/* Visual copy of what the bar already exposes (aria-valuenow /
+            aria-valuetext) — hidden so "45%" is not read twice. */}
         {displayText && (
           <Text
             as="span"
             size="sm"
+            aria-hidden="true"
             className={[
               'ds-progress-bar__value-text',
               isNumericValue && 'ds-progress-bar__value-text--numeric',

@@ -189,15 +189,15 @@ Built into every section and template — not a separate pass.
 
 ---
 
-## Docs Site Standards
+## Workbench Standards
 
-The docs site is the most-copied code in the system. It must exemplify the same discipline as the component library.
+`apps/workbench` is the visual test bench — the place to look at every component at real phone/tablet/desktop widths, in light and dark, and record whether it looks right. It is not a documentation site: no prose, props tables or code snippets.
 
-- **Use design system components in demos.** If `PriceDisplay` exists, use it — don't reimplement price formatting inline.
-- **Every Storybook story must have a matching live preview** in the docs page. A heading + code snippet without a `<Gallery client:load />` is a gap.
-- **Gallery/demo files use `<Text>` and `<Heading>`**, never raw `<p>` or `<h2>`.
-- **Repeated patterns go in `demo-utilities.css`.** 3+ occurrences → extract to shared class.
-- **Foundation token pages include visual previews AND semantic mapping tables.** If a developer has to read component CSS to understand what tokens a component uses, the docs are incomplete.
+- **Stories are the specimens.** The workbench renders every `*.stories.tsx` directly (via `composeStories`), so a component's stories ARE its workbench page. One story per meaningful state, in a sensible order — they appear in file order.
+- **Never duplicate a story as a separate demo.** If a state is worth seeing, it is a story.
+- **Non-story sheets** (foundations, consistency line-ups, store pages) live in `apps/workbench/src/specimens/` and use `<Heading>`/`<Text>` and design-system components, never raw `<p>`/`<h2>`.
+- **Specimens compose, never restyle.** Workbench CSS may lay components out; it never changes how a component looks. Token visualizations may set a single property to a `var(--token)` inline.
+- **A new component with stories appears automatically**; add it to a group in `apps/workbench/src/lib/catalog.ts` (unlisted ones land under "Other").
 
 ---
 
@@ -213,7 +213,7 @@ The docs site is the most-copied code in the system. It must exemplify the same 
 ## Build & Dev Reference
 
 ```bash
-pnpm dev                              # Start docs (:4321) + storybook (:6006)
+pnpm dev                              # Start workbench (:4321) + storybook (:6006)
 pnpm build                            # Build all packages (Turborepo handles order)
 pnpm --filter @ds/tokens build        # Rebuild tokens only
 pnpm --filter @ds/components build    # Rebuild components only
@@ -270,7 +270,7 @@ Before any new section, component, or template is considered done:
 - [ ] Performance — no render-blocking resources
 - [ ] Tests — unit + a11y passing
 - [ ] Storybook stories — one per meaningful state, autodocs tag
-- [ ] Docs page — live previews for every story group, props table, a11y notes
+- [ ] Workbench — stories cover every meaningful state; reviewed at phone/desktop, light/dark, with Long text and RTL
 - [ ] Playbook updated — decisions, conventions, lessons captured
 
 ---

@@ -1,4 +1,5 @@
-import { forwardRef, useMemo } from 'react';
+import { forwardRef, useCallback, useEffect, useMemo, useRef } from 'react';
+import type { FocusEvent } from 'react';
 import type { ReactNode } from 'react';
 import { Drawer } from '../drawer';
 import { Heading } from '../typography';
@@ -6,6 +7,9 @@ import { Text } from '../typography';
 import { Button } from '../button';
 import { CartLineItem } from '../cart-line-item';
 import type { CartLineItemOption } from '../cart-line-item';
+import { formatMoney } from '../internal/format-money';
+import { useChangeAnnouncement } from '../internal/use-change-announcement';
+import { safeHref } from '../internal/safe-url';
 import './CartDrawer.css';
 
 // ─── Types ────────────────────────────────────────────────
@@ -44,6 +48,8 @@ export interface CartDrawerProps {
   subtotal: number;
   /** Currency code for formatting */
   currency?: string;
+  /** BCP 47 locale for the subtotal and every line (default `'en-US'`) */
+  locale?: string;
   /** Callback when item quantity changes */
   onUpdateQuantity: (itemId: string, quantity: number) => void;
   /** Callback when an item is removed */
@@ -60,11 +66,31 @@ export interface CartDrawerProps {
 
 // ─── Helpers ──────────────────────────────────────────────
 
-function formatPrice(cents: number, currency = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-  }).format(cents / 100);
+/**
+ * Speaks the item count only when it changes while the drawer is open. It
+ * mounts with the drawer's content, empty: filled on mount, it was read in
+ * browse mode as a hidden repeat of the visible "Your Bag (4)".
+ */
+function CartCountAnnouncer({ itemCount }: { itemCount: number }) {
+  const text = useChangeAnnouncement(
+    itemCount > 0
+      ? `${itemCount} ${itemCount === 1 ? 'item' : 'items'} in your cart`
+      : 'Your cart is empty',
+  );
+  return (
+    <div aria-live="polite" aria-atomic="true" className="ds-sr-only">
+      {text}
+    </div>
+  );
+}
+
+/** Nearest ancestor that scrolls vertically (the Drawer's body). */
+function scrollParent(el: HTMLElement): HTMLElement | null {
+  for (let node = el.parentElement; node; node = node.parentElement) {
+    const { overflowY } = getComputedStyle(node);
+    if (overflowY === 'auto' || overflowY === 'scroll') return node;
+  }
+  return null;
 }
 
 // ─── Component ────────────────────────────────────────────
@@ -77,6 +103,7 @@ export const CartDrawer = forwardRef<HTMLDivElement, CartDrawerProps>(
       items,
       subtotal,
       currency = 'USD',
+      locale,
       onUpdateQuantity,
       onRemoveItem,
       checkoutUrl = '/checkout',
@@ -97,6 +124,54 @@ export const CartDrawer = forwardRef<HTMLDivElement, CartDrawerProps>(
 
     const isEmpty = items.length === 0;
 
+    // Removing a line unmounts the Remove button that had focus; Radix then
+    // parks focus on the panel itself, and the keyboard user starts over
+    // from the top of the drawer. Once the line is gone, focus the Remove
+    // button of the line now in its place (or the last one), or the empty
+    // state's button when the bag is empty.
+    const contentRef = useRef<HTMLDivElement>(null);
+    const removedIndexRef = useRef<number | null>(null);
+    useEffect(() => {
+      const index = removedIndexRef.current;
+      if (index === null) return;
+      const content = contentRef.current;
+      const focused = document.activeElement;
+      const lost =
+        !focused || focused === document.body || focused.getAttribute('role') === 'dialog';
+      if (!lost) {
+        // Still on the Remove button (update not in yet): keep waiting.
+        if (!content?.contains(focused)) removedIndexRef.current = null;
+        return;
+      }
+      removedIndexRef.current = null;
+      const removeButtons = content?.querySelectorAll<HTMLElement>('.ds-cart-line-item__remove button');
+      if (removeButtons && removeButtons.length > 0) {
+        removeButtons[Math.min(index, removeButtons.length - 1)]?.focus();
+        return;
+      }
+      content?.querySelector<HTMLElement>('.ds-cart-drawer__empty button')?.focus();
+    });
+
+    // The footer (subtotal, Checkout) sticks to the bottom of the scrolling
+    // drawer body. Tabbing down a long bag, the browser scrolled each line
+    // in at the bottom edge — right under the footer, completely hidden
+    // (WCAG 2.4.11; measured on phone, landscape phone and desktop).
+    // Browsers ignore sticky content when revealing focus, so lift the
+    // focused control clear of the footer.
+    const footerRef = useRef<HTMLDivElement>(null);
+    const revealAboveFooter = useCallback((event: FocusEvent<HTMLDivElement>) => {
+      const footer = footerRef.current;
+      const target = event.target;
+      if (!footer || !(target instanceof HTMLElement)) return;
+      const hidden = target.getBoundingClientRect().bottom - footer.getBoundingClientRect().top;
+      if (hidden <= 0) return;
+      const scroller = scrollParent(footer);
+      if (!scroller) return;
+      // Breathing room: the footer's own top padding (--cart-drawer-gap)
+      const gap = Number.parseFloat(getComputedStyle(footer).paddingTop) || 0;
+      scroller.scrollTop += hidden + gap;
+    }, []);
+
     const classes = ['ds-cart-drawer', className].filter(Boolean).join(' ');
 
     return (
@@ -108,7 +183,7 @@ export const CartDrawer = forwardRef<HTMLDivElement, CartDrawerProps>(
         title="Shopping cart"
         className={classes}
       >
-        <div className="ds-cart-drawer__content">
+        <div ref={contentRef} className="ds-cart-drawer__content">
           {/* ── Header ─────────────────────────────────────── */}
           <div className="ds-cart-drawer__header">
             <Heading as="h2" size="xl">
@@ -133,14 +208,18 @@ export const CartDrawer = forwardRef<HTMLDivElement, CartDrawerProps>(
           ) : (
             <>
               {/* ── Items list ─────────────────────────────── */}
-              <div className="ds-cart-drawer__items">
-                {items.map((item) => (
+              <div className="ds-cart-drawer__items" onFocus={revealAboveFooter}>
+                {items.map((item, index) => (
                   <CartLineItem
                     key={item.id}
                     id={item.id}
                     name={item.name}
                     price={item.price}
                     compareAtPrice={item.compareAtPrice}
+                    // Lines must format in the drawer's currency and locale —
+                    // they used to show $ beside a € subtotal.
+                    currency={currency}
+                    locale={locale}
                     quantity={item.quantity}
                     maxQuantity={item.maxQuantity}
                     image={item.image}
@@ -148,13 +227,16 @@ export const CartDrawer = forwardRef<HTMLDivElement, CartDrawerProps>(
                     options={item.options}
                     href={item.href}
                     onQuantityChange={(qty) => onUpdateQuantity(item.id, qty)}
-                    onRemove={() => onRemoveItem(item.id)}
+                    onRemove={() => {
+                      removedIndexRef.current = index;
+                      onRemoveItem(item.id);
+                    }}
                   />
                 ))}
               </div>
 
               {/* ── Footer ─────────────────────────────────── */}
-              <div className="ds-cart-drawer__footer">
+              <div ref={footerRef} className="ds-cart-drawer__footer">
                 {children}
                 <div className="ds-cart-drawer__subtotal">
                   <Text size="base" weight="medium">
@@ -165,7 +247,7 @@ export const CartDrawer = forwardRef<HTMLDivElement, CartDrawerProps>(
                     weight="semibold"
                     className="ds-cart-drawer__subtotal-value"
                   >
-                    {formatPrice(subtotal, currency)}
+                    {formatMoney(subtotal, currency, locale)}
                   </Text>
                 </div>
                 <Button
@@ -174,7 +256,7 @@ export const CartDrawer = forwardRef<HTMLDivElement, CartDrawerProps>(
                   fullWidth
                   asChild
                 >
-                  <a href={checkoutUrl}>Checkout</a>
+                  <a href={safeHref(checkoutUrl)}>Checkout</a>
                 </Button>
                 <Button
                   variant="ghost"
@@ -190,11 +272,7 @@ export const CartDrawer = forwardRef<HTMLDivElement, CartDrawerProps>(
         </div>
 
         {/* Live region for item count announcements */}
-        <div aria-live="polite" className="ds-sr-only">
-          {itemCount > 0
-            ? `${itemCount} ${itemCount === 1 ? 'item' : 'items'} in your cart`
-            : 'Your cart is empty'}
-        </div>
+        <CartCountAnnouncer itemCount={itemCount} />
       </Drawer>
     );
   },

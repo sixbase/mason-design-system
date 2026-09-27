@@ -6,6 +6,14 @@ const meta: Meta<typeof Tabs> = {
   title: 'Components/Tabs',
   component: Tabs,
   tags: ['autodocs'],
+  parameters: {
+    docs: {
+      description: {
+        component:
+          'Buttons that switch between panels of related content — Description, Reviews, Specifications.',
+      },
+    },
+  },
 };
 export default meta;
 
@@ -35,8 +43,31 @@ export const Default: Story = {
   ),
 };
 
+export const WithBadges: Story = {
+  render: () => (
+    <Tabs defaultValue="description">
+      <TabsList>
+        <TabsTrigger value="description">Description</TabsTrigger>
+        <TabsTrigger value="reviews" badge={127}>Reviews</TabsTrigger>
+        <TabsTrigger value="questions" badge={4}>Questions</TabsTrigger>
+      </TabsList>
+      <TabsContent value="description">
+        A minimal stoneware bowl with a matte finish.
+      </TabsContent>
+      <TabsContent value="reviews">
+        127 reviews — 4.8 average. Customers highlight the weight and texture.
+      </TabsContent>
+      <TabsContent value="questions">
+        4 answered questions about care, sizing, and shipping.
+      </TabsContent>
+    </Tabs>
+  ),
+};
+
+/** Opened on a chosen tab by the page — e.g. a “Read reviews” link jumps straight to Reviews. */
 export const Controlled: Story = {
-  render: () => {
+  name: 'Opened on Reviews by the page',
+  render: function ControlledStory() {
     const [value, setValue] = useState('reviews');
     return (
       <Tabs value={value} onValueChange={setValue}>
@@ -68,42 +99,22 @@ export const WithDisabledTab: Story = {
         <TabsTrigger value="specs">Specifications</TabsTrigger>
       </TabsList>
       <TabsContent value="description">
-        This product description is available to read.
+        Hand-thrown stoneware with a speckled matte glaze. Holds 350 ml.
       </TabsContent>
       <TabsContent value="reviews">
-        Reviews are not yet available for this product.
+        Reviews open once the first orders arrive.
       </TabsContent>
       <TabsContent value="specs">
-        Technical specifications for this product.
+        Stoneware, 350 ml, dishwasher and microwave safe.
       </TabsContent>
     </Tabs>
   ),
 };
 
-export const WithBadges: Story = {
-  render: () => (
-    <Tabs defaultValue="description">
-      <TabsList>
-        <TabsTrigger value="description">Description</TabsTrigger>
-        <TabsTrigger value="reviews" badge={127}>Reviews</TabsTrigger>
-        <TabsTrigger value="questions" badge={4}>Questions</TabsTrigger>
-      </TabsList>
-      <TabsContent value="description">
-        A minimal stoneware bowl with a matte finish.
-      </TabsContent>
-      <TabsContent value="reviews">
-        127 reviews — 4.8 average. Customers highlight the weight and texture.
-      </TabsContent>
-      <TabsContent value="questions">
-        4 answered questions about care, sizing, and shipping.
-      </TabsContent>
-    </Tabs>
-  ),
-};
-
+/** More tabs than fit: the row scrolls sideways and keeps the chosen tab in view. */
 export const ManyTabs: Story = {
   render: () => (
-    <div style={{ maxWidth: '400px' }}>
+    <div style={{ maxWidth: 'var(--size-modal-sm)' }}>
       <Tabs defaultValue="tab-1">
         <TabsList>
           <TabsTrigger value="tab-1">Description</TabsTrigger>
@@ -113,12 +124,12 @@ export const ManyTabs: Story = {
           <TabsTrigger value="tab-5">Returns</TabsTrigger>
           <TabsTrigger value="tab-6">Warranty</TabsTrigger>
         </TabsList>
-        <TabsContent value="tab-1">Description content with overflow tabs.</TabsContent>
-        <TabsContent value="tab-2">Reviews content.</TabsContent>
-        <TabsContent value="tab-3">Specifications content.</TabsContent>
-        <TabsContent value="tab-4">Shipping information.</TabsContent>
-        <TabsContent value="tab-5">Returns policy.</TabsContent>
-        <TabsContent value="tab-6">Warranty details.</TabsContent>
+        <TabsContent value="tab-1">Hand-thrown stoneware with a speckled matte glaze.</TabsContent>
+        <TabsContent value="tab-2">4.8 out of 5 from 127 reviews.</TabsContent>
+        <TabsContent value="tab-3">Stoneware, 350 ml, dishwasher and microwave safe.</TabsContent>
+        <TabsContent value="tab-4">Free standard shipping on orders over $50.</TabsContent>
+        <TabsContent value="tab-5">Free returns within 30 days of delivery.</TabsContent>
+        <TabsContent value="tab-6">Chips and cracks from normal use are covered for a year.</TabsContent>
       </Tabs>
     </div>
   ),
@@ -131,7 +142,7 @@ export const SingleTab: Story = {
         <TabsTrigger value="only">Product Details</TabsTrigger>
       </TabsList>
       <TabsContent value="only">
-        Even with a single tab, the panel structure remains for consistent layout.
+        Hand-thrown stoneware with a speckled matte glaze. Holds 350 ml.
       </TabsContent>
     </Tabs>
   ),

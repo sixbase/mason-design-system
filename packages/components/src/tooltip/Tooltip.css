@@ -17,23 +17,59 @@
   padding: var(--spacing-1) var(--spacing-2);
   max-width: var(--tooltip-max-width);
   z-index: var(--z-index-tooltip);
+  -webkit-user-select: none; /* Safari ignores the unprefixed property */
   user-select: none;
+  overflow-wrap: break-word;
+  /* No border, so forced-colors mode (bg → Canvas) left floating text
+     with no bubble edge. A transparent outline is invisible normally and
+     repainted in a system color under forced colors. */
+  outline: var(--border-width-sm) solid transparent;
 
   /* Animation */
   transform-origin: var(--radix-tooltip-content-transform-origin);
-  animation: ds-tooltip-open var(--transition-duration-fast) var(--transition-easing-out);
+  animation: ds-tooltip-open var(--transition-duration-normal) var(--transition-easing-emphasized);
+}
+
+/* Opens from the side it's anchored to: a few pixels of drift toward
+   the content plus a slight grow, then leaves faster than it came. */
+.ds-tooltip[data-side='top']    { --tooltip-drift-y: var(--motion-distance-sm); }
+.ds-tooltip[data-side='bottom'] { --tooltip-drift-y: calc(var(--motion-distance-sm) * -1); }
+.ds-tooltip[data-side='left']   { --tooltip-drift-x: var(--motion-distance-sm); }
+.ds-tooltip[data-side='right']  { --tooltip-drift-x: calc(var(--motion-distance-sm) * -1); }
+
+.ds-tooltip[data-state='closed'] {
+  animation: ds-tooltip-close var(--transition-duration-fast) var(--transition-easing-emphasized-in) forwards;
 }
 
 @keyframes ds-tooltip-open {
-  from { opacity: 0; transform: scale(0.97); }
-  to   { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: translate(var(--tooltip-drift-x, 0), var(--tooltip-drift-y, 0)) scale(var(--scale-enter));
+  }
+}
+
+@keyframes ds-tooltip-close {
+  to {
+    opacity: 0;
+    transform: scale(var(--scale-enter));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ds-tooltip { animation: none; }
+  .ds-tooltip,
+  .ds-tooltip[data-state='closed'] { animation: none; }
 }
 
 /* ─── Arrow ──────────────────────────────────────────────── */
 .ds-tooltip__arrow {
   fill: var(--tooltip-bg);
+}
+
+/* SVG fills aren't forced: the arrow kept the theme's dark/light token, so
+   with a High Contrast palette that disagrees with the site theme it was
+   black-on-black (or white-on-white). Draw it in the outline's colour. */
+@media (forced-colors: active) {
+  .ds-tooltip__arrow {
+    fill: CanvasText;
+  }
 }

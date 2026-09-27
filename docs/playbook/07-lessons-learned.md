@@ -15,7 +15,7 @@
 
 ## Extracted Rules — Quick Reference
 
-Every lesson produced a rule. This table collects them all so Claude can scan for the relevant rule without reading 700 lines.
+Every lesson produced a rule. This table collects the rules **still in force** so Claude can scan without reading 700 lines. (Updated 2026-09-26: rules that only applied to the retired Astro docs site or to `apps/theme/` inside this repo are marked obsolete; the round 1–4 rules are added. The how-to chapters — `03`, `04`, `05`, `09`, `13`, `14` — state the same rules in context.)
 
 ### Build & Tooling Rules
 
@@ -24,12 +24,14 @@ Every lesson produced a rule. This table collects them all so Claude can scan fo
 | `types` must be first key in package.json exports | [types-export-order](#types-export-order) |
 | tsup outputs `.js` for CJS, `.mjs` for ESM — not `.cjs` | [tsup-extensions](#tsup-extensions) |
 | Storybook glob is relative to `.storybook/`, uses `{ts,tsx}` not `@(ts\|tsx)` | [storybook-glob](#storybook-glob) |
-| Astro imports relative to `.astro` file location, not project root | Harder than expected |
-| Token CSS needs full rebuild, `tsup --watch` only covers TS | Harder than expected |
-| Component CSS changes require library rebuild (`pnpm turbo build --filter=@ds/components --force`) | [css-hot-reload](#css-hot-reload) |
-| Chromatic needs `fetch-depth: 0` in GitHub Actions | [chromatic-fetch-depth](#chromatic-fetch-depth) |
+| Token CSS needs a full `@ds/tokens` build — `pnpm dev` builds it once, then only watches TS | Harder than expected |
+| Component CSS changes show instantly in the workbench (it renders source); only `dist` consumers need a rebuild | [workbench-source](#workbench-source) (replaces the docs-era [css-hot-reload](#css-hot-reload)) |
+| Chromatic (if re-enabled) needs `fetch-depth: 0` in GitHub Actions | [chromatic-fetch-depth](#chromatic-fetch-depth) |
 | Clear Storybook cache after adding any Radix package | [storybook-cache](#storybook-cache) |
-| Always `cd apps/theme` before `shopify theme dev`; never from monorepo root | [shopify-theme-dev-cwd](#shopify-theme-dev-cwd) |
+| Bump all `@radix-ui/*` together; check the lockfile for duplicate internals | [radix-duplicates](#radix-duplicates) |
+| tsup `splitting` needs `clean: true` | [tsup-clean](#tsup-clean) |
+| Token build scripts resolve references through a lookup that throws | [token-build-fails-silently](#token-build-fails-silently) |
+| Always `cd` into the storefront repo root (`/Users/alvinthong/Code/mason-storefront`, formerly `apps/theme`) before `shopify theme dev` | [shopify-theme-dev-cwd](#shopify-theme-dev-cwd) |
 | `settings_schema.json` `theme_info`: `theme_documentation_url` required; exactly one of `theme_support_email` or `theme_support_url` | [shopify-settings-schema-validation](#shopify-settings-schema-validation) |
 | Transient Shopify CLI SSL errors — retry before debugging | [shopify-cli-ssl](#shopify-cli-ssl) |
 
@@ -42,8 +44,15 @@ Every lesson produced a rule. This table collects them all so Claude can scan fo
 | Never use `color-mix(… %, transparent)` for WCAG-required contrast | [color-mix-contrast](#color-mix-contrast) |
 | Disabled state: `var(--opacity-medium)`, never `0.5` | Refactor audit |
 | Transitions: use `var(--transition-fast)` shorthands, never raw duration | Token convention |
-| `@media` queries cannot use CSS custom properties | [css-media-vars](#css-media-vars) |
+| `@media` queries cannot use CSS custom properties — write the breakpoint token's value; `check-css` rejects any other width | [css-media-vars](#css-media-vars) |
 | Form elements don't inherit `font-family` — need global reset | [form-font-inheritance](#form-font-inheritance) |
+| Every `:hover` inside `@media (hover: hover)` (`:not(:hover)` highlights exempt) | Round 4 (decisions log) |
+| Composite tokens are declared in every mode block | [composite-tokens-nested-theme](#composite-tokens-nested-theme) |
+| Check the global layer in `tokens.css` before adding per-component focus/motion handling | [global-css-safety-nets](#global-css-safety-nets) |
+| The global reduced-motion reset zeroes delays; `.ds-motion-safe` opts out a replacement animation | [reduced-motion-delays](#reduced-motion-delays), [reset-kills-fallback](#reset-kills-fallback) |
+| Above-the-fold entrances start at `--opacity-ghost`, never 0 | [lcp-opacity-zero](#lcp-opacity-zero) |
+| Don't hide content for a reveal until GSAP has loaded | [reveal-hide-after-load](#reveal-hide-after-load) |
+| Animate a transformed layer, not a repainted gradient | [skeleton-shimmer](#skeleton-shimmer) |
 
 ### Component Pattern Rules
 
@@ -60,7 +69,7 @@ Every lesson produced a rule. This table collects them all so Claude can scan fo
 | `text-overflow: ellipsis` not working? Trace `min-width: 0` up the chain | [flex-overflow](#flex-overflow) |
 | Prefer CSS responsive behavior over JS — render full content, CSS controls visibility | [css-vs-js-responsive](#css-vs-js-responsive) |
 | Icon buttons in `justify-content: space-between` flex rows need `flex-shrink: 0` — otherwise they collapse to content width | [icon-button-flex-shrink](#icon-button-flex-shrink) |
-| Inline SVGs in Liquid/Astro need `.ds-icon ds-icon--{size}` classes OR explicit `width`/`height` attrs — no default dimensions = invisible or 300×150 | [inline-svg-sizing](#inline-svg-sizing) |
+| Inline SVGs in Liquid need `.ds-icon ds-icon--{size}` classes OR explicit `width`/`height` attrs — no default dimensions = invisible or 300×150 | [inline-svg-sizing](#inline-svg-sizing) |
 | Icon audits must verify render, not just path correctness — agents that only check `d=""` miss sizing/layout bugs | [icon-audit-render-check](#icon-audit-render-check) |
 | `<figure>` has default `margin: 1em 40px` — reset to 0 when used as a positioned wrapper, otherwise content shifts and parent bg shows through | [figure-default-margin](#figure-default-margin) |
 | Pipe Shopify `image.presentation.focal_point` to `object-position` so cover-cropped images keep the merchant-set focal area visible | [shopify-focal-point](#shopify-focal-point) |
@@ -68,22 +77,24 @@ Every lesson produced a rule. This table collects them all so Claude can scan fo
 | `.ds-price-display--sm` renders price at `--font-size-base` (16px) — not `--font-size-sm`. Don't confuse it with `<Text size="sm">` (14px) | [price-display-size-naming](#price-display-size-naming) — superseded by [price-display-collapse](#price-display-collapse) |
 | PriceDisplay sale state (when `comparePrice` is present) renders the current price in `--color-destructive` via `:has()` so it visually echoes the Sale badge | [price-display-collapse](#price-display-collapse) |
 | When the React DS source changes a primitive (PriceDisplay, Card, etc.), `git log -- packages/components/src/{component}/` is the audit trail — diff the theme's CSS/Liquid against the latest commit and port | [theme-port-audit-trail](#theme-port-audit-trail) |
-| Page-level patterns belong in a docs example demo (e.g. CollectionDemo.tsx) BEFORE they're ported to the theme. Components in isolation aren't enough — the page-level composition is the DS contract | [page-level-demo-pattern](#page-level-demo-pattern) |
-| `<Heading level={N}>` is NOT a valid prop — the API is `<Heading as="hN">`. Pass `level={1}` and you silently get `<h2>` (the default). Grep all demos when seen | [heading-level-prop-bug](#heading-level-prop-bug) |
+| Page-level patterns belong in a workbench store page (e.g. `apps/workbench/src/specimens/pages/CollectionDemo.tsx`) BEFORE they're ported to the theme. Components in isolation aren't enough — the page-level composition is the DS contract | [page-level-demo-pattern](#page-level-demo-pattern) |
+| `<Heading level={N}>` is NOT a valid prop — the API is `<Heading as="hN">`. Pass `level={1}` and you silently get `<h2>` (the default). Stories and workbench sheets are now type-checked, which catches it | [heading-level-prop-bug](#heading-level-prop-bug) |
 | `<CollectionFilters>` is self-contained — render it ONCE per page, not separately for desktop and mobile. CSS visibility inside the component handles the responsive split | [collection-filters-single-render](#collection-filters-single-render) |
 | Components use `<Heading>`/`<Text>` internally too — never raw `<p>`/`<h1>`–`<h6>`. BEM selectors styling a Typography child need `.ds-block .ds-block__el` specificity to beat the `.ds-text`/`.ds-heading` class tie | [raw-html-in-components](#raw-html-in-components) |
 
-### Docs & Demo Rules
+### Stories & Workbench Rules
+
+(The docs-site rules — gallery parity, `demo-utilities.css`, `apps/docs/src/lib/` — retired with the Astro site on 2026-09-25. Their spirit carries over below.)
 
 | Rule | Source Lesson |
 |------|--------------|
-| Gallery/demo code uses `<Text>` and `<Heading>`, never raw tags | [raw-html-in-demos](#raw-html-in-demos) |
-| Demo files deserve production discipline — 3+ repeats → shared class | [gallery-inline-styles](#gallery-inline-styles) |
-| Parity measured at story level, not component level | [docs-audit-gap](#docs-audit-gap) |
-| Docs must compose existing components, not reimplement inline | [docs-example-parity](#docs-example-parity) |
-| Audit docs/demo code with same rigor as components | [docs-token-drift](#docs-token-drift) |
+| Stories and workbench sheets use `<Text>` and `<Heading>`, never raw tags | [raw-html-in-demos](#raw-html-in-demos) |
+| Stories and sheets compose components; they never restyle or reimplement them | [docs-example-parity](#docs-example-parity) |
+| Stories and sheets get the same token discipline as components (inline styles: layout only, `var(--token)`) | [docs-token-drift](#docs-token-drift) |
 | Dead CSS classes are silent bugs — verify every className has a definition | [dead-css-classes](#dead-css-classes) |
-| Shared helpers: 2+ occurrences in docs → extract to `apps/docs/src/lib/` | [shared-doc-utilities](#shared-doc-utilities) |
+| Write stories in the order you want to review them | [story-order](#story-order) |
+| Look at the rendered result in the workbench — jsdom can't see layout | [visual-pass](#visual-pass) |
+| Workbench: validate saved state field by field; compose stories once per module | [workbench-storage](#workbench-storage), [compose-once](#compose-once) |
 
 ### Accessibility Rules
 
@@ -92,8 +103,16 @@ Every lesson produced a rule. This table collects them all so Claude can scan fo
 | After initial semantic tokens, run a11y audit before calling architecture complete | [semantic-token-gap](#semantic-token-gap) |
 | jest-axe needs `expect.extend(toHaveNoViolations)` in setup + region rule disabled | [jest-axe-setup](#jest-axe-setup) |
 | When switching fonts, immediately test small dense components (badges, tags, chips) | [font-vertical-centering](#font-vertical-centering) |
-| `text-box-trim: both; text-box-edge: cap alphabetic` for pill components | [font-vertical-centering](#font-vertical-centering) |
+| ~~`text-box-trim: both` for pill components~~ — invalid CSS; optical centering is an open decision | [text-box-trim-invalid](#text-box-trim-invalid) |
 | Combobox: keep focus on input, use `aria-activedescendant` — never move DOM focus to options | [combobox-focus-pattern](#combobox-focus-pattern) |
+| Controls that can disable themselves while focused use `aria-disabled`, not native `disabled` | [aria-disabled-focus](#aria-disabled-focus) |
+| Overlays find their opener with `internal/dialog-opener.ts` (Safari doesn't focus clicked buttons) | [safari-click-focus](#safari-click-focus) |
+| Live regions exist empty and fill on change (`useChangeAnnouncement`) | [live-region-first](#live-region-first) |
+| `aria-label` needs a role; keep controls out of headings | [aria-label-no-role](#aria-label-no-role), [heading-name](#heading-name) |
+| Focus rings: transparent outline for forced colors; inset/outline inside clipping or overlapping containers; un-fade focused `aria-disabled` controls; offset sticky headers | [inset-outline](#inset-outline), [forced-colors](#forced-colors), [opacity-ring](#opacity-ring), [sticky-focus](#sticky-focus) |
+| Radix list keyboard highlight: `[data-highlighted]:not(:hover)`, not `:focus-visible` | [radix-highlight](#radix-highlight) |
+| Hit areas: pick overlay / min-height / one-axis by neighbourhood | [hit-area-selection](#hit-area-selection) |
+| Form controls pin 16px on coarse pointers (iOS zoom) | [ios-zoom-fluid-base](#ios-zoom-fluid-base) |
 
 ---
 
@@ -126,6 +145,7 @@ Every component got a docs page the same session. The discipline meant docs were
 **Expected:** Relative to package root. **Reality:** Relative to `.storybook/` dir. Need `../../../` not `../../`. Silent failure — empty Storybook, no error.
 
 ### Astro JSON import paths
+*(Obsolete — the Astro docs site was retired 2026-09-25.)*
 **Expected:** Relative to project root. **Reality:** Relative to `.astro` file. Five `../` to reach packages from a nested page. Silent 404.
 
 ### Two separate build steps for tokens
@@ -188,6 +208,7 @@ Use raw pixel values with token-name comments: `/* @breakpoint-lg = 1024px */`.
 Trace from overflowing element up through every parent. First ancestor without `min-width: 0` is the bug.
 
 ### CSS changes don't hot-reload in docs site {#css-hot-reload}
+*(Obsolete — the workbench renders component source; see [workbench-source](#workbench-source).)*
 Docs imports pre-built CSS from `@ds/components/dist/`. Must rebuild library after CSS changes.
 **Rule:** Component CSS → library rebuild. Token changes → token rebuild. Only page-level CSS hot-reloads.
 
@@ -256,6 +277,8 @@ Footer rendered its tagline, column headings, and copyright as raw `<p>`/`<h3>` 
 ---
 
 ## Gotchas: Docs & Demos
+
+*(Written for the retired Astro docs site. The files named here — gallery components, `demo-utilities.css`, `apps/docs/src/lib/` — no longer exist; the current rules are under "Stories & Workbench Rules" above.)*
 
 ### Inline styles in gallery components accumulate fast {#gallery-inline-styles}
 25+ inline style attributes across 4 gallery files. Invisible to search, impossible to update globally.
@@ -476,7 +499,7 @@ The React DS side doesn't hit this because `<Text size="sm" weight="semibold">` 
 ---
 
 ### iOS auto-zoom: the fluid `--font-size-base` dips below 1rem on phones {#ios-zoom-fluid-base}
-**Bug:** iOS Safari zooms the whole page when a focused form control's font-size is under 16px. Our fluid `--font-size-base` is `clamp(0.8611rem, …, 1rem)` — on phone widths it sits *below* 1rem, so even "base"-sized inputs triggered zoom.
+**Bug:** iOS Safari zooms the whole page when a focused form control's font-size is under 16px. Our fluid `--font-size-base` is `clamp(0.8611rem, …, 1rem)` (floor since raised to 0.875rem so `base` never drops below `sm`; still under 1rem) — on phone widths it sits *below* 1rem, so even "base"-sized inputs triggered zoom.
 **Rule:** Form controls (Input, Textarea, Select trigger, QuantitySelector) pin `font-size` to `--font-size-tight-base` (fixed 1rem) under `@media (pointer: coarse)`. Any control using the fluid default scale needs the guard — including `lg` sizes.
 
 ### Hit-area pattern selection: overlay vs min-height vs one-axis {#hit-area-selection}
@@ -515,20 +538,193 @@ CartLineItem pinned QuantitySelector (~104px intrinsic) into the grid column nex
 1. **Define token palette LAST.** Build a rough prototype first to understand brand direction. Lock token names before writing components — renaming causes ripple effects.
 2. **Test package.json exports before writing components.** Full build → export → import chain. Finding issues after 10 components is much more painful.
 3. **Set up Chromatic from day one.** Baselines grow incrementally. Setting up after 10 components triggers "changes detected" on all of them.
-4. **Write docs the same session as the component.** Not "this week." The same session.
+4. **Write stories the same session as the component.** Not "this week." The same session. (Originally "docs"; the stories are now the only specimens.)
 5. **Keep primitive token names stable.** The semantic layer exists so primitives are never in component CSS. Enforce this.
-6. **Two-server setup is worth it.** Storybook for building, docs for consuming. Different audiences, don't merge.
+6. **Build a review bench on your stories, not a docs site.** We ran Storybook plus an Astro docs site for months; the docs cost parity work on every component and still couldn't show phone next to desktop or light next to dark. A small Vite app that renders the stories in real device-width iframes replaced it (`02` → Workbench).
 7. **`pnpm --filter @ds/tokens build` is the most-run command.** Set up watchers for heavy token iteration.
-8. **When changing fonts, test small dense components immediately.** Badges, tags, chips, small buttons, inline code. Use `text-box-trim` proactively.
+8. **When changing fonts, test small dense components immediately.** Badges, tags, chips, small buttons, inline code. And check that optical-centering CSS actually applies (`CSS.supports(…)`) — ours never did ([text-box-trim-invalid](#text-box-trim-invalid)).
+9. **Add silent-failure guards on day one:** a CSS lint for undefined `var()`, raw values and ungated `:hover`; type-checked stories; a token build that throws on bad references. Each of these caught real bugs only after months.
+10. **Look at every state at 320px, in dark mode, with a keyboard, early.** Four audit rounds found hundreds of bugs that unit tests had passed (`12`).
 
 ---
 
 ## Open Questions
 
-**[PENDING DECISION]** Should `tokens.json` be the source of truth for Figma variables? Options: Tokens Studio, native Figma Variables API, custom sync script.
+**Open** — Should `tokens.json` be the source of truth for Figma variables? Options: Tokens Studio, native Figma Variables API, custom sync script. Tracked in `12-audit-2026-09-25.md` → "Open after five rounds".
 
 **[RESOLVED]** Icon component built as library-agnostic `<Icon>` wrapper in `@ds/components`. Accepts SVG children directly — no icon library dependency yet. When a library is chosen (Lucide or Radix Icons), the `name` prop and registry pattern can be added without breaking the existing children API. Added `--size-icon-sm/md/lg` tokens (16/20/24px).
 
 **[RESOLVED — 2026-04-24]** Added internal icon registry at `packages/components/src/icon/icons.tsx` (19 named exports — `X`, `Check`, `ChevronDown/Up/Left/Right`, `Plus`, `Minus`, `Search`, `Sun`, `Moon`, `Info`, `CircleCheck`, `TriangleAlert`, `CircleX`, `Image`, `ShoppingBag`, `ShoppingCart`, `Heart`). Paths are Lucide-equivalent. 11 components, BaseLayout.astro, and header.liquid migrated off raw `<svg>`. `<Icon>` wrapper kept for custom composition. See [decisions log](06-decisions-log.md) for rationale.
 
-**[RESOLVED]** Deployment: GitHub Pages via Actions. Astro `base: '/claude-design-system'`. Live at `https://sixbase.github.io/claude-design-system/`.
+**[RESOLVED]** Deployment: GitHub Pages via Actions. Astro `base: '/claude-design-system'`. Live at `https://sixbase.github.io/claude-design-system/`. *(Changed 2026-09-25: the workbench replaced the docs site and deploys to `https://sixbase.github.io/mason-design-system/` — Vite `base: '/mason-design-system/'`, `.github/workflows/deploy-docs.yml`.)*
+
+---
+
+## 2026-09-25 — Motion + break-it audit
+
+### Composite custom properties don't re-resolve in nested themes {#composite-tokens-nested-theme}
+`--focus-ring: 0 0 0 3px var(--focus-ring-color)` declared once on `:root` computes *at :root*. A nested `.dark` region inherits the already-computed light value — its own `--color-focus-ring` is ignored. **Rule:** any token built from semantic colors must be declared inside every mode block (`compositeBlock()` in build-css.mjs), not just `:root`.
+
+### `<Heading level={1}>` is not a prop — and nothing caught it {#heading-level-prop}
+HomepageDemo, CartDemo, DrawerGallery and CollectionFiltersGallery passed `level={N}` (and `size="lg"`/`"md"`, not valid sizes). React spread `level` as an HTML attribute; the pages shipped `<h2 level="1">` and **no h1 at all**. TypeScript would have failed, but `astro check` isn't in CI. **Rule:** Heading uses `as="h1"…"h6"`. Run `pnpm --filter @ds/docs typecheck` before calling docs work done; add it to CI. *(Now: Heading supports `h1`–`h4` only, and `pnpm --filter @ds/workbench typecheck` checks every story and sheet in CI.)*
+
+### The global reduced-motion rule must zero delays too {#reduced-motion-delays}
+`animation-duration: 0.01ms` alone leaves `animation-delay`/`transition-delay` intact, so a staggered item still waits its delay and then snaps in. The global block now also sets `animation-delay: 0s` and `transition-delay: 0s`.
+
+### Don't hide content for a reveal until the animation library has loaded {#reveal-hide-after-load}
+The common "`.js [data-reveal] { opacity: 0 }` in CSS, reveal with JS" pattern hides the page for as long as the script takes. On a slow 4G connection that's seconds of blank sections — and if the script fails, forever. `@ds/motion` measures and hides only after GSAP is in memory, only elements fully below the fold, and with opacity only (content stays in the accessibility tree; focus or print reveals it).
+
+### IntersectionObserver for *when*, GSAP for *how* {#io-over-scrolltrigger}
+ScrollTrigger is 18KB gz and runs scroll-position math on the main thread. For "animate this once when it scrolls into view", a native IntersectionObserver does the triggering off the main thread and GSAP core only tweens. Reserve ScrollTrigger for scrubbed (scroll-linked) effects, and only on devices that can afford them.
+
+### FLIP exits in React need a copy of the removed node {#flip-react-exit}
+React removes a filtered-out item before any animation can run. Keep a reference at `capture()` time; after the commit, clone the now-detached node, pin it `position: fixed` at its old rect, mark it `aria-hidden` + `inert`, fade it out, remove it. Never re-insert the original — React no longer owns it.
+
+### Axe `scrollable-region-focusable` on every docs page {#pre-focusable}
+Horizontally scrolling `<pre>` blocks weren't keyboard-reachable (62 pages). BaseLayout now gives every `.prose pre` `tabindex="0"`, `role="region"` and a label at load.
+
+### Never fade an LCP candidate in from `opacity: 0` {#lcp-opacity-zero}
+Chrome doesn't count an element painted at opacity 0 as contentful. A hero headline animating `from { opacity: 0 }` was excluded from Largest Contentful Paint until the fade finished — measured on a throttled phone (Slow 4G, 4× CPU), homepage LCP went from **0.62s to 1.25s**. Starting the same fade at `--opacity-ghost` (9%) makes the headline an LCP candidate on its first frame: LCP back to 0.62s, and the difference is invisible (the emphasized curve passes 50% in ~100ms). Verified with a lab harness in both directions (0, 0.01, 0.2, transform-only, clip-path, blur). `clip-path: inset(0 0 100% 0)` has the same problem as opacity 0. **Rule:** above-the-fold entrances start at `--opacity-ghost` or use transform only.
+
+### `text-box-trim: both` is invalid CSS — optical centering has never run {#text-box-trim-invalid}
+**Open** (owner decision — `12-audit-2026-09-25.md` → "Open after five rounds" item 1). The valid values are `trim-start | trim-end | trim-both` (shorthand: `text-box: trim-both cap alphabetic`). In Chromium 145/152, `CSS.supports('text-box-trim: both')` is **false** and `trim-both` is true. Consequences across ~24 component files (56 declarations):
+- the trim never applied anywhere, and every `@supports not (text-box-trim: both)` fallback nudge (`translateY(0.05em)`) runs in *all* browsers — so the shipped look is "fallback everywhere";
+- even with valid syntax, `text-box-trim` does nothing on a flex/inline-flex root with direct text (Button, Badge): it applies to block containers and inline boxes, so it needs a label span;
+- on table cells a valid trim would shrink rows by ~13px.
+Fixing the syntax alone would visibly change every fixed-height control at once. Recommended path: one deliberate pass — add a `__label` span where needed, switch to `text-box: trim-both cap alphabetic`, drop the translate fallback, and re-baseline visuals (Chromatic). The same snippet in CLAUDE.md and 04-components.md must be corrected in that pass. Not changed in the 2026-09-25 audit.
+
+### The workbench renders component source — no build to see a change {#workbench-source}
+The retired docs site consumed built `@ds/components` (`dist/`), so a CSS edit needed a rebuild before it showed (see `#css-hot-reload`). The workbench aliases `@ds/components` and `@ds/motion` to `src/` in `vite.config.ts`: component edits hot-reload in every frame immediately. Storybook also reads source.
+
+### `composeStories` + `import.meta.glob` lose story order {#story-order}
+A module namespace object lists exports alphabetically ("All variants, As link, Destructive…"), and Storybook's `__namedExportsOrder` is injected only by Storybook's own compiler. The workbench also globs each story file as `?raw` text and reads `export const` names in source order. **Rule:** write stories in the order you want to review them.
+
+---
+
+## 2026-09-25 — Audit round 2 (visual pass)
+
+### Look at the rendered result — jsdom can't see layout {#visual-pass}
+Round 1 (jsdom tests) fixed ~164 bugs; round 2 screenshotted all 418 story states at 375/1280 × light/dark (+ doubled text, RTL) through the workbench and found ~60 more that no unit test could: a selected segment invisible in dark mode, a magnifier icon painted over by its own input, carousels clipping the last card by one gap, QuantitySelector 2px taller than every other control, headers 20px off-centre. **Rule:** after any component change, review it in the workbench at Phone and Desktop, Light and Dark.
+
+### Duplicate Radix internals break nested overlays {#radix-duplicates}
+Two versions of `@radix-ui/react-dismissable-layer` = two independent "top layer" stacks. The inner overlay can't be clicked and Escape closes everything. Check with the lockfile, not `node_modules/.pnpm` (which keeps stale folders). Update all `@radix-ui/*` together.
+
+### SplitText's `revert()` rebuilds via `innerHTML` {#splittext-revert}
+It orphans React's text nodes: the heading silently stops updating. `@ds/motion` restores the original node objects instead. Keep `data-motion="split"` for static headline text.
+
+### A scrubbed ScrollTrigger snaps an on-screen element on creation {#scrolltrigger-snap}
+Creating a parallax tween applies its start state immediately — an image already in view jumped 10% larger. Wire parallax only for elements not currently in view, or accept the snap below the fold only.
+
+### GSAP writes defaults into the vars object you pass {#gsap-vars-mutated}
+Spy-based tests that assert on the vars must copy them first. Vitest inlines gsap, so `vi.resetModules()` hands out a fresh GSAP instance (re-register eases/plugins).
+
+---
+
+## 2026-09-25 — Audit round 3 (API, speed, keyboard, browsers, languages)
+
+### Safari doesn't focus what you click {#safari-click-focus}
+On macOS and iOS Safari, clicking or tapping a button leaves `document.activeElement` on `<body>`. A dialog that restores focus to "whatever was focused when it opened" drops VoiceOver users at the top of the page. `internal/dialog-opener.ts` remembers the last pressed control (capture-phase `pointerdown`) and uses it when `activeElement` is `<body>`. Any new overlay must use it.
+
+### `aria-disabled` for controls that can disable themselves while focused {#aria-disabled-focus}
+A native `disabled` button loses focus the moment it becomes disabled (pagination "Next" on the last page, a quantity "−" at 1), and focus falls to `<body>`. Use `aria-disabled="true"` and ignore the click, so focus stays put. Keep native `disabled` for controls that start disabled.
+
+### Focus rings drawn with `box-shadow` hide under the next element {#inset-outline}
+A sibling painted later (a card image, the next carousel slide) covers an outer `box-shadow` ring. Use `outline` with a negative `outline-offset` inside clipped containers — it also survives Windows High Contrast, which removes box-shadows.
+
+### Forced colors removes backgrounds and shadows {#forced-colors}
+In Windows High Contrast, a selected state shown only by a background (SegmentedControl pill, swatch ring, switch thumb) disappears. Give such states a transparent `outline` or border in normal mode — forced colors turns it visible — or use system colors (`Highlight`, `CanvasText`) in `@media (forced-colors: active)`. 17 components fixed.
+
+### A centred flex column sizes children to their longest word {#centred-column-overflow}
+With `align-items: center`, a child is only as wide as its content, and `overflow-wrap: break-word` does not make that content narrower. One long word pushed a 320px page 230px sideways. `max-width: min(100%, …)` on the child (now in `.ds-text` and `.ds-heading`) and on any wrapper box between them fixes it.
+
+### The first `Intl.NumberFormat` on a page is slow {#first-format-cost}
+The first formatter a page creates costs ~42ms on a throttled phone (locale data loads). Caching fixes the per-card cost, not that first one. Not fixed — it would mean pre-formatting prices on the server, which the Liquid theme already does.
+
+### Animated shimmer: move a layer, don't repaint a gradient {#skeleton-shimmer}
+Animating `background-position` repaints every skeleton on every frame. A pseudo-element moved with `transform` runs on the compositor (the GPU part of the browser) and costs almost nothing. Pause off-screen timers too: Countdown stops ticking while hidden.
+
+---
+
+## 2026-09-26 — Audit round 4 (things that fail silently)
+
+### A global `!important` reset also kills the reduced-motion fallback {#reset-kills-fallback}
+The reduced-motion reset (`animation-duration: 0.01ms !important`, one iteration) beats any component rule, including a component's own gentle replacement animation. Spinner showed a frozen closed ring. Mark such elements `.ds-motion-safe`; they must then handle reduced motion *and* `data-motion="off"` themselves.
+
+### `aria-label` on an element with no role is ignored {#aria-label-no-role}
+Pagination's "Page 5, current page" label sat on a `<span>` and was never read. Use visible or visually hidden text, or put the label on an element with a role.
+
+### Everything inside a heading becomes the heading's name {#heading-name}
+A checkbox inside an accordion heading made it read "Functional Cookies Functional Cookies". Keep controls beside headings, not inside. CSS generated content joins names too: write `content: ' *' / ''` for a required asterisk.
+
+### A live region must exist before its message {#live-region-first}
+A region inserted with text already inside is often skipped by screen readers; one that opens pre-filled repeats visible text. Render it empty, fill it on change. Never copy a live region into a Radix modal — the page's regions stay exposed and it announces twice.
+
+### A scroll container's outline paints under its content {#scroll-outline}
+Carousel's track ring only showed in the gaps between slides. Draw the ring with an overlay sibling. And an inline `<a>` around a block card shows no outline — the card draws it via `:focus-visible > .ds-card--interactive`.
+
+### Opacity fades the focus ring too {#opacity-ring}
+A focused `aria-disabled` button at 0.618 opacity had a 1.9:1 ring. Un-fade on focus.
+
+### Sticky headers hide focus {#sticky-focus}
+Tabbing up a scrolled page put breadcrumbs and filter triggers fully under the header. `scroll-padding-top` on `html`, and every other sticky element offsets by the header height.
+
+### Radix list items can't use `:focus-visible` for the keyboard highlight {#radix-highlight}
+Radix moves focus to items from script on pointer hover, so `:focus-visible` matches for mouse users in all engines. Use `[data-highlighted]:not(:hover)`.
+
+### `--color-background-subtle` equals the surface in dark mode {#subtle-equals-surface}
+A hover fill on it vanished in dark. Icon-button hover is always `--color-secondary`. And a control's generic `:hover` outranks its error class — exclude the error state from hover rules.
+
+### Stagger a group per child on phones {#stagger-per-child}
+Revealing a whole group when it enters played the lower cards off-screen (y=1376 on an 812px screen). Reveal each child as it enters; children arriving together still go in reading order. A reveal observer with a negative bottom margin never fires for short content at the page's end — pair it with a "fully visible" observer.
+
+### `Flip.getState` without `simple: true` forces a layout per item {#flip-simple}
+48 cards cost a 51–65ms long task. Pass `simple` (no scaled/rotated ancestors) and only copy leaving items that were on screen: tap-to-paint 72 → 48ms.
+
+### tsup with `splitting` needs `clean: true` {#tsup-clean}
+Old hashed chunks accumulated in `dist` (10MB, 184 chunks) and would have been published.
+
+### Sample numbers, not screenshots, for motion {#sample-motion}
+Recording each frame's opacity, transform and position as numbers caught the L-shaped fly-to-cart path and off-screen staggers that screenshots missed.
+
+### Workbench: validate saved state field by field {#workbench-storage}
+One `null` in saved review data, or a screen size that no longer exists, blanked the whole workbench. Everything read from localStorage is checked per field and falls back to defaults.
+
+### Workbench: a new iframe paints before its CSS {#iframe-flash}
+Dark frames flashed white on Replay (worst in Safari). The device screen wears its frame's theme, and a new frame stays hidden until `load`.
+
+### Workbench: compose stories once per module {#compose-once}
+Calling `composeStories()` on every visit grew memory ~17MB per full pass with six frames. Cache per story file (~8MB; the rest is Storybook render contexts, cleared by a reload).
+
+### Workbench: fixed toolbar rows {#fixed-toolbar-rows}
+A toolbar that wrapped to one or two rows depending on the title length moved every frame ~46px. The rows are fixed in the markup.
+
+---
+
+## 2026-09-27 — Audit round 5 (seams between components)
+
+### Parallel edits leave collisions {#parallel-collisions}
+Seven agents editing the same files produced rules that fought each other (a `:not(error)` hover outranking the press rule), a parent's `min(100%, …)` cap undone by a child restating `max-width` at equal weight, and a workbench copy of a design-system rule that re-froze Spinner. After any parallel pass, review the diff component by component — and never duplicate a system rule in the workbench.
+
+### `aria-hidden` spares only `[aria-live]` regions {#alert-hidden}
+`role="alert"` without an explicit `aria-live` is hidden by a Radix modal's `aria-hidden` on the page — error toasts went silent while a drawer was open.
+
+### `scroll-padding` on `<html>` also moves sticky and fixed controls {#scroll-padding-sticky}
+Round 4's sticky-header fix made the page jump up to 408px when focus returned to the header after closing a drawer. Exempt focus inside the sticky bar and return focus with `preventScroll` when the opener is visible. Browsers also ignore sticky footers when revealing focus — lift the focused control yourself.
+
+### An empty list is not "no results" until the query was searched {#no-results-timing}
+PredictiveSearch said "No results for 'ca'" during its own debounce. Track which query the results belong to.
+
+### Galleries track the picture, not the slot {#gallery-picture}
+After a colour switch, the gallery kept slot 2 and showed the new colour's back photo. Keep the same picture if it is still in the set, else show the first.
+
+### `configureAxe()` returns a new function {#configure-axe}
+Rule changes passed to it did nothing because no test used the returned function; and axe on `container` misses portalled content (9 tests scanned an empty box). Use `globalOptions` and `baseElement`.
+
+### Planted bugs show which tests are decorative {#mutation}
+163 planted bugs: 24% survived the suite before round 5, 4% after. Leak tests must pair each add/remove listener or count timers; debounce tests use fake timers with `fireEvent` (user-event v14 hangs under fake timers); money tests need values like 19.99 where ×100 lands below the whole number.
+
+### Stubs must match the real API shape {#stub-shape}
+GSAP SplitText kept a plain-object `document.fonts` stub between tests and failed under a shuffled order. Stub with an `EventTarget`.
+
+### Print forces light tokens — dark-only filters must be screen-only {#print-dark-filters}
+Dark-mode logo inverts printed white on white.

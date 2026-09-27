@@ -1,12 +1,21 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { Text } from '../typography/Typography';
 import { Icon } from './Icon';
 
 const meta: Meta<typeof Icon> = {
   title: 'Components/Icon',
   component: Icon,
   tags: ['autodocs'],
+  parameters: {
+    docs: {
+      description: {
+        component:
+          'Small line drawings (heart, search, cart) that take on the colour of the text around them.',
+      },
+    },
+  },
   argTypes: {
-    size: { control: 'select' },
+    size: { control: 'select', options: ['sm', 'md', 'lg'] },
     decorative: { control: 'boolean' },
   },
 };
@@ -110,7 +119,9 @@ export const ColorInheritance: Story = {
 
 /* ─── Accessible (labelled) ────────────────────────── */
 
+/** A standalone icon that carries meaning on its own gets `decorative={false}` and a `label`. */
 export const Accessible: Story = {
+  name: 'Meaningful on its own (has a label)',
   args: {
     decorative: false,
     label: 'Favorite',
@@ -123,18 +134,18 @@ export const Accessible: Story = {
 export const InlineWithText: Story = {
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)' }}>
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--spacing-2)', fontSize: 'var(--font-size-sm)' }}>
+      <Text as="span" size="sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--spacing-2)' }}>
         <Icon size="sm"><CartPath /></Icon>
         Add to cart
-      </span>
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--spacing-2)', fontSize: 'var(--font-size-base)' }}>
+      </Text>
+      <Text as="span" size="base" style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--spacing-2)' }}>
         <Icon size="md"><SearchPath /></Icon>
         Search products
-      </span>
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--spacing-2)', fontSize: 'var(--font-size-lg)' }}>
+      </Text>
+      <Text as="span" size="lg" style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--spacing-2)' }}>
         <Icon size="lg"><HeartPath /></Icon>
         Wishlist
-      </span>
+      </Text>
     </div>
   ),
 };

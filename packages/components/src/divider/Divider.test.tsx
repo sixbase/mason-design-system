@@ -90,6 +90,13 @@ describe('Divider', () => {
       expect(container.querySelector('.ds-divider--labeled')).not.toBeInTheDocument();
     });
 
+    // Regression: separator children are presentational, so the visible
+    // "OR" never reached assistive tech.
+    it('names the separator with its label', () => {
+      render(<Divider label="OR" />);
+      expect(screen.getByRole('separator', { name: 'OR' })).toBeInTheDocument();
+    });
+
     it('has no accessibility violations (labeled)', async () => {
       const { container } = render(
         <div>

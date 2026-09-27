@@ -40,7 +40,7 @@
 
 .ds-countdown__label {
   font-size: var(--countdown-label-font-size);
-  font-weight: var(--font-weight-regular);
+  font-weight: var(--font-weight-normal);
   line-height: var(--line-height-none);
   letter-spacing: var(--letter-spacing-wider);
   text-transform: uppercase;

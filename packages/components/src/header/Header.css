@@ -1,7 +1,7 @@
 .ds-header {
   position: relative;
   background-color: var(--color-background);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: var(--border-width-sm) solid var(--color-border);
 }
 
 /* ─── Sticky variant ─────────────────────────────────────── */
@@ -12,54 +12,56 @@
   box-shadow: var(--elevation-sticky);
 }
 
-/* ─── Skip link ──────────────────────────────────────────── */
-/* Visually hidden until keyboard focus, then revealed as an
-   overlay pill at the top-left of the header. */
-.ds-header__skip-link {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0); /* legacy fallback */
-  clip-path: inset(50%);
-  white-space: nowrap;
-  border: 0;
+/* Focus not obscured (WCAG 2.4.11). Browsers scroll a focused element into
+   view only "if needed" — and an element sitting under the sticky bar
+   counts as in view. Tabbing after a scroll left breadcrumbs, the sort
+   Select and filter triggers 100% hidden behind the header (measured on 5
+   of 8 store pages). scroll-padding-top tells the browser the top of the
+   viewport is covered, so focus (and #anchor jumps, the skip link's target)
+   lands below the bar. --sticky-header-height = the bar's height (inner
+   padding × 2 + the 36px action buttons + the bottom border); published on
+   <html> so other sticky things can clear the bar too (.ds-layout__sticky
+   stuck 45px of the PDP/cart/filter column underneath it). */
+html:has(.ds-header--sticky) {
+  --sticky-header-height: calc(
+    var(--spacing-4) * 2 + var(--size-touch-target) + var(--border-width-sm)
+  );
+  scroll-padding-top: calc(var(--sticky-header-height) + var(--spacing-4));
 }
 
-.ds-header__skip-link:focus {
-  top: var(--spacing-2);
-  left: var(--spacing-2);
-  z-index: var(--z-index-sticky);
-  display: inline-flex;
-  align-items: center;
-  width: auto;
-  height: auto;
-  min-height: var(--size-hit-area);
-  margin: 0;
-  padding: var(--spacing-2) var(--spacing-4);
-  overflow: visible;
-  clip: auto;
-  clip-path: none;
-  background-color: var(--color-background-surface);
-  color: var(--color-foreground);
-  font-family: var(--font-family-body);
-  font-size: var(--font-size-sm);
-  text-decoration: none;
-  border-radius: var(--radius-md);
-  box-shadow: var(--focus-ring);
+/* …but not for the bar's own controls. With that padding, Chromium and
+   WebKit judged every stuck header control "under the bar" and scrolled to
+   reveal it: Shift+Tab back into the header, or closing the mobile menu
+   (focus returns to its button), threw the page up half a screen (Chromium
+   −408px, WebKit −69px, every time). The bar is always on screen, so while
+   focus is inside it nothing needs revealing. The skip link keeps the
+   padding: its #main-content jump happens while it still has focus. */
+html:has(.ds-header--sticky :focus:not(.ds-skip-link)) {
+  scroll-padding-top: 0;
 }
+
+/* ─── Skip link ──────────────────────────────────────────── */
+/* The built-in skip link is the shared <SkipLink> (see SkipLink.css);
+   .ds-header__skip-link is only a hook — no restyling here. */
 
 /* ─── Inner layout ───────────────────────────────────────── */
 .ds-header__inner {
   max-width: var(--size-container);
   margin: 0 auto;
-  display: flex;
+  /* Three tracks — start · centre · end. The outer two split the leftover
+     space equally, so the centre item (the logo on phones, the nav from md
+     up) sits on the true centre of the bar. With flex space-between it only
+     sat midway between its neighbours: the actions group is wider than the
+     menu button, so the phone logo landed 20px left of the hero headline
+     below it, and the desktop nav ~40px right of centre (the wordmark is
+     wider than the actions). The max-content floors keep the outer items
+     from ever being squeezed; the centre track (floor 0) gives way first —
+     a wide logo scales down at 320px, a long menu wraps. */
+  display: grid;
+  grid-template-columns: minmax(max-content, 1fr) minmax(0, auto) minmax(max-content, 1fr);
   align-items: center;
-  justify-content: space-between;
+  column-gap: var(--spacing-4);
   padding: var(--spacing-4);
-  gap: var(--spacing-4);
 }
 
 /* @breakpoint-md = 768px */
@@ -76,23 +78,66 @@
   }
 }
 
+/* The logo is the one flexible item in the row: at 320px a wide wordmark
+   (160px at 20px tall) plus menu + actions exceeds the content box, and
+   without this the icon buttons were the ones squeezed (menu 36px → 20px).
+   It shrinks instead, scaling the image down inside its box (contain,
+   left-anchored) so the aspect ratio is preserved. */
 .ds-header__logo {
+  position: relative;
   display: flex;
   align-items: center;
+  justify-self: start;
+  min-width: 0;
+  max-width: 100%;
   text-decoration: none;
+}
+
+/* The home link is only as tall as the 20px logo — under the 24px WCAG
+   2.5.8 floor, let alone 44px. Isolated control, so the centred overlay
+   hit area applies unguarded (lesson: hit-area-selection). */
+.ds-header__logo::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: max(100%, var(--size-hit-area));
+  height: max(100%, var(--size-hit-area));
+}
+
+/* Phones with a menu: menu · logo · actions, logo on the centre track. */
+/* @breakpoint-md = 768px */
+@media (max-width: 767px) {
+  .ds-header--has-nav .ds-header__logo {
+    justify-self: center;
+  }
 }
 
 .ds-header__logo-img {
   display: block;
   height: var(--spacing-5);
   width: auto;
+  min-width: 0;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: left center;
   color: var(--color-foreground);
 }
 
 /* ─── Desktop nav ────────────────────────────────────────── */
+/* Wraps onto extra rows rather than overflowing: from 768px the row only
+   fits ~5 short links beside the logo and actions, and a longer menu used
+   to push the actions off-screen (12 links → 1210px-wide page at 768px).
+   It lives on the centre grid track (floor 0), so a long menu wraps there
+   instead of squeezing the logo or the actions. */
 .ds-header__nav {
   display: none;
-  gap: var(--spacing-6);
+  flex-wrap: wrap;
+  justify-content: center;
+  column-gap: var(--spacing-6);
+  row-gap: var(--spacing-2);
+  min-width: 0;
 }
 
 /* @breakpoint-md = 768px */
@@ -105,22 +150,56 @@
 .ds-header__nav a {
   font-family: var(--font-family-body);
   font-size: var(--font-size-sm);
+  white-space: nowrap;
   color: var(--color-foreground-secondary);
   text-decoration: none;
   transition: color var(--transition-fast);
 }
 
-.ds-header__nav a:hover {
+@media (hover: hover) {
+  .ds-header__nav a:hover {
+    color: var(--color-foreground);
+  }
+}
+
+/* The page (or section) being viewed. Colour + underline, not weight —
+   a bolder link would widen and nudge its neighbours. */
+.ds-header__nav a[aria-current='page'] {
   color: var(--color-foreground);
+  text-decoration: underline;
+  text-decoration-thickness: var(--border-width-sm);
+  text-underline-offset: var(--spacing-2);
+}
+
+/* Tablets are touch devices at the width where the inline nav appears:
+   extend each link's tap zone to 44px tall without changing the row.
+   Vertical only — links sit 24px apart, so widening would overlap. */
+@media (pointer: coarse) {
+  .ds-header__nav a {
+    position: relative;
+  }
+
+  .ds-header__nav a::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    width: 100%;
+    height: max(100%, var(--size-hit-area));
+  }
 }
 
 .ds-header__nav a:focus-visible {
-  outline: none;
+  outline: var(--border-width-lg) solid transparent; /* painted in forced-colors mode, where box-shadow rings vanish */
   box-shadow: var(--focus-ring);
   border-radius: var(--radius-sm);
 }
 
 .ds-header__actions {
+  /* Always the end track, whether or not a menu / nav precedes it. */
+  grid-column: 3;
+  justify-self: end;
   display: flex;
   align-items: center;
   gap: var(--spacing-1);
@@ -132,6 +211,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   width: var(--size-touch-target);
   height: var(--size-touch-target);
   border: none;
@@ -141,10 +221,9 @@
   border-radius: var(--radius-md);
   transition: background-color var(--transition-fast);
   padding: 0;
-
-  /* Optical centering: trim em-box to cap height + baseline */
-  text-box-trim: both;
-  text-box-edge: cap alphabetic;
+  /* No text-box trim: these are icon-only controls (the cart count is an
+     absolutely positioned badge), so there is no text to centre optically —
+     and the translateY fallback nudged every icon 0.05em off true centre. */
 }
 
 /* 44px hit area, expanded beyond the 36px visual footprint.
@@ -162,18 +241,27 @@
   }
 }
 
-.ds-header__icon-btn:hover {
-  background-color: var(--color-background-subtle);
+/* Only where a real pointer hovers: touch screens (iOS Safari) keep :hover
+   after a tap, so the menu, search or cart button stayed shaded after its
+   drawer closed, as if still pressed. */
+@media (hover: hover) {
+  /* --color-secondary, the ghost-button hover every other icon button uses
+     (Button ghost, overlay close, carousel arrows). background-subtle was
+     1.07:1 against the header — the hover barely showed. */
+  .ds-header__icon-btn:hover {
+    background-color: var(--color-secondary);
+  }
 }
 
 .ds-header__icon-btn:focus-visible {
-  outline: none;
+  outline: var(--border-width-lg) solid transparent; /* painted in forced-colors mode, where box-shadow rings vanish */
   box-shadow: var(--focus-ring);
 }
 
 /* ─── Mobile menu button ─────────────────────────────────── */
 .ds-header__menu-btn {
   display: none;
+  justify-self: start;
 }
 
 /* @breakpoint-md = 768px */
@@ -195,25 +283,81 @@
   display: flex;
   align-items: center;
   min-height: var(--size-hit-area);
-  padding: var(--spacing-2) 0;
-  font-size: var(--font-size-base);
+  /* One step up from body with medium weight: at body size the links read
+     as a settings list lost in an empty panel; this is the menu speaking. */
+  padding: var(--spacing-3) 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: var(--line-height-snug);
   color: var(--color-foreground);
   text-decoration: none;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: var(--border-width-sm) solid var(--color-border);
   transition: color var(--transition-fast);
+  /* Links rise in one tight stagger apart while the drawer slides —
+     the list arrives just behind its panel. nth-child delays, not a
+     per-link inline style; capped at 8 so a long menu never waits. */
+  animation: ds-header-nav-in var(--transition-duration-slower) var(--transition-easing-emphasized) both;
+  animation-delay: calc(var(--transition-duration-fast) + var(--motion-stagger-tight) * 7);
 }
 
-.ds-header__drawer-nav a:hover {
-  color: var(--color-foreground-secondary);
+.ds-header__drawer-nav a:nth-child(1) { animation-delay: var(--transition-duration-fast); }
+.ds-header__drawer-nav a:nth-child(2) { animation-delay: calc(var(--transition-duration-fast) + var(--motion-stagger-tight)); }
+.ds-header__drawer-nav a:nth-child(3) { animation-delay: calc(var(--transition-duration-fast) + var(--motion-stagger-tight) * 2); }
+.ds-header__drawer-nav a:nth-child(4) { animation-delay: calc(var(--transition-duration-fast) + var(--motion-stagger-tight) * 3); }
+.ds-header__drawer-nav a:nth-child(5) { animation-delay: calc(var(--transition-duration-fast) + var(--motion-stagger-tight) * 4); }
+.ds-header__drawer-nav a:nth-child(6) { animation-delay: calc(var(--transition-duration-fast) + var(--motion-stagger-tight) * 5); }
+.ds-header__drawer-nav a:nth-child(7) { animation-delay: calc(var(--transition-duration-fast) + var(--motion-stagger-tight) * 6); }
+
+@keyframes ds-header-nav-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--motion-distance-sm));
+  }
+}
+
+@media (hover: hover) {
+  .ds-header__drawer-nav a:hover {
+    color: var(--color-foreground-secondary);
+  }
+}
+
+.ds-header__drawer-nav a[aria-current='page'] {
+  text-decoration: underline;
+  text-decoration-thickness: var(--border-width-sm);
+  text-underline-offset: var(--spacing-2);
 }
 
 .ds-header__drawer-nav a:focus-visible {
-  outline: none;
+  outline: var(--border-width-lg) solid transparent; /* painted in forced-colors mode, where box-shadow rings vanish */
   box-shadow: var(--focus-ring);
   border-radius: var(--radius-sm);
 }
 
 /* ─── Cart count badge ───────────────────────────────────── */
+/* A changed count springs in from small — the cart saying "got it" */
+.ds-header__cart-count--bump {
+  animation: ds-header-cart-bump var(--transition-duration-slower) var(--transition-easing-spring);
+}
+
+@keyframes ds-header-cart-bump {
+  from {
+    transform: scale(var(--scale-pop));
+  }
+}
+
+.ds-header__cart {
+  --header-badge-ring: var(--color-background);
+}
+
+@media (hover: hover) {
+  /* The ring cuts the badge out of the button's hover fill, so it must match
+     .ds-header__icon-btn:hover above */
+  .ds-header__cart:hover {
+    --header-badge-ring: var(--color-secondary);
+  }
+}
+
 .ds-header__cart-count {
   position: absolute;
   top: var(--spacing-1);
@@ -222,16 +366,45 @@
   align-items: center;
   justify-content: center;
   min-width: var(--spacing-4);
-  height: var(--spacing-4);
+  /* min-height, not height: type is rem, sizes are px. With a 200% browser
+     font size (or user text-spacing CSS) the digit outgrew a fixed 16px
+     bubble by 8px; now the bubble grows with it. Identical at default. */
+  min-height: var(--spacing-4);
   padding: 0 var(--spacing-1);
   background-color: var(--color-primary);
   color: var(--color-primary-foreground);
-  font-family: var(--font-family-body);
+  /* Counts are numbers: same numeric family as prices, pagination, steps. */
+  font-family: var(--font-family-numeric);
+  font-variant-numeric: tabular-nums;
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
   line-height: var(--line-height-none);
   border-radius: var(--radius-full);
+  /* A ring in the bar's own colour cuts the badge out of the bag outline
+     it overlaps — without it the two strokes ran together into a blot.
+     Follows the button's hover fill so the ring never shows as a halo. */
+  box-shadow: 0 0 0 var(--border-width-lg) var(--header-badge-ring);
   pointer-events: none;
+}
+
+/* Forced colors drops the fill and the box-shadow ring, leaving a bare
+   digit sitting on the bag's corner stroke. The (canvas-repainted, opaque)
+   background still masks the icon; a system-colour outline restores the
+   bubble so the count reads as a badge again. (Outline, not border: the
+   forced-colors text backplate painted over the top and bottom border.) */
+@media (forced-colors: active) {
+  .ds-header__cart-count {
+    outline: var(--border-width-sm) solid CanvasText;
+  }
+}
+
+/* Print drops backgrounds by default: the count (light on a fill) printed
+   white-on-white. Keep the fill. (-webkit- for Safari < 15.4 / Chrome < 136.) */
+@media print {
+  .ds-header__cart-count {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }
 
 /* Theme toggle icon visibility */
@@ -247,15 +420,12 @@
   display: block;
 }
 
-/* Invert logo in dark mode (SVG loaded as <img> can't use currentColor) */
-.dark .ds-header__logo-img {
-  filter: invert(1);
-}
-
-/* ─── Optical centering fallback ─────────────────────────── */
-@supports not (text-box-trim: both) {
-  .ds-header__icon-btn {
-    transform: translateY(0.05em);
+/* Invert logo in dark mode (SVG loaded as <img> can't use currentColor).
+   Screen only: print always uses the light tokens (tokens.css), so an
+   inverted logo printed white on white paper. */
+@media screen {
+  :is(.dark, [data-theme="dark"]) .ds-header__logo-img {
+    filter: invert(1);
   }
 }
 
@@ -265,5 +435,10 @@
   .ds-header__nav a,
   .ds-header__drawer-nav a {
     transition: none;
+  }
+
+  .ds-header__drawer-nav a,
+  .ds-header__cart-count--bump {
+    animation: none;
   }
 }

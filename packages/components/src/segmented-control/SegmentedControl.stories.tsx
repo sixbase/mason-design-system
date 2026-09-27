@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useState } from 'react';
 import { Icon } from '../icon';
+import { Text } from '../typography/Typography';
 import { SegmentedControl, SegmentedControlItem } from './SegmentedControl';
 
 const GridGlyph = () => (
@@ -27,6 +28,14 @@ const meta: Meta<typeof SegmentedControl> = {
   title: 'Components/SegmentedControl',
   component: SegmentedControl,
   tags: ['autodocs'],
+  parameters: {
+    docs: {
+      description: {
+        component:
+          'Two to five joined buttons where exactly one is selected — Grid / List.',
+      },
+    },
+  },
   argTypes: {
     size: { control: 'select', options: ['sm', 'md'] },
     value: { control: false },
@@ -57,19 +66,6 @@ export const ThreeSegments: Story = {
   ),
 };
 
-export const IconOnly: Story = {
-  render: () => (
-    <SegmentedControl aria-label="View" defaultValue="grid">
-      <SegmentedControlItem value="grid" aria-label="Grid view">
-        <GridGlyph />
-      </SegmentedControlItem>
-      <SegmentedControlItem value="list" aria-label="List view">
-        <ListGlyph />
-      </SegmentedControlItem>
-    </SegmentedControl>
-  ),
-};
-
 export const IconWithLabel: Story = {
   render: () => (
     <SegmentedControl aria-label="View" defaultValue="grid">
@@ -85,6 +81,19 @@ export const IconWithLabel: Story = {
   ),
 };
 
+export const IconOnly: Story = {
+  render: () => (
+    <SegmentedControl aria-label="View" defaultValue="grid">
+      <SegmentedControlItem value="grid" aria-label="Grid view">
+        <GridGlyph />
+      </SegmentedControlItem>
+      <SegmentedControlItem value="list" aria-label="List view">
+        <ListGlyph />
+      </SegmentedControlItem>
+    </SegmentedControl>
+  ),
+};
+
 export const Small: Story = {
   render: () => (
     <SegmentedControl aria-label="View" defaultValue="grid" size="sm">
@@ -94,17 +103,8 @@ export const Small: Story = {
   ),
 };
 
-export const DisabledSegment: Story = {
-  render: () => (
-    <SegmentedControl aria-label="Availability" defaultValue="all">
-      <SegmentedControlItem value="all">All</SegmentedControlItem>
-      <SegmentedControlItem value="in-stock">In stock</SegmentedControlItem>
-      <SegmentedControlItem value="preorder" disabled>Preorder</SegmentedControlItem>
-    </SegmentedControl>
-  ),
-};
-
 export const Controlled: Story = {
+  name: 'Choice shown below',
   render: function ControlledStory() {
     const [view, setView] = useState('grid');
     return (
@@ -114,8 +114,21 @@ export const Controlled: Story = {
           <SegmentedControlItem value="list">List</SegmentedControlItem>
           <SegmentedControlItem value="map">Map</SegmentedControlItem>
         </SegmentedControl>
-        <span>Selected: {view}</span>
+        <Text size="sm" muted>
+          Showing products as: {view}
+        </Text>
       </div>
     );
   },
+};
+
+export const DisabledSegment: Story = {
+  name: 'One option unavailable',
+  render: () => (
+    <SegmentedControl aria-label="Availability" defaultValue="all">
+      <SegmentedControlItem value="all">All</SegmentedControlItem>
+      <SegmentedControlItem value="in-stock">In stock</SegmentedControlItem>
+      <SegmentedControlItem value="preorder" disabled>Preorder</SegmentedControlItem>
+    </SegmentedControl>
+  ),
 };

@@ -21,6 +21,10 @@
   gap: var(--empty-state-gap);
   padding-block: var(--empty-state-padding-block);
   font-family: var(--font-family-body);
+  /* Long unbroken strings (a search query echoed in "No results for …")
+     wrap inside the 320px column because Heading and Text cap themselves
+     at 100% of it (Typography.css). An `overflow-wrap` here would not
+     reach them — both set their own. */
 }
 
 /* ─── Child elements ────────────────────────────────────── */
@@ -41,9 +45,11 @@
   text-align: center;
 }
 
+/* No max-width: <Text> already caps at min(100%, 65ch). Restating the bare
+   65ch here (same specificity, loaded later) undid the 100% cap, and a long
+   query pushed the description 40px past a 320px screen. */
 .ds-empty-state__description {
   text-align: center;
-  max-width: var(--measure-reading);
   color: var(--empty-state-description-color);
 }
 

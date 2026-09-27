@@ -5,6 +5,14 @@ const meta: Meta<typeof Highlights> = {
   title: 'Components/Highlights',
   component: Highlights,
   tags: ['autodocs'],
+  parameters: {
+    docs: {
+      description: {
+        component:
+          'A row of picture cards, each with a short bold phrase and a line of detail.',
+      },
+    },
+  },
 };
 export default meta;
 

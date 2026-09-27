@@ -1,8 +1,11 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 import { describe, expect, it, vi } from 'vitest';
 import { QuantitySelector } from './QuantitySelector';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { useState } from 'react';
 
 describe('QuantitySelector', () => {
   it('renders current value in an editable spinbutton', () => {
@@ -178,5 +181,77 @@ describe('QuantitySelector', () => {
   it('has no accessibility violations', async () => {
     const { container } = render(<QuantitySelector value={1} onChange={() => {}} />);
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+
+  // ─── Regressions (QA break pass) ─────────────────────────
+
+  describe('regressions', () => {
+    function Harness() {
+      const [value, setValue] = useState(1);
+      return <QuantitySelector value={value} onChange={setValue} />;
+    }
+
+    // Safari never focuses a clicked button, so the input never blurred and
+    // "+" stepped from the stale prop while the field kept the typed number.
+    it('+ steps from a pending typed draft even if the input never blurs', async () => {
+      const user = userEvent.setup();
+      render(<Harness />);
+      const input = screen.getByRole('spinbutton');
+      await user.click(input);
+      await user.clear(input);
+      await user.type(input, '5');
+      fireEvent.click(screen.getByRole('button', { name: 'Increase quantity' }));
+      expect(input).toHaveValue('6');
+      expect(input).toHaveAttribute('aria-valuenow', '6');
+    });
+
+    it('decrement from an out-of-range value lands inside the range', () => {
+      const onChange = vi.fn();
+      render(<QuantitySelector value={150} onChange={onChange} max={99} />);
+      fireEvent.click(screen.getByRole('button', { name: 'Decrease quantity' }));
+      expect(onChange).toHaveBeenCalledWith(99);
+    });
+
+    // Bad cart data: Math.max(min, NaN) is NaN, so "+" sent onChange(NaN)
+    // and the field read "NaN".
+    it('a NaN value never reaches onChange or the screen', () => {
+      const onChange = vi.fn();
+      render(<QuantitySelector value={Number.NaN} onChange={onChange} />);
+      const input = screen.getByRole('spinbutton');
+      expect(input).toHaveValue('');
+      expect(input).not.toHaveAttribute('aria-valuenow');
+      fireEvent.click(screen.getByRole('button', { name: 'Increase quantity' }));
+      expect(onChange).toHaveBeenCalledWith(1);
+    });
+
+    // Stripping non-digits alone turned "2.5" into 25 and "1e9" into 19.
+    it.each([
+      ['2.5', 2],
+      ['1e9', 1],
+      ['3,5', 3],
+      [' 7 ', 7],
+      ['-5', 5],
+    ])('pasted %j commits %i', (pasted, expected) => {
+      const onChange = vi.fn();
+      render(<QuantitySelector value={10} onChange={onChange} />);
+      const input = screen.getByRole('spinbutton');
+      fireEvent.change(input, { target: { value: pasted } });
+      fireEvent.blur(input);
+      expect(onChange).toHaveBeenCalledWith(expected);
+    });
+
+    // overflow: hidden clipped the buttons' 44px coarse-pointer hit areas.
+    it('the frame does not clip the coarse-pointer hit areas', () => {
+      const style = document.createElement('style');
+      style.textContent = readFileSync(resolve(__dirname, 'QuantitySelector.css'), 'utf8');
+      document.head.appendChild(style);
+      try {
+        const { container } = render(<QuantitySelector value={1} onChange={() => {}} size="sm" />);
+        expect(getComputedStyle(container.firstElementChild!).overflow).not.toBe('hidden');
+      } finally {
+        style.remove();
+      }
+    });
   });
 });

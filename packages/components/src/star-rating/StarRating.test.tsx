@@ -112,6 +112,24 @@ describe('StarRating', () => {
       expect(onRate).toHaveBeenCalledWith(2);
     });
 
+    // Stars run right-to-left in RTL, so the horizontal arrows swap. The
+    // direction check read only computed style, which jsdom leaves empty —
+    // this case was untested; it now shares internal/direction's fallback.
+    it('swaps the horizontal arrows in right-to-left pages', async () => {
+      const user = userEvent.setup();
+      const onRate = vi.fn();
+      render(
+        <div dir="rtl">
+          <StarRating rating={3} onRate={onRate} />
+        </div>,
+      );
+      screen.getByRole('radio', { name: '3 stars' }).focus();
+      await user.keyboard('{ArrowLeft}');
+      expect(onRate).toHaveBeenLastCalledWith(4);
+      await user.keyboard('{ArrowRight}');
+      expect(onRate).toHaveBeenLastCalledWith(2);
+    });
+
     it('wraps arrow-key selection at the ends', async () => {
       const user = userEvent.setup();
       const onRate = vi.fn();
@@ -119,6 +137,32 @@ describe('StarRating', () => {
       screen.getByRole('radio', { name: '5 stars' }).focus();
       await user.keyboard('{ArrowRight}');
       expect(onRate).toHaveBeenCalledWith(1);
+    });
+
+    // Regression (keyboard audit): Up raised the rating like a slider and
+    // Down lowered it — the reverse of the APG radio pattern (Down = next).
+    it('follows the APG radio arrow mapping for Up and Down', async () => {
+      const user = userEvent.setup();
+      const onRate = vi.fn();
+      render(<StarRating rating={3} onRate={onRate} />);
+      screen.getByRole('radio', { name: '3 stars' }).focus();
+      await user.keyboard('{ArrowDown}');
+      expect(onRate).toHaveBeenLastCalledWith(4);
+      await user.keyboard('{ArrowUp}');
+      expect(onRate).toHaveBeenLastCalledWith(2);
+    });
+
+    // Regression (keyboard audit): unrated, focus enters on star 1 (unchecked)
+    // and the first ArrowRight re-selected star 1 instead of moving to 2.
+    it('moves on from the focused star when unrated', async () => {
+      const user = userEvent.setup();
+      const onRate = vi.fn();
+      render(<StarRating rating={0} onRate={onRate} />);
+      await user.tab();
+      expect(screen.getByRole('radio', { name: '1 star' })).toHaveFocus();
+      await user.keyboard('{ArrowRight}');
+      expect(onRate).toHaveBeenLastCalledWith(2);
+      expect(screen.getByRole('radio', { name: '2 stars' })).toHaveFocus();
     });
 
     it('uses roving tabindex — only the checked star is tabbable', () => {
@@ -156,5 +200,42 @@ describe('StarRating', () => {
   it('has no accessibility violations', async () => {
     const { container } = render(<StarRating rating={4.5} reviewCount={128} />);
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  describe('regressions', () => {
+    it('groups the review count in an explicit locale, not the runtime default (SSR/hydration)', () => {
+      // toLocaleString() with no locale used Node's default on the server
+      // and the browser's on the client — "1,234" vs "1.234" mismatched.
+      const spy = vi.spyOn(Number.prototype, 'toLocaleString');
+      const { rerender } = render(<StarRating rating={4} reviewCount={1234} />);
+      expect(screen.getByText('(1,234 reviews)')).toBeInTheDocument();
+      expect(spy).not.toHaveBeenCalledWith();
+      rerender(<StarRating rating={4} reviewCount={1234} locale="de-DE" />);
+      expect(screen.getByText(`(${(1234).toLocaleString('de-DE')} reviews)`)).toBeInTheDocument();
+      spy.mockRestore();
+    });
+
+    it('reads a NaN rating as 0, never "NaN"', () => {
+      render(<StarRating rating={NaN} />);
+      expect(screen.getByRole('img')).toHaveAttribute('aria-label', '0 out of 5 stars');
+    });
+
+    it('rounds computed averages to one decimal in the accessible name', () => {
+      render(<StarRating rating={14 / 3} />);
+      expect(screen.getByRole('img')).toHaveAttribute('aria-label', '4.7 out of 5 stars');
+    });
+
+    it('includes the review count in the accessible name (role="img" hides children)', () => {
+      render(<StarRating rating={4.5} reviewCount={128} label="Customer rating" />);
+      expect(
+        screen.getByRole('img', { name: 'Customer rating: 4.5 out of 5 stars, 128 reviews' }),
+      ).toBeInTheDocument();
+    });
+
+    it('does not render a NaN review count', () => {
+      const { container } = render(<StarRating rating={4} reviewCount={NaN} />);
+      expect(container.querySelector('.ds-star-rating__count')).not.toBeInTheDocument();
+      expect(screen.getByRole('img')).toHaveAttribute('aria-label', '4 out of 5 stars');
+    });
   });
 });
