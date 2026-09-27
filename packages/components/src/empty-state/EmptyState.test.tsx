@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { render, screen } from '@testing-library/react';
 import { axe } from 'jest-axe';
 import { describe, it, expect } from 'vitest';
@@ -18,6 +20,14 @@ describe('EmptyState', () => {
   it('renders heading text', () => {
     render(<EmptyState heading="Your bag is empty" />);
     expect(screen.getByText('Your bag is empty')).toBeInTheDocument();
+  });
+
+  it('renders an h2 by default and headingLevel when set', () => {
+    const { rerender } = render(<EmptyState heading="Your bag is empty" />);
+    expect(screen.getByRole('heading', { level: 2, name: 'Your bag is empty' })).toBeInTheDocument();
+    // Inside a drawer or section that has its own h2, an h2 here flattened the outline.
+    rerender(<EmptyState heading="Your bag is empty" headingLevel="h3" />);
+    expect(screen.getByRole('heading', { level: 3, name: 'Your bag is empty' })).toBeInTheDocument();
   });
 
   it('renders description when provided', () => {
@@ -130,5 +140,24 @@ describe('EmptyState', () => {
     );
     const results = await axe(container);
     expect(results).toHaveNoViolations();
+  });
+
+  // Regression: a bare `max-width: 65ch` on the description (same
+  // specificity as .ds-text, loaded later) undid Text's min(100%, 65ch)
+  // cap, and a long echoed search query overflowed a 320px screen.
+  it("keeps Text's 100% width cap on the description", () => {
+    const styles = ['../typography/Typography.css', 'EmptyState.css'].map((file) => {
+      const style = document.createElement('style');
+      style.textContent = readFileSync(resolve(__dirname, file), 'utf8');
+      document.head.appendChild(style);
+      return style;
+    });
+    try {
+      render(<EmptyState heading="No results" description="No results for “aramidfibercase”" />);
+      const description = screen.getByText('No results for “aramidfibercase”');
+      expect(getComputedStyle(description).maxWidth).toBe('min(100%, var(--measure-reading))');
+    } finally {
+      styles.forEach((style) => style.remove());
+    }
   });
 });

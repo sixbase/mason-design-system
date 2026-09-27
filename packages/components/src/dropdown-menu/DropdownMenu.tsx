@@ -1,6 +1,6 @@
 import * as RadixDropdownMenu from '@radix-ui/react-dropdown-menu';
 import { forwardRef } from 'react';
-import type { ComponentPropsWithoutRef } from 'react';
+import type { ComponentPropsWithoutRef, ElementRef } from 'react';
 import { Check } from '../icon';
 import './DropdownMenu.css';
 
@@ -79,7 +79,14 @@ export function DropdownMenu({ children, ...props }: DropdownMenuProps) {
 
 // ─── Trigger ──────────────────────────────────────────────
 
-export const DropdownMenuTrigger = RadixDropdownMenu.Trigger;
+// Thin wrapper, not a bare re-export: setting `displayName` on the Radix
+// part itself renames Radix's shared component for every consumer.
+export const DropdownMenuTrigger = forwardRef<
+  ElementRef<typeof RadixDropdownMenu.Trigger>,
+  ComponentPropsWithoutRef<typeof RadixDropdownMenu.Trigger>
+>(function DropdownMenuTrigger(props, ref) {
+  return <RadixDropdownMenu.Trigger ref={ref} {...props} />;
+});
 DropdownMenuTrigger.displayName = 'DropdownMenuTrigger';
 
 // ─── Content ──────────────────────────────────────────────
@@ -164,7 +171,11 @@ DropdownMenuCheckboxItem.displayName = 'DropdownMenuCheckboxItem';
 
 // ─── RadioGroup + RadioItem ───────────────────────────────
 
-export const DropdownMenuRadioGroup = RadixDropdownMenu.RadioGroup;
+export const DropdownMenuRadioGroup = forwardRef<HTMLDivElement, DropdownMenuRadioGroupProps>(
+  function DropdownMenuRadioGroup(props, ref) {
+    return <RadixDropdownMenu.RadioGroup ref={ref} {...props} />;
+  },
+);
 DropdownMenuRadioGroup.displayName = 'DropdownMenuRadioGroup';
 
 export const DropdownMenuRadioItem = forwardRef<HTMLDivElement, DropdownMenuRadioItemProps>(

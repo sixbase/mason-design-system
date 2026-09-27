@@ -4,20 +4,32 @@
   "description": "Design tokens — CSS variables, TypeScript constants, and JSON source of truth",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
     },
     "./css": "./dist/tokens.css",
-    "./json": "./src/tokens.json"
+    "./json": "./src/tokens.json",
+    "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
-  "files": ["dist", "src/tokens.json"],
+  "files": [
+    "dist",
+    "src/tokens.json"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
   "scripts": {
-    "build": "tsup && node scripts/build-css.mjs",
-    "dev": "tsup --watch",
+    "build": "node scripts/build-css.mjs && tsup",
+    "dev": "node scripts/build-css.mjs && tsup --watch",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src"
   },

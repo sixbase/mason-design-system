@@ -3,7 +3,11 @@
   --cart-line-item-image-size: var(--spacing-20);
   --cart-line-item-gap: var(--spacing-3);
   --cart-line-item-padding: var(--spacing-4);
-  --cart-line-item-radius: var(--radius-sm);
+  /* Photo-tile radius, proportional to the tile: 8px on this 80–96px square
+     (≈ the 34px corner ProductCard uses on a 300px tile). The old 2px was
+     sharper than a button's corner and read as a different product family
+     beside the rounded cards in the same drawer. */
+  --cart-line-item-radius: var(--radius-lg);
   --cart-line-item-transition: color var(--transition-fast),
     background-color var(--transition-fast);
 
@@ -12,7 +16,7 @@
   grid-template-columns: var(--cart-line-item-image-size) 1fr auto auto auto;
   gap: var(--cart-line-item-gap);
   padding: var(--cart-line-item-padding) 0;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: var(--border-width-sm) solid var(--color-border);
   align-items: center;
 }
 
@@ -47,10 +51,22 @@
   color: var(--color-foreground-subtle);
 }
 
+/* Forced colors drops the tile fill — the glyph floated with no thumbnail
+   edge, misaligning the row against lines that have photos. */
+@media (forced-colors: active) {
+  .ds-cart-line-item__placeholder {
+    outline: var(--border-width-sm) solid GrayText;
+    outline-offset: calc(-1 * var(--border-width-sm));
+  }
+}
+
 /* ─── Info ────────────────────────────────────────────────── */
 .ds-cart-line-item__info {
   display: flex;
   flex-direction: column;
+  /* Children hug their content. With the default stretch the "Sale" badge
+     became a full-width grey bar across the whole info column. */
+  align-items: flex-start;
   gap: var(--spacing-1);
   min-width: 0;
 }
@@ -62,18 +78,30 @@
   overflow: hidden;
 }
 
+/* The info column is a flex column with align-items: flex-start, which
+   sizes items to their min-content: one long word (a German compound, an
+   SKU) made the name wider than the column and pushed a 320px cart page
+   58px sideways. Cap name (and its link wrapper) at the column so the
+   inherited break-word can wrap it. Two classes: beats .ds-text's 65ch. */
+.ds-cart-line-item__link,
+.ds-cart-line-item .ds-cart-line-item__name {
+  max-width: 100%;
+}
+
 .ds-cart-line-item__link {
   text-decoration: none;
   color: inherit;
   transition: var(--cart-line-item-transition);
 }
 
-.ds-cart-line-item__link:hover .ds-cart-line-item__name {
-  color: var(--color-primary);
+@media (hover: hover) {
+  .ds-cart-line-item__link:hover .ds-cart-line-item__name {
+    color: var(--color-primary);
+  }
 }
 
 .ds-cart-line-item__link:focus-visible {
-  outline: none;
+  outline: var(--border-width-lg) solid transparent; /* painted in forced-colors mode, where box-shadow rings vanish */
   box-shadow: var(--focus-ring);
   border-radius: var(--radius-xs);
 }
@@ -81,7 +109,17 @@
 .ds-cart-line-item__options {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--spacing-1);
+  column-gap: var(--spacing-2);
+  row-gap: 0;
+}
+
+/* A quiet middle dot between options, so "Size: M · Color: Oat" doesn't read
+   as one run-on phrase. Alt text "" keeps it out of the accessibility tree
+   (screen readers already get each option as its own line). */
+.ds-cart-line-item__option + .ds-cart-line-item__option::before {
+  content: '\00B7' / '';
+  margin-inline-end: var(--spacing-2);
+  color: var(--color-foreground-subtle);
 }
 
 /* Unit price — visible on mobile, hidden on desktop (shown in price column) */
@@ -158,8 +196,9 @@
     align-items: center;
   }
 
-  /* Hide unit price in info on desktop — price column shows line total */
-  .ds-cart-line-item__unit-price {
+  /* Hide the unit price on desktop when it would only repeat the line-total
+     column (quantity 1, full price). */
+  .ds-cart-line-item__unit-price:not(.ds-cart-line-item__unit-price--informative) {
     display: none;
   }
 

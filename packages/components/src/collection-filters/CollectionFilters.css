@@ -1,5 +1,10 @@
 /* ─── Component tokens ─────────────────────────────────── */
-.ds-collection-filters {
+/* Declared on the panel too: on phones the panel renders inside the filter
+   Drawer, a portal outside .ds-collection-filters, so tokens set only on the
+   root never reached it — every var(--cf-*) there was undefined, the price
+   range lost its gap and the Apply button sat glued to the inputs. */
+.ds-collection-filters,
+.ds-collection-filters__panel {
   --cf-gap: var(--spacing-4);
   --cf-pill-radius: var(--radius-full);
   --cf-pill-padding-x: var(--spacing-3);
@@ -9,6 +14,9 @@
   --cf-price-gap: var(--spacing-3);
 
   font-family: var(--font-family-body);
+}
+
+.ds-collection-filters {
   width: 100%;
 }
 
@@ -40,7 +48,7 @@
   align-items: center;
   gap: var(--spacing-1);
   padding: var(--cf-pill-padding-y) var(--cf-pill-padding-x);
-  border: 1px solid var(--color-border);
+  border: var(--border-width-sm) solid var(--color-border);
   border-radius: var(--cf-pill-radius);
   background-color: var(--color-background-subtle);
   color: var(--color-foreground);
@@ -55,6 +63,24 @@
 
   text-box-trim: both;
   text-box-edge: cap alphabetic;
+}
+
+/* A pill arrives when its filter is applied — the answer to the tap,
+   at the anchored-overlay pace (normal, emphasized). Only pills added
+   after the first render (--enter, CollectionFilters.tsx): pills already
+   active on page load just show. Mount-only: a removed pill goes at once
+   (the product grid's FLIP carries that change). The `scale` property,
+   not `transform`, so the optical-centering nudge below is kept; from
+   --opacity-ghost like every entrance. */
+.ds-collection-filters__pill--enter {
+  animation: ds-collection-filters-pill-in var(--transition-duration-normal) var(--transition-easing-emphasized) backwards;
+}
+
+@keyframes ds-collection-filters-pill-in {
+  from {
+    opacity: var(--opacity-ghost);
+    scale: var(--scale-enter);
+  }
 }
 
 /* Coarse pointers: each pill (a remove button) gets an invisible
@@ -77,13 +103,15 @@
   }
 }
 
-.ds-collection-filters__pill:hover {
-  background-color: var(--color-secondary);
-  border-color: var(--color-border-strong);
+@media (hover: hover) {
+  .ds-collection-filters__pill:hover {
+    background-color: var(--color-secondary);
+    border-color: var(--color-border-strong);
+  }
 }
 
 .ds-collection-filters__pill:focus-visible {
-  outline: none;
+  outline: var(--border-width-lg) solid transparent; /* painted in forced-colors mode, where box-shadow rings vanish */
   box-shadow: var(--focus-ring);
 }
 
@@ -120,7 +148,7 @@
   align-items: center;
   justify-content: space-between;
   padding-bottom: var(--spacing-2);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: var(--border-width-sm) solid var(--color-border);
 }
 
 .ds-collection-filters__active-label {
@@ -192,7 +220,7 @@
 }
 
 .ds-collection-filters__mobile-badge {
-  margin-left: var(--spacing-1);
+  margin-inline-start: var(--spacing-1);
 }
 
 /* ─── Desktop / Mobile visibility ─────────────────────── */
@@ -212,6 +240,14 @@
   .ds-collection-filters__mobile {
     display: none;
   }
+
+  /* The active-filter pills sit directly above the sidebar on desktop and
+     already end in "Clear all", so the sidebar's own "N active filters ·
+     Clear all" row stacked a second, identical Clear all right under it.
+     It stays in the mobile drawer, where the pills are out of view. */
+  .ds-collection-filters__desktop .ds-collection-filters__clear-row {
+    display: none;
+  }
 }
 
 /* ─── Optical centering fallback ──────────────────────── */
@@ -225,5 +261,9 @@
 @media (prefers-reduced-motion: reduce) {
   .ds-collection-filters__pill {
     transition: none;
+  }
+
+  .ds-collection-filters__pill--enter {
+    animation: none;
   }
 }

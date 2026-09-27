@@ -1,9 +1,16 @@
 /* ─── StarRating ─────────────────────────────────────────── */
 .ds-star-rating {
   display: inline-flex;
+  /* In a narrow column the parts wrap as whole units (label / stars / count)
+     instead of the count breaking mid-phrase beside the stars. */
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--spacing-1);
   font-family: var(--font-family-body);
+}
+
+.ds-star-rating__count {
+  white-space: nowrap;
 }
 
 .ds-star-rating__stars {
@@ -16,12 +23,46 @@
   flex-shrink: 0;
 }
 
+/* RTL: stars flow right-to-left, so the half star's filled (left) half would
+   face away from the full stars. Mirror it — the star path is symmetric. */
+.ds-star-rating__star--half:dir(rtl) {
+  transform: scaleX(-1);
+}
+
 .ds-star-rating__star-fill {
   fill: var(--color-foreground);
 }
 
 .ds-star-rating__star-bg {
   fill: var(--color-border);
+}
+
+/* In the interactive rating each star is a control, so an empty star must
+   stand 3:1 from the page (WCAG 1.4.11) — the hairline border colour was
+   1.27:1 light / 1.43:1 dark. Display-only ratings keep the quiet empty
+   star: their value is also in the accessible name. */
+.ds-star-rating--interactive .ds-star-rating__star-bg {
+  fill: var(--color-border-control);
+}
+
+/* Forced colors does not touch SVG fills, so the stars kept their theme
+   tokens: when the High Contrast palette and the site theme disagree
+   (HC Black + light theme) filled stars went dark-on-black and empty
+   stars light — a 4.5 rating read as 0.5, "no reviews" as five stars.
+   System colours follow the user's palette: filled = CanvasText, empty =
+   an outlined star. */
+@media (forced-colors: active) {
+  .ds-star-rating__star-fill {
+    fill: CanvasText;
+  }
+
+  .ds-star-rating__star-bg,
+  .ds-star-rating--interactive .ds-star-rating__star-bg {
+    fill: Canvas;
+    stroke: CanvasText;
+    stroke-width: var(--border-width-sm);
+    stroke-linejoin: round;
+  }
 }
 
 .ds-star-rating__count {
@@ -52,8 +93,19 @@
 }
 
 .ds-star-rating__radio:focus-visible {
-  outline: none;
+  outline: var(--border-width-lg) solid transparent; /* painted in forced-colors mode, where box-shadow rings vanish */
   box-shadow: var(--focus-ring);
+}
+
+/* WCAG 2.5.8 (AA) for every pointer: flush 16–20px stars failed both the
+   24px size and the spacing exception with a mouse. Flush neighbours grow
+   the real box (lesson: hit-area-selection) — each star centres in a 24px
+   cell, so the row spreads slightly; display mode is untouched.
+   --spacing-6 = 24px, as for the Carousel dots (token gap: no
+   --size-target-min). */
+.ds-star-rating--interactive .ds-star-rating__radio {
+  min-width: var(--spacing-6);
+  min-height: var(--spacing-6);
 }
 
 .ds-star-rating--interactive .ds-star-rating__star-fill,
@@ -61,17 +113,24 @@
   transition: fill var(--transition-fast);
 }
 
-/* 44px hit areas. Stars sit flush against each other, so the extension is
-   guarded to coarse pointers only — overlapping invisible targets would
-   fight precise mouse hover previews. */
+/* 44px hit areas, coarse pointers only (desktop keeps the flush row and its
+   precise hover preview). Stars sit flush, so a centred overlay can't be
+   used here: each star's 44px ::after covered its neighbour, and the later
+   star's overlay won — tapping star 1 rated 2, star 4 rated 5 (lesson:
+   hit-area-selection, "flush neighbours grow the real box"). Each star gets
+   its own 44px column instead; the overlay only extends vertically. */
 @media (pointer: coarse) {
+  .ds-star-rating--interactive .ds-star-rating__radio {
+    min-width: var(--size-hit-area);
+  }
+
   .ds-star-rating__radio::after {
     content: '';
     position: absolute;
     top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: max(100%, var(--size-hit-area));
+    left: 0;
+    transform: translateY(-50%);
+    width: 100%;
     height: max(100%, var(--size-hit-area));
   }
 }

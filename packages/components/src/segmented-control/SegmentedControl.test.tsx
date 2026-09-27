@@ -1,7 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'jest-axe';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { resetDevWarnings } from '../internal/dev-warning';
 import { SegmentedControl, SegmentedControlItem } from './SegmentedControl';
 
 function renderControl(props: Record<string, unknown> = {}) {
@@ -272,5 +273,114 @@ describe('SegmentedControl', () => {
       </div>,
     );
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+
+  // ─── Regressions (QA break pass) ─────────────────────────
+
+  describe('regressions', () => {
+    const tabStops = () =>
+      screen
+        .getAllByRole('radio')
+        .filter((radio) => radio.tabIndex === 0 && !(radio as HTMLButtonElement).disabled);
+
+    it('keeps one reachable tab stop when the value matches no segment', () => {
+      render(
+        <SegmentedControl aria-label="View" value="nope" onValueChange={() => {}}>
+          <SegmentedControlItem value="grid">Grid</SegmentedControlItem>
+          <SegmentedControlItem value="list">List</SegmentedControlItem>
+        </SegmentedControl>,
+      );
+      expect(tabStops()).toHaveLength(1);
+    });
+
+    it('keeps one reachable tab stop when the first segment is disabled and nothing is selected', () => {
+      render(
+        <SegmentedControl aria-label="View">
+          <SegmentedControlItem value="grid" disabled>Grid</SegmentedControlItem>
+          <SegmentedControlItem value="list">List</SegmentedControlItem>
+        </SegmentedControl>,
+      );
+      expect(tabStops()).toHaveLength(1);
+    });
+
+    it('keeps one reachable tab stop when the selected segment is disabled', () => {
+      render(
+        <SegmentedControl aria-label="View" defaultValue="grid">
+          <SegmentedControlItem value="grid" disabled>Grid</SegmentedControlItem>
+          <SegmentedControlItem value="list">List</SegmentedControlItem>
+        </SegmentedControl>,
+      );
+      expect(tabStops()).toHaveLength(1);
+    });
+
+    it('Tab reaches the control when the default value is stale', async () => {
+      const user = userEvent.setup();
+      render(
+        <>
+          <button type="button">before</button>
+          <SegmentedControl aria-label="View" defaultValue="gone">
+            <SegmentedControlItem value="grid">Grid</SegmentedControlItem>
+            <SegmentedControlItem value="list">List</SegmentedControlItem>
+          </SegmentedControl>
+        </>,
+      );
+      await user.click(screen.getByText('before'));
+      await user.tab();
+      expect(screen.getByRole('radio', { name: 'Grid' })).toHaveFocus();
+    });
+
+    it('Fragment-wrapped items: the selected segment still owns the tab stop', () => {
+      render(
+        <SegmentedControl aria-label="View" defaultValue="list">
+          <>
+            <SegmentedControlItem value="grid">Grid</SegmentedControlItem>
+            <SegmentedControlItem value="list">List</SegmentedControlItem>
+          </>
+        </SegmentedControl>,
+      );
+      expect(screen.getByRole('radio', { name: 'List' })).toHaveAttribute('tabindex', '0');
+    });
+
+    it('ArrowRight moves to the visually-next segment in RTL', async () => {
+      const user = userEvent.setup();
+      render(
+        <div dir="rtl">
+          <SegmentedControl aria-label="View" defaultValue="list">
+            <SegmentedControlItem value="grid">Grid</SegmentedControlItem>
+            <SegmentedControlItem value="list">List</SegmentedControlItem>
+            <SegmentedControlItem value="map">Map</SegmentedControlItem>
+          </SegmentedControl>
+        </div>,
+      );
+      screen.getByRole('radio', { name: 'List' }).focus();
+      await user.keyboard('{ArrowRight}');
+      expect(screen.getByRole('radio', { name: 'Grid' })).toHaveAttribute('aria-checked', 'true');
+    });
+  });
+
+  describe('dev warnings', () => {
+    beforeEach(() => resetDevWarnings());
+
+    it('warns when controlled without onValueChange (read-only)', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      renderControl({ value: 'grid', defaultValue: undefined });
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('read-only'));
+      warn.mockRestore();
+    });
+
+    it('warns when the group has no accessible name', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      renderControl({ 'aria-label': undefined });
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('radiogroup is otherwise unnamed'));
+      warn.mockRestore();
+    });
+
+    it('stays quiet for a named, uncontrolled control', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      renderControl();
+      expect(warn).not.toHaveBeenCalled();
+      warn.mockRestore();
+    });
   });
 });

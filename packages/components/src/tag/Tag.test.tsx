@@ -1,9 +1,18 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 import { describe, expect, it, vi } from 'vitest';
 import { Check } from '../icon';
 import { Tag } from './Tag';
+
+/** Declarations of the top-level rule whose selector is exactly `selector`. */
+function cssRule(selector: string): string {
+  const css = readFileSync(resolve(__dirname, 'Tag.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return css.match(new RegExp(`(?:^|})\\s*${escaped}\\s*\\{([^}]*)\\}`))?.[1] ?? '';
+}
 
 describe('Tag', () => {
   it('renders with text content', () => {
@@ -93,6 +102,19 @@ describe('Tag', () => {
     ).toBeInTheDocument();
   });
 
+  // Regression: JSX like `Color: {color}` arrives as an array, so every
+  // such tag got an identical, ambiguous "Remove" button.
+  it('derives the remove label from JSX text children', () => {
+    const color = 'Blue';
+    render(<Tag onDismiss={() => {}}>Color: {color}</Tag>);
+    expect(screen.getByRole('button', { name: 'Remove Color: Blue' })).toBeInTheDocument();
+  });
+
+  it('derives the remove label from numeric children', () => {
+    render(<Tag onDismiss={() => {}}>{42}</Tag>);
+    expect(screen.getByRole('button', { name: 'Remove 42' })).toBeInTheDocument();
+  });
+
   it('falls back to a generic label for non-string children', () => {
     render(
       <Tag onDismiss={() => {}}>
@@ -100,6 +122,41 @@ describe('Tag', () => {
       </Tag>,
     );
     expect(screen.getByRole('button', { name: 'Remove' })).toBeInTheDocument();
+  });
+
+  /* ─── Styles ─────────────────────────────────────────────────── */
+
+  // Regression: long labels were nowrap with no cap, so a long filter
+  // value pushed the pill past a 320px viewport.
+  it('caps the pill at its row width and ellipsizes the label', () => {
+    expect(cssRule('.ds-tag')).toMatch(/max-width:\s*100%/);
+    const label = cssRule('.ds-tag__label');
+    expect(label).toMatch(/min-width:\s*0/);
+    expect(label).toMatch(/overflow-x:\s*clip/);
+    expect(label).toMatch(/text-overflow:\s*ellipsis/);
+  });
+
+  // Regression: the 24px remove button made a dismissible md tag 42px
+  // tall next to a 26px plain tag.
+  it('cancels the remove button extra height so dismissible tags match', () => {
+    expect(cssRule('.ds-tag--md .ds-tag__remove')).toMatch(
+      /margin-block:\s*calc\(var\(--spacing-2\) \* -1\)/,
+    );
+    expect(cssRule('.ds-tag--sm .ds-tag__remove')).toMatch(
+      /margin-block:\s*calc\(var\(--spacing-1\) \* -1\)/,
+    );
+  });
+
+  // Regression: the dimmed X on an outline tag measured 2.65:1 on the
+  // light page background (WCAG 1.4.11 needs 3:1).
+  it('does not dim the remove icon on the outline variant', () => {
+    expect(cssRule('.ds-tag--outline .ds-tag__remove')).toMatch(/opacity:\s*var\(--opacity-full\)/);
+  });
+
+  it('keeps a transparent focus outline for forced-colors mode', () => {
+    expect(cssRule('.ds-tag__remove:focus-visible')).toMatch(
+      /outline:\s*var\(--border-width-lg\) solid transparent/,
+    );
   });
 
   /* ─── Accessibility ──────────────────────────────────────────── */

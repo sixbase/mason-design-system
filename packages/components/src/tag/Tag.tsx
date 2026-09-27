@@ -1,4 +1,4 @@
-import { forwardRef } from 'react';
+import { Children, forwardRef } from 'react';
 import type { HTMLAttributes, ReactNode } from 'react';
 import { X } from '../icon';
 import './Tag.css';
@@ -20,10 +20,25 @@ export interface TagProps extends HTMLAttributes<HTMLSpanElement> {
   onDismiss?: () => void;
   /**
    * Accessible label for the remove button.
-   * Defaults to "Remove {children}" when children is a string.
-   * Required for accessibility when children is not a plain string.
+   * Defaults to "Remove {children}" when children is plain text —
+   * including JSX text like `Color: {color}`, which React passes as
+   * an array. Required when children contains elements.
    */
   removeLabel?: string;
+}
+
+/**
+ * Text of `children` when it is only strings/numbers (JSX like
+ * `Size: {size}` arrives as an array); `null` when it contains elements.
+ */
+function plainText(children: ReactNode): string | null {
+  let text = '';
+  let plain = true;
+  Children.forEach(children, (child) => {
+    if (typeof child === 'string' || typeof child === 'number') text += String(child);
+    else if (child != null && typeof child !== 'boolean') plain = false;
+  });
+  return plain && text.trim() ? text : null;
 }
 
 /**
@@ -69,9 +84,8 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(function Tag(
     .filter(Boolean)
     .join(' ');
 
-  const removeAriaLabel =
-    removeLabel ??
-    (typeof children === 'string' ? `Remove ${children}` : 'Remove');
+  const label = plainText(children);
+  const removeAriaLabel = removeLabel ?? (label ? `Remove ${label}` : 'Remove');
 
   return (
     <span ref={ref} className={classes} {...props}>

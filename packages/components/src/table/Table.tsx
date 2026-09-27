@@ -5,14 +5,17 @@ import {
   forwardRef,
   isValidElement,
   useContext,
+  useId,
 } from 'react';
 import type {
+  CSSProperties,
   HTMLAttributes,
   ReactElement,
   ReactNode,
   TdHTMLAttributes,
   ThHTMLAttributes,
 } from 'react';
+import { devWarning } from '../internal/dev-warning';
 import { Text } from '../typography';
 import './Table.css';
 
@@ -40,6 +43,12 @@ function extractText(node: ReactNode): string {
   return '';
 }
 
+/** Columns a cell occupies (`colSpan`, default 1). */
+function spanOf(cell: ReactElement): number {
+  const span = Number((cell.props as { colSpan?: number | string }).colSpan);
+  return Number.isFinite(span) && span > 1 ? span : 1;
+}
+
 /** Collects header cell text from Table children (Header → Row → Head). */
 function extractHeaderLabels(children: ReactNode): string[] {
   const labels: string[] = [];
@@ -51,7 +60,9 @@ function extractHeaderLabels(children: ReactNode): string[] {
       const rowChildren = (row.props as { children?: ReactNode }).children;
       Children.forEach(rowChildren, (head) => {
         if (isValidElement(head) && head.type === TableHead) {
-          labels.push(extractText((head.props as { children?: ReactNode }).children));
+          // A colSpan header labels every column it covers.
+          const text = extractText((head.props as { children?: ReactNode }).children);
+          for (let i = 0; i < spanOf(head); i += 1) labels.push(text);
         }
       });
     });
@@ -73,6 +84,14 @@ export interface TableProps extends HTMLAttributes<HTMLTableElement> {
   /** Sticky header on vertical scroll */
   stickyHeader?: boolean;
   /**
+   * Bounds the table's own scroll area (any CSS length — prefer a token,
+   * e.g. `"var(--size-modal-sm)"`). Required for `stickyHeader`: the
+   * wrapper scrolls horizontally, which makes it the header's scroll
+   * container, so the header can only stick inside a height-bounded
+   * wrapper — never to the page.
+   */
+  maxHeight?: string;
+  /**
    * Mobile strategy below the sm breakpoint:
    * - `'scroll'` (default) — keeps the horizontal scroll region
    * - `'stack'` — each row renders as a card; cells show their
@@ -87,8 +106,11 @@ export const Table = forwardRef<HTMLTableElement, TableProps>(function Table(
     size = 'md',
     stickyHeader = false,
     responsive = 'scroll',
+    maxHeight,
     className,
     children,
+    'aria-label': ariaLabel,
+    'aria-labelledby': ariaLabelledBy,
     ...props
   },
   ref,
@@ -96,9 +118,38 @@ export const Table = forwardRef<HTMLTableElement, TableProps>(function Table(
   const isStack = responsive === 'stack';
   const labels = isStack ? extractHeaderLabels(children) : null;
 
+  // Name the scroll region from what names the table: aria-labelledby,
+  // aria-label, or a <caption> child. No generic fallback — a fixed
+  // "Data table" gave every table on a page the same landmark name
+  // (axe landmark-unique).
+  const generatedCaptionId = useId();
+  let captionId: string | undefined;
+  const content = Children.map(children, (child) => {
+    if (!isValidElement(child) || child.type !== 'caption') return child;
+    const caption = child as ReactElement<{ id?: string }>;
+    captionId = caption.props.id ?? generatedCaptionId;
+    return caption.props.id ? caption : cloneElement(caption, { id: captionId });
+  });
+  const regionLabelledBy = ariaLabelledBy ?? (ariaLabel ? undefined : captionId);
+  // An unnamed role="region" still counts as a landmark to axe, and two
+  // of them collide — only claim the role when there is a name for it.
+  const isNamedRegion = Boolean(ariaLabel || regionLabelledBy);
+
+  // The wrapper is always a tab stop (below), so an unnamed table puts
+  // keyboard focus on a region announced with no name at all — screen
+  // readers say just "group" or nothing. There is no safe generic name
+  // (see above), so tell the developer instead.
+  if (!isNamedRegion) {
+    devWarning(
+      'Table:unnamed',
+      'Table: the table\'s scroll area is a keyboard tab stop but has no accessible name — add a <caption>, `aria-label` or `aria-labelledby`.',
+    );
+  }
+
   const classes = [
     'ds-table-wrapper',
     isStack && 'ds-table-wrapper--stack',
+    stickyHeader && 'ds-table-wrapper--sticky',
     className,
   ].filter(Boolean).join(' ');
 
@@ -113,11 +164,16 @@ export const Table = forwardRef<HTMLTableElement, TableProps>(function Table(
   return (
     <div
       className={classes}
-      role="region"
-      aria-label={props['aria-label'] ?? 'Data table'}
+      role={isNamedRegion ? 'region' : undefined}
+      aria-label={ariaLabel}
+      aria-labelledby={regionLabelledBy}
+      style={
+        maxHeight !== undefined
+          ? ({ '--table-max-height': maxHeight } as CSSProperties)
+          : undefined
+      }
       // Scrollable region: keyboard users need a tab stop to scroll
       // wide tables with arrow keys (WAI scrollable-region pattern).
-      // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
       tabIndex={0}
     >
       <TableLabelsContext.Provider value={labels}>
@@ -127,10 +183,10 @@ export const Table = forwardRef<HTMLTableElement, TableProps>(function Table(
           ref={ref}
           role={isStack ? 'table' : undefined}
           className={tableClasses}
+          aria-labelledby={ariaLabelledBy}
           {...props}
-          aria-label={undefined}
         >
-          {children}
+          {content}
         </table>
       </TableLabelsContext.Provider>
     </div>
@@ -189,14 +245,17 @@ const TableRow = forwardRef<HTMLTableRowElement, TableRowProps>(function TableRo
   const labels = useContext(TableLabelsContext);
   const section = useContext(TableSectionContext);
 
-  // Stack mode: inject each cell's column header as data-label
+  // Stack mode: inject each cell's column header as data-label. The
+  // column index advances for row headers (Table.Head scope="row") and
+  // by colSpan, so labels stay aligned with their columns.
   let content = children;
   if (labels && section === 'body') {
-    let cellIndex = 0;
+    let column = 0;
     content = Children.map(children, (child) => {
-      if (isValidElement(child) && child.type === TableCell) {
-        const index = cellIndex;
-        cellIndex += 1;
+      if (!isValidElement(child)) return child;
+      const index = column;
+      if (child.type === TableCell || child.type === TableHead) column += spanOf(child);
+      if (child.type === TableCell) {
         const cell = child as ReactElement<TableCellProps>;
         const label = labels[index];
         if (cell.props['data-label'] === undefined && label !== undefined && label !== '') {
@@ -241,6 +300,9 @@ const TableHead = forwardRef<HTMLTableCellElement, TableHeadProps>(function Tabl
   ].filter(Boolean).join(' ');
 
   const isStack = useContext(TableLabelsContext) != null;
+  // A th in the body is a row header (the row's title), not a column header.
+  const inBody = useContext(TableSectionContext) === 'body';
+  const scope = props.scope ?? (inBody ? 'row' : 'col');
 
   const ariaSort =
     sorted === 'asc'
@@ -260,8 +322,8 @@ const TableHead = forwardRef<HTMLTableCellElement, TableHeadProps>(function Tabl
     <th
       ref={ref}
       className={classes}
-      scope={props.scope ?? 'col'}
-      role={isStack ? 'columnheader' : undefined}
+      scope={scope}
+      role={isStack ? (scope === 'row' ? 'rowheader' : 'columnheader') : undefined}
       aria-sort={ariaSort}
       {...props}
     >
@@ -300,12 +362,26 @@ export interface TableCellProps extends TdHTMLAttributes<HTMLTableCellElement> {
 }
 
 const TableCell = forwardRef<HTMLTableCellElement, TableCellProps>(function TableCell(
-  { className, ...props },
+  { className, children, ...props },
   ref,
 ) {
   const isStack = useContext(TableLabelsContext) != null;
   const classes = ['ds-table__cell', className].filter(Boolean).join(' ');
-  return <td ref={ref} role={isStack ? 'cell' : undefined} className={classes} {...props} />;
+  // Stack mode lays a labelled cell out as a 2-column grid (label | value).
+  // Wrap the content so multi-part values ("Shipped" + <Badge>, two
+  // action buttons) stay in the value column instead of each part
+  // becoming its own grid item and wrapping under the label.
+  const content =
+    isStack && props['data-label'] ? (
+      <div className="ds-table__cell-value">{children}</div>
+    ) : (
+      children
+    );
+  return (
+    <td ref={ref} role={isStack ? 'cell' : undefined} className={classes} {...props}>
+      {content}
+    </td>
+  );
 });
 
 TableCell.displayName = 'Table.Cell';
@@ -360,3 +436,9 @@ Table.Row = TableRow;
 Table.Head = TableHead;
 Table.Cell = TableCell;
 Table.Empty = TableEmpty;
+
+// Flat named exports — the library-wide compound convention (ModalHeader,
+// TabsTrigger, AccordionItem). `Table.Header` dot access keeps working;
+// the flat names also survive React Server Component boundaries, where
+// property access on a client component reference is not allowed.
+export { TableHeader, TableBody, TableRow, TableHead, TableCell, TableEmpty };

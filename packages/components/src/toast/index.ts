@@ -5,4 +5,6 @@ export type {
   ToastVariant,
   ToastPosition,
   ToastProviderProps,
+  ToastProps,
+  ToastContextValue,
 } from './Toast';

@@ -7,8 +7,15 @@
 }
 
 .ds-radio-group-root--disabled {
-  opacity: var(--opacity-medium);
   cursor: not-allowed;
+}
+
+/* Disabled fades only the options (circle + option label). The group label
+   stays full strength like Input/Select/Textarea field labels, and so does
+   the hint — it often says how to enable the control ("Add a phone number
+   to enable"), and faded it fell to 1.75:1. */
+.ds-radio-group-root--disabled .ds-radio-group-items {
+  opacity: var(--opacity-medium);
 }
 
 /* ─── Group label ────────────────────────────────────────── */
@@ -17,6 +24,7 @@
   font-weight: var(--font-weight-medium);
   color: var(--color-foreground);
   line-height: var(--line-height-snug);
+  overflow-wrap: anywhere;
 }
 
 /* ─── Items container ────────────────────────────────────── */
@@ -44,11 +52,12 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-2);
+  min-width: 0;
 }
 
 /* ─── Radio circle ───────────────────────────────────────── */
 .ds-radio-item-circle {
-  --radio-border-color: var(--color-border);
+  --radio-border-color: var(--color-border-control);
   --radio-bg:           var(--color-background-surface);
 
   position: relative;
@@ -58,7 +67,7 @@
   flex-shrink: 0;
   padding: 0;
   background-color: var(--radio-bg);
-  border: 1.5px solid var(--radio-border-color);
+  border: var(--border-width-md) solid var(--radio-border-color);
   border-radius: var(--radius-full);
   outline: none;
   cursor: pointer;
@@ -80,39 +89,63 @@
   height: var(--size-checkbox-md);
 }
 
-/* 44px hit area — invisible, centered on the circle */
+/* ─── Hit area ───────────────────────────────────────────── */
+/* Same split as Checkbox. Every pointer gets at least the WCAG 2.5.8 (AA)
+   24px target, invisible and centered on the circle. It used to be 44px
+   for every pointer, and stacked options sit 31–33px apart, so each zone
+   overlapped its neighbour's by 11–13px (measured) — a tap or click near
+   the edge picked the wrong option. 24px zones leave ≥7px between rows.
+   --spacing-6 = 24px, as in Checkbox (token gap: no --size-target-min). */
 .ds-radio-item-circle::after {
   content: '';
   position: absolute;
   top: 50%;
   left: 50%;
-  width: max(100%, var(--size-hit-area));
-  height: max(100%, var(--size-hit-area));
+  width: max(100%, var(--spacing-6));
+  height: max(100%, var(--spacing-6));
   transform: translate(-50%, -50%);
   border-radius: var(--radius-full);
 }
 
-/* Hover */
-.ds-radio-item-circle:hover:not([data-disabled]) {
-  border-color: var(--color-border-strong);
+/* Touch: --size-hit-area (44px). The option row grows to real 44px height
+   (like SegmentedControl) so each zone stays inside its own row and
+   neighbours can't overlap; the rows' own height now spaces them, so the
+   stacking gap drops to 0 (the horizontal gap between options stays). */
+@media (pointer: coarse) {
+  .ds-radio-item-circle::after {
+    width: max(100%, var(--size-hit-area));
+    height: max(100%, var(--size-hit-area));
+  }
+
+  .ds-radio-item-field {
+    min-height: var(--size-hit-area);
+  }
+
+  .ds-radio-group-items,
+  .ds-radio-group-items[data-orientation="horizontal"] {
+    row-gap: 0;
+  }
 }
 
-/* Active (pressed) */
-.ds-radio-item-circle:active:not([data-disabled]) {
-  border-color: var(--color-primary);
-  transform: scale(var(--scale-press));
-}
-
-.ds-radio-item-circle[data-state="checked"]:active:not([data-disabled]) {
-  background-color: var(--color-primary-active);
-  border-color: var(--color-primary-active);
-  transform: scale(var(--scale-press));
+/* Hover — only where a real pointer hovers: touch screens (iOS Safari)
+   keep :hover after a tap, leaving a darker edge that reads as a state. */
+@media (hover: hover) {
+  /* Not on an error circle: this rule outranks .ds-radio-item-circle--error,
+     so hovering swapped the red edge for grey (Input/Select keep theirs). */
+  .ds-radio-item-circle:hover:not([data-disabled]):not(.ds-radio-item-circle--error) {
+    border-color: var(--color-foreground-subtle); /* darker than the resting border-control edge */
+  }
 }
 
 /* Focus */
 .ds-radio-item-circle:focus-visible {
   border-color: var(--color-primary);
   box-shadow: var(--focus-ring);
+  /* Invisible normally. Forced-colors mode (Windows High Contrast) drops
+     box-shadow and repaints outlines in a system color, so this becomes
+     the focus indicator there instead of nothing. */
+  outline: var(--border-width-lg) solid transparent;
+  outline-offset: var(--border-width-lg);
 }
 
 /* Checked */
@@ -121,9 +154,28 @@
   border-color: var(--color-primary);
 }
 
-.ds-radio-item-circle[data-state="checked"]:hover:not([data-disabled]) {
-  background-color: var(--color-primary-hover);
-  border-color: var(--color-primary-hover);
+@media (hover: hover) {
+  .ds-radio-item-circle[data-state="checked"]:hover:not([data-disabled]) {
+    background-color: var(--color-primary-hover);
+    border-color: var(--color-primary-hover);
+  }
+}
+
+/* Active (pressed). A mouse press is also a hover, so these come after
+   both hover rules and match their weight (0-4-0) — the pressed edge used
+   to lose to the hover edge. An error circle keeps its red edge, like Select. */
+.ds-radio-item-circle:active:not([data-disabled]) {
+  transform: scale(var(--scale-press));
+}
+
+.ds-radio-item-circle:active:not([data-disabled]):not(.ds-radio-item-circle--error) {
+  border-color: var(--color-primary);
+}
+
+.ds-radio-item-circle[data-state="checked"]:active:not([data-disabled]) {
+  background-color: var(--color-primary-active);
+  border-color: var(--color-primary-active);
+  transform: scale(var(--scale-press));
 }
 
 /* Error state */
@@ -133,6 +185,12 @@
 
 .ds-radio-item-circle--error:focus-visible {
   box-shadow: var(--focus-ring-error);
+}
+
+/* An unchecked error circle keeps its red edge while focused (the generic
+   focus rule turned it dark) — Input, Select and Textarea keep theirs. */
+.ds-radio-item-circle--error[data-state="unchecked"]:focus-visible {
+  border-color: var(--color-destructive);
 }
 
 /* Disabled */
@@ -147,36 +205,67 @@
   justify-content: center;
 }
 
+/* The dot is drawn entirely with border (a zero-size box with a thick
+   round border), not background. Forced-colors mode repaints backgrounds
+   to the canvas colour — a background dot vanished and a checked radio
+   looked unchecked — but it keeps borders, in the text colour. */
 .ds-radio-item-indicator::after {
   content: '';
   display: block;
-  background-color: var(--color-primary-foreground);
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-color: var(--color-primary-foreground);
   border-radius: var(--radius-full);
+  /* The dot springs in when the indicator mounts on selection */
+  animation: ds-radio-pop var(--transition-duration-slow) var(--transition-easing-spring);
 }
 
+@keyframes ds-radio-pop {
+  from {
+    transform: scale(var(--scale-pop));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-radio-item-indicator::after {
+    animation: none;
+  }
+}
+
+/* Dot diameter = 2 × border width: 4px (sm), 8px (md) */
 .ds-radio-item-circle--sm .ds-radio-item-indicator::after {
-  width: var(--spacing-1);
-  height: var(--spacing-1);
+  border-width: var(--spacing-phi-1);
 }
 
 .ds-radio-item-circle--md .ds-radio-item-indicator::after {
-  width: var(--spacing-2);
-  height: var(--spacing-2);
+  border-width: var(--spacing-1);
 }
 
 /* ─── Item label ─────────────────────────────────────────── */
 .ds-radio-item-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-size: var(--font-size-sm);
   color: var(--color-foreground);
   line-height: var(--line-height-snug);
   cursor: pointer;
+  -webkit-user-select: none; /* Safari ignores the unprefixed property */
   user-select: none;
   text-box-trim: both;
   text-box-edge: cap alphabetic;
 }
 
-.ds-radio-group-root--disabled .ds-radio-item-label {
+.ds-radio-group-root--disabled .ds-radio-item-label,
+.ds-radio-item--disabled .ds-radio-item-label {
   cursor: not-allowed;
+}
+
+/* One disabled option in an enabled group. Skipped when the whole group is
+   disabled — the items already carry the opacity, and stacking it would
+   fade that option to 0.146. */
+.ds-radio-group-root:not(.ds-radio-group-root--disabled) .ds-radio-item--disabled {
+  opacity: var(--opacity-medium);
 }
 
 /* Optical centering fallback for browsers without text-box-trim */
@@ -191,11 +280,12 @@
   font-size: var(--font-size-xs);
   color: var(--color-foreground-secondary);
   line-height: var(--line-height-normal);
-  padding-left: calc(var(--size-checkbox-md) + var(--spacing-2));
+  padding-inline-start: calc(var(--size-checkbox-md) + var(--spacing-2));
+  overflow-wrap: anywhere;
 }
 
 .ds-radio-item--sm .ds-radio-item-description {
-  padding-left: calc(var(--size-checkbox-sm) + var(--spacing-2));
+  padding-inline-start: calc(var(--size-checkbox-sm) + var(--spacing-2));
 }
 
 /* ─── Group hint / error ─────────────────────────────────── */
@@ -203,10 +293,23 @@
   font-size: var(--font-size-xs);
   color: var(--color-foreground-secondary);
   line-height: var(--line-height-normal);
+  overflow-wrap: anywhere;
 }
 
 .ds-radio-group-error {
   font-size: var(--font-size-xs);
   color: var(--color-destructive);
   line-height: var(--line-height-normal);
+  overflow-wrap: anywhere;
+}
+
+/* ─── Print ─────────────────────────────────────────────── */
+/* The selected dot is a fill: every option printed unselected. Browsers drop backgrounds when printing by default ("economy"), so
+   the state vanished on paper; exact keeps these fills. (-webkit- for
+   Safari < 15.4 and Chrome < 136, which only read the prefixed form.) */
+@media print {
+  .ds-radio-group-root {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }

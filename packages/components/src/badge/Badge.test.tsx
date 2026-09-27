@@ -72,24 +72,31 @@ describe('Badge', () => {
   });
 
   it('keeps the label as accessible content with dot', () => {
-    render(<Badge variant="warning" dot>Low stock</Badge>);
-    expect(screen.getByRole('status')).toHaveTextContent('Low stock');
+    const { container } = render(<Badge variant="warning" dot>Low stock</Badge>);
+    expect(container.querySelector('.ds-badge')).toHaveTextContent('Low stock');
   });
 
   /* ─── Semantic roles (WCAG) ──────────────────────────────────── */
 
-  it('applies role="status" to status variants', () => {
-    const { rerender } = render(<Badge variant="success">OK</Badge>);
-    expect(screen.getByRole('status')).toBeInTheDocument();
+  // A live region per badge made a filtered product grid read every
+  // "Sale" / "Out of stock" aloud. Static labels are plain text now.
+  it('does not make status-coloured badges live regions by default', () => {
+    const { rerender } = render(<Badge variant="success">In stock</Badge>);
+    expect(screen.queryByRole('status')).toBeNull();
 
-    rerender(<Badge variant="warning">Warn</Badge>);
-    expect(screen.getByRole('status')).toBeInTheDocument();
+    rerender(<Badge variant="warning">Low stock</Badge>);
+    expect(screen.queryByRole('status')).toBeNull();
 
-    rerender(<Badge variant="destructive">Error</Badge>);
-    expect(screen.getByRole('status')).toBeInTheDocument();
+    rerender(<Badge variant="destructive">Sale</Badge>);
+    expect(screen.queryByRole('status')).toBeNull();
   });
 
-  it('does not apply role="status" to non-status variants', () => {
+  it('becomes a live region when role="status" is passed', () => {
+    render(<Badge variant="warning" role="status">2 left</Badge>);
+    expect(screen.getByRole('status')).toHaveTextContent('2 left');
+  });
+
+  it('is not a live region by default (default variant)', () => {
     render(<Badge variant="default">New</Badge>);
     expect(screen.queryByRole('status')).toBeNull();
   });

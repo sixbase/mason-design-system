@@ -1,8 +1,10 @@
 import { forwardRef, useCallback, useEffect, useId, useRef, useState } from 'react';
-import type { HTMLAttributes } from 'react';
+import type { AnimationEvent, HTMLAttributes } from 'react';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '../accordion/Accordion';
 import { Button } from '../button/Button';
 import { Text } from '../typography/Typography';
+import { dialogOpener, trackDialogOpeners } from '../internal/dialog-opener';
+import { safeHref } from '../internal/safe-url';
 import './CookieConsent.css';
 
 // ─── Types ────────────────────────────────────────────────
@@ -18,7 +20,10 @@ export interface CookieCategory {
   required?: boolean;
   /** Default checked state (defaults to false for non-required) */
   defaultChecked?: boolean;
-  /** URL for a "Learn more" link shown below the description */
+  /**
+   * URL for a "Learn more" link shown below the description. An unsafe
+   * URL (javascript:, data:, vbscript:) is dropped and no link shows.
+   */
   learnMoreHref?: string;
 }
 
@@ -39,7 +44,10 @@ export interface CookieConsentProps extends HTMLAttributes<HTMLDivElement> {
   heading?: string;
   /** Banner description / privacy message */
   description?: string;
-  /** URL for a "Learn more" link appended to the description */
+  /**
+   * URL for a "Learn more" link appended to the description. An unsafe
+   * URL (javascript:, data:, vbscript:) is dropped and no link shows.
+   */
   learnMoreHref?: string;
   /** Label for the learn more link */
   learnMoreLabel?: string;
@@ -108,24 +116,42 @@ export const CookieConsent = forwardRef<HTMLDivElement, CookieConsentProps>(
     const [closing, setClosing] = useState(false);
     const [showPreferences, setShowPreferences] = useState(false);
 
-    // Build initial category selection from defaults
-    const [selectedCategories, setSelectedCategories] = useState<Record<string, boolean>>(() => {
-      if (!categories) return {};
-      const initial: Record<string, boolean> = {};
-      for (const cat of categories) {
-        initial[cat.id] = cat.required ? true : (cat.defaultChecked ?? false);
-      }
-      return initial;
-    });
+    // "Learn more" links whose href safeHref blocks (javascript:, data:…)
+    // are left out entirely — the banner reads exactly as if no link was
+    // given. They used to render as a link-styled <a> with no href: it
+    // looked like a link but could not be focused or activated. Plain text
+    // was the other option, but "Learn More" that goes nowhere promises
+    // something it can't deliver. safeHref already warns in development.
+    const learnMoreUrl = safeHref(learnMoreHref);
+
+    // Only the user's explicit toggles are stored. Each category's checked
+    // state is derived at render time (required → always on, otherwise the
+    // toggle or its default), so categories that arrive after mount (async
+    // CMS / consent-platform config) still get their defaults, and removed
+    // categories can never leak into the accepted list.
+    // A Map, not a plain object: `{}['constructor']` is inherited (truthy),
+    // so a category with an id like "constructor" or "toString" read as
+    // ticked and was reported as consented without the shopper touching it.
+    const [toggledCategories, setToggledCategories] = useState<ReadonlyMap<string, boolean>>(
+      () => new Map(),
+    );
+    const isCategoryChecked = (category: CookieCategory) =>
+      category.required
+        ? true
+        : (toggledCategories.get(category.id) ?? category.defaultChecked ?? false);
 
     const headingId = useId();
     const bannerRef = useRef<HTMLDivElement>(null);
     const headingRef = useRef<HTMLElement>(null);
     const previousFocusRef = useRef<HTMLElement | null>(null);
+    // Set synchronously on the first choice so a double-click (or a click
+    // during the exit animation) can't fire onAccept / onReject twice.
+    const decidedRef = useRef(false);
 
     // ─── Handlers ───────────────────────────────────────────
 
     const finishClose = useCallback(() => {
+      decidedRef.current = false;
       setClosing(false);
       setShowPreferences(false);
       if (isControlled) {
@@ -139,36 +165,44 @@ export const CookieConsent = forwardRef<HTMLDivElement, CookieConsentProps>(
     }, [isControlled, onOpenChange]);
 
     const close = useCallback(() => {
+      decidedRef.current = true;
       setClosing(true);
     }, []);
 
-    const handleAnimationEnd = useCallback(() => {
-      if (closing) {
-        finishClose();
-      }
-    }, [closing, finishClose]);
+    // Only the banner's own exit animation ends the close: animationend
+    // bubbles, and a category's accordion fade finishing mid-exit cut the
+    // slide short.
+    const handleAnimationEnd = useCallback(
+      (event: AnimationEvent<HTMLDivElement>) => {
+        if (closing && event.target === event.currentTarget) {
+          finishClose();
+        }
+      },
+      [closing, finishClose],
+    );
 
-    const handleAcceptAll = useCallback(() => {
+    const handleAcceptAll = () => {
+      if (decidedRef.current) return;
       const allIds = categories ? categories.map((c) => c.id) : [];
       onAccept?.(allIds);
       close();
-    }, [categories, onAccept, close]);
+    };
 
-    const handleReject = useCallback(() => {
+    const handleReject = () => {
+      if (decidedRef.current) return;
       onReject?.();
       close();
-    }, [onReject, close]);
+    };
 
-    const handleSavePreferences = useCallback(() => {
-      const accepted = Object.entries(selectedCategories)
-        .filter(([, checked]) => checked)
-        .map(([id]) => id);
+    const handleSavePreferences = () => {
+      if (decidedRef.current) return;
+      const accepted = (categories ?? []).filter(isCategoryChecked).map((c) => c.id);
       onAccept?.(accepted);
       close();
-    }, [selectedCategories, onAccept, close]);
+    };
 
     const handleCategoryChange = useCallback((categoryId: string, checked: boolean) => {
-      setSelectedCategories((prev) => ({ ...prev, [categoryId]: checked }));
+      setToggledCategories((prev) => new Map(prev).set(categoryId, checked));
     }, []);
 
     const handleBack = useCallback(() => {
@@ -191,16 +225,42 @@ export const CookieConsent = forwardRef<HTMLDivElement, CookieConsentProps>(
       }
     }, [closing, finishClose]);
 
+    // ─── Keep the page reachable ────────────────────────────
+    // The banner is fixed over the bottom of the page. Tabbing to the
+    // footer (Contact, Privacy Policy — what a shopper deciding about
+    // cookies may want to read) left the focused link completely under it
+    // (WCAG 2.4.11), and the end of every page could not be scrolled into
+    // view. The banner's height is published on <html>; CookieConsent.css
+    // turns it into scroll-padding (focus lands above the banner) and room
+    // at the end of the page. Measured, not a token: it depends on the copy.
+    const onScreen = isOpen || closing;
+    useEffect(() => {
+      const panel = bannerRef.current;
+      if (!onScreen || !panel) return;
+      const root = document.documentElement;
+      const publish = () =>
+        root.style.setProperty('--cookie-consent-height', `${panel.offsetHeight}px`);
+      publish();
+      const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(publish);
+      observer?.observe(panel);
+      return () => {
+        observer?.disconnect();
+        root.style.removeProperty('--cookie-consent-height');
+      };
+    }, [onScreen]);
+
     // ─── Focus management ───────────────────────────────────
     // On open, move focus to the dialog heading so screen readers announce
     // the banner. The previously focused element is restored on close.
 
+    // Safari never focuses the button that was clicked/tapped (a "Cookie
+    // settings" link reopening the banner), so the opener is taken from the
+    // last press there (see internal/dialog-opener).
+    useEffect(() => trackDialogOpeners(), []);
+
     useEffect(() => {
       if (!isOpen) return;
-      previousFocusRef.current =
-        document.activeElement instanceof HTMLElement
-          ? document.activeElement
-          : null;
+      previousFocusRef.current = dialogOpener();
       headingRef.current?.focus();
     }, [isOpen]);
 
@@ -210,7 +270,11 @@ export const CookieConsent = forwardRef<HTMLDivElement, CookieConsentProps>(
       if (!isOpen || closing) return;
 
       const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
+        // A nested overlay (Modal, Popover, Select…) that consumed this
+        // Escape calls preventDefault — Radix does so in the capture phase,
+        // before this bubble-phase listener. Closing the banner too would
+        // dismiss it without a consent choice.
+        if (e.key === 'Escape' && !e.defaultPrevented) {
           close();
         }
       };
@@ -252,15 +316,16 @@ export const CookieConsent = forwardRef<HTMLDivElement, CookieConsentProps>(
               id={headingId}
               ref={headingRef}
               tabIndex={-1}
+              className="ds-cookie-consent__heading"
             >
               {heading}
             </Text>
             <Text size="sm" muted>
               {description}
-              {learnMoreHref && (
+              {learnMoreUrl && (
                 <>
                   {' '}
-                  <a href={learnMoreHref} className="ds-cookie-consent__link">{learnMoreLabel}</a>
+                  <a href={learnMoreUrl} className="ds-cookie-consent__link">{learnMoreLabel}</a>
                 </>
               )}
             </Text>
@@ -269,34 +334,37 @@ export const CookieConsent = forwardRef<HTMLDivElement, CookieConsentProps>(
           {hasCategories && showPreferences && (
             <div className="ds-cookie-consent__preferences">
               <Accordion type="multiple" size="sm" bordered>
-                {categories.map((category) => (
-                  <AccordionItem key={category.id} value={category.id}>
-                    <AccordionTrigger
-                      checked={selectedCategories[category.id] ?? false}
-                      checkboxDisabled={category.required}
-                      checkboxLabel={category.label}
-                      onCheckedChange={(checked) =>
-                        handleCategoryChange(category.id, checked === true)
-                      }
-                    >
-                      {category.label}
-                    </AccordionTrigger>
-                    {(category.description || category.learnMoreHref) && (
-                      <AccordionContent>
-                        {category.description && (
-                          <Text size="sm" muted className="ds-cookie-consent__category-description">
-                            {category.description}
-                          </Text>
-                        )}
-                        {category.learnMoreHref && (
-                          <a href={category.learnMoreHref} className="ds-cookie-consent__link ds-cookie-consent__category-link">
-                            Learn More
-                          </a>
-                        )}
-                      </AccordionContent>
-                    )}
-                  </AccordionItem>
-                ))}
+                {categories.map((category) => {
+                  const categoryUrl = safeHref(category.learnMoreHref);
+                  return (
+                    <AccordionItem key={category.id} value={category.id}>
+                      <AccordionTrigger
+                        checked={isCategoryChecked(category)}
+                        checkboxDisabled={category.required}
+                        checkboxLabel={category.label}
+                        onCheckedChange={(checked) =>
+                          handleCategoryChange(category.id, checked === true)
+                        }
+                      >
+                        {category.label}
+                      </AccordionTrigger>
+                      {(category.description || categoryUrl) && (
+                        <AccordionContent>
+                          {category.description && (
+                            <Text size="sm" muted className="ds-cookie-consent__category-description">
+                              {category.description}
+                            </Text>
+                          )}
+                          {categoryUrl && (
+                            <a href={categoryUrl} className="ds-cookie-consent__link ds-cookie-consent__category-link">
+                              Learn More
+                            </a>
+                          )}
+                        </AccordionContent>
+                      )}
+                    </AccordionItem>
+                  );
+                })}
               </Accordion>
             </div>
           )}

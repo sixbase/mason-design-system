@@ -1,0 +1,13 @@
+{
+  "//": "Type-checks every component story. The workbench renders the stories, so it is their consumer; stories import @storybook/react, which only the apps install.",
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@ds/components": ["../../packages/components/src/index.ts"],
+      "@ds/motion": ["../../packages/motion/src/index.ts"],
+      "@ds/motion/react": ["../../packages/motion/src/react.ts"],
+      "@storybook/react": ["./node_modules/@storybook/react"]
+    }
+  },
+  "include": ["src/vite-env.d.ts", "../../packages/components/src/**/*.stories.tsx"]
+}

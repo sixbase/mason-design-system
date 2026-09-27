@@ -9,7 +9,11 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   variant?: CardVariant;
   /** Makes the card interactive (hover + focus styles) */
   interactive?: boolean;
-  /** Remove internal padding — useful when the card contains a full-bleed image */
+  /**
+   * Remove CardBody/CardFooter padding — for content that brings its own
+   * spacing (a flush table or list). Not needed for images: CardImage is
+   * always full-bleed.
+   */
   noPadding?: boolean;
 }
 
@@ -68,7 +72,9 @@ Card.displayName = 'Card';
 // ─── CardImage ────────────────────────────────────────────
 
 export interface CardImageProps extends HTMLAttributes<HTMLDivElement> {
+  /** Image URL */
   src: string;
+  /** Specific description of the image — empty string only if purely decorative */
   alt: string;
   /**
    * Aspect ratio of the image container. When omitted, the container falls
@@ -79,24 +85,42 @@ export interface CardImageProps extends HTMLAttributes<HTMLDivElement> {
    * golden-portrait) are valid values.
    */
   aspectRatio?: '1/1' | '4/3' | '3/2' | '16/9' | '4/5';
+  /** Responsive candidates for the image, e.g. `"/a-400.jpg 400w, /a-800.jpg 800w"`. */
+  srcSet?: string;
+  /** Rendered-width hints for `srcSet`, e.g. `"(min-width: 768px) 33vw, 100vw"`. */
+  sizes?: string;
+  /**
+   * Defaults to `'lazy'`. Pass `'eager'` for above-the-fold cards (e.g.
+   * the first row of a collection) so the LCP image isn't deferred.
+   */
+  loading?: 'lazy' | 'eager';
 }
 
 export const CardImage = forwardRef<HTMLDivElement, CardImageProps>(function CardImage(
-  { src, alt, aspectRatio, className, ...props },
+  { src, alt, aspectRatio, srcSet, sizes, loading = 'lazy', className, style, ...props },
   ref,
 ) {
+  // Merge rather than replace: a consumer `style` must not wipe out the
+  // aspect-ratio token set by the typed prop (prop wins, like Grid).
+  const mergedStyle = aspectRatio
+    ? ({ ...style, '--card-image-ratio': aspectRatio } as React.CSSProperties)
+    : style;
+
   return (
     <div
       ref={ref}
       className={['ds-card-image', className].filter(Boolean).join(' ')}
-      style={
-        aspectRatio
-          ? ({ '--card-image-ratio': aspectRatio } as React.CSSProperties)
-          : undefined
-      }
+      style={mergedStyle}
       {...props}
     >
-      <img src={src} alt={alt} className="ds-card-image__img" loading="lazy" />
+      <img
+        src={src}
+        srcSet={srcSet}
+        sizes={sizes}
+        alt={alt}
+        className="ds-card-image__img"
+        loading={loading}
+      />
     </div>
   );
 });

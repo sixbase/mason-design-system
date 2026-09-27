@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { useState } from 'react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { describe, expect, it, vi } from 'vitest';
 import { CartDrawer } from './CartDrawer';
@@ -34,6 +35,24 @@ const defaultProps = {
 };
 
 describe('CartDrawer', () => {
+  it('formats line items in the drawer currency, not USD', () => {
+    render(<CartDrawer {...defaultProps} currency="EUR" />);
+    const dialog = screen.getByRole('dialog');
+    expect(dialog.textContent).toContain('€');
+    expect(dialog.textContent).not.toContain('$');
+  });
+
+  it('formats the subtotal and every line in the drawer locale', () => {
+    render(<CartDrawer {...defaultProps} currency="EUR" locale="de-DE" />);
+    const de = (amount: number) =>
+      new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(amount);
+    const dialog = screen.getByRole('dialog');
+    expect(dialog.textContent).toContain(de(226)); // subtotal
+    expect(dialog.textContent).toContain(de(48)); // Canvas Tote line
+    expect(dialog.textContent).toContain(de(178)); // Linen Shirt × 2 line total
+    expect(dialog.textContent).not.toContain('€48.00'); // no en-US leftovers
+  });
+
   // ── Rendering ──────────────────────────────────────────
 
   it('renders as a dialog when open', () => {
@@ -147,14 +166,39 @@ describe('CartDrawer', () => {
 
   // ── Live region ────────────────────────────────────────
 
-  it('announces item count via aria-live', () => {
+  // The region used to open already filled ("3 items in your cart"), which
+  // screen readers read in browse mode as a hidden repeat of "Your Bag (3)".
+  // It now starts empty and speaks only when the count changes.
+  const liveRegion = () => document.querySelector('.ds-cart-drawer [aria-live="polite"]');
+
+  it('opens with an empty live region', () => {
     render(<CartDrawer {...defaultProps} />);
-    expect(screen.getByText('3 items in your cart')).toBeInTheDocument();
+    expect(liveRegion()).toBeInTheDocument();
+    expect(liveRegion()).toBeEmptyDOMElement();
   });
 
-  it('announces empty cart via aria-live', () => {
-    render(<CartDrawer {...defaultProps} items={[]} subtotal={0} />);
-    expect(screen.getByText('Your cart is empty')).toBeInTheDocument();
+  it('announces item count via aria-live when it changes', () => {
+    const { rerender } = render(<CartDrawer {...defaultProps} />);
+    rerender(
+      <CartDrawer
+        {...defaultProps}
+        items={[{ ...sampleItems[0], quantity: 2 }, sampleItems[1]]}
+        subtotal={27400}
+      />,
+    );
+    expect(liveRegion()).toHaveTextContent('4 items in your cart');
+  });
+
+  it('says "item", not "items", for a single item', () => {
+    const { rerender } = render(<CartDrawer {...defaultProps} />);
+    rerender(<CartDrawer {...defaultProps} items={[sampleItems[0]!]} subtotal={4800} />);
+    expect(liveRegion()).toHaveTextContent('1 item in your cart');
+  });
+
+  it('announces empty cart via aria-live when the last item goes', () => {
+    const { rerender } = render(<CartDrawer {...defaultProps} />);
+    rerender(<CartDrawer {...defaultProps} items={[]} subtotal={0} />);
+    expect(liveRegion()).toHaveTextContent('Your cart is empty');
   });
 
   // ── Children (footer slot) ────────────────────────────
@@ -170,17 +214,95 @@ describe('CartDrawer', () => {
 
   // ── Accessibility ──────────────────────────────────────
 
+  // The drawer portals to <body>, so `container` is empty: scan baseElement.
   it('has no accessibility violations', async () => {
-    const { container } = render(<CartDrawer {...defaultProps} />);
-    const results = await axe(container);
+    const { baseElement } = render(<CartDrawer {...defaultProps} />);
+    const results = await axe(baseElement);
     expect(results).toHaveNoViolations();
   });
 
   it('has no accessibility violations in empty state', async () => {
-    const { container } = render(
+    const { baseElement } = render(
       <CartDrawer {...defaultProps} items={[]} subtotal={0} />,
     );
-    const results = await axe(container);
+    const results = await axe(baseElement);
     expect(results).toHaveNoViolations();
   });
+
+  // Regression (keyboard audit): removing a line unmounted the focused
+  // Remove button and focus fell back to the drawer panel (top of the cart).
+  describe('focus after removing a line', () => {
+    function Stateful() {
+      const [items, setItems] = useState(sampleItems);
+      return (
+        <CartDrawer
+          {...defaultProps}
+          items={items}
+          onRemoveItem={(id) => setItems((prev) => prev.filter((i) => i.id !== id))}
+        />
+      );
+    }
+
+    it('moves focus to the Remove button of the line that takes its place', async () => {
+      const user = userEvent.setup();
+      render(<Stateful />);
+      screen.getByRole('button', { name: 'Remove Canvas Tote from cart' }).focus();
+      await user.keyboard('{Enter}');
+      expect(screen.getByRole('button', { name: 'Remove Linen Shirt from cart' })).toHaveFocus();
+    });
+
+    // With two lines, "the line in its place" and "the first line" are the
+    // same button; a middle line tells them apart.
+    it('keeps focus at the same position when a middle line is removed', async () => {
+      const three = [...sampleItems, { id: 'item-3', name: 'Wool Scarf', price: 3500, quantity: 1 }];
+      function StatefulThree() {
+        const [items, setItems] = useState(three);
+        return (
+          <CartDrawer
+            {...defaultProps}
+            items={items}
+            onRemoveItem={(id) => setItems((prev) => prev.filter((i) => i.id !== id))}
+          />
+        );
+      }
+      const user = userEvent.setup();
+      render(<StatefulThree />);
+      screen.getByRole('button', { name: 'Remove Linen Shirt from cart' }).focus();
+      await user.keyboard('{Enter}');
+      expect(screen.getByRole('button', { name: 'Remove Wool Scarf from cart' })).toHaveFocus();
+    });
+
+    it('moves focus to the empty state once the last line is removed', async () => {
+      const user = userEvent.setup();
+      render(<Stateful />);
+      screen.getByRole('button', { name: 'Remove Linen Shirt from cart' }).focus();
+      await user.keyboard('{Enter}');
+      expect(screen.getByRole('button', { name: 'Remove Canvas Tote from cart' })).toHaveFocus();
+      await user.keyboard('{Enter}');
+      expect(screen.getByRole('button', { name: 'Continue Shopping' })).toHaveFocus();
+    });
+  });
+
+  // Round 5 (shopper journeys): tabbing down a long bag, each line scrolled
+  // in at the bottom edge — under the sticky footer (subtotal, Checkout),
+  // completely hidden. The focused control is lifted clear of the footer.
+  it('scrolls a focused line control out from under the sticky footer', () => {
+    render(<CartDrawer {...defaultProps} />);
+    const dialog = screen.getByRole('dialog');
+    const scroller = dialog.querySelector<HTMLElement>('.ds-drawer__body')!;
+    scroller.style.overflowY = 'auto'; // jsdom has no stylesheet
+    const footer = dialog.querySelector<HTMLElement>('.ds-cart-drawer__footer')!;
+    const rect = (top: number, bottom: number) =>
+      ({ x: 0, y: top, top, bottom, left: 0, right: 100, width: 100, height: bottom - top, toJSON: () => ({}) });
+    vi.spyOn(footer, 'getBoundingClientRect').mockReturnValue(rect(500, 700));
+    const [first, second] = screen.getAllByRole('spinbutton');
+    vi.spyOn(first!, 'getBoundingClientRect').mockReturnValue(rect(300, 342));
+    vi.spyOn(second!, 'getBoundingClientRect').mockReturnValue(rect(520, 562));
+
+    first!.focus(); // clear of the footer: left alone
+    expect(scroller.scrollTop).toBe(0);
+    second!.focus(); // 62px under the footer
+    expect(scroller.scrollTop).toBe(62);
+  });
 });
+

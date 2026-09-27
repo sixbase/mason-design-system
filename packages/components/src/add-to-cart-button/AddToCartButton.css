@@ -14,24 +14,61 @@
   border-color: var(--add-to-cart-success-border);
   color: var(--add-to-cart-success-fg);
   transition: var(--add-to-cart-transition);
-  pointer-events: none;
+  /* No pointer-events: none here (or on Sold Out): a click that fell
+     through moved focus off the button to <main> — see Button.css. The
+     click handler already ignores presses in these states. */
 }
 
-.ds-add-to-cart--success:hover:not(:disabled) {
+/* Pressing "Added!" does nothing, so it shouldn't look pressed */
+.ds-add-to-cart.ds-add-to-cart--success:active:not(:disabled) {
   background-color: var(--add-to-cart-success-bg);
   border-color: var(--add-to-cart-success-border);
+  transform: none;
+}
+
+/* Doubled class: must outrank Button's primary :hover/:active rules, which
+   used to be masked by pointer-events: none on this state. */
+@media (hover: hover) {
+  .ds-add-to-cart.ds-add-to-cart--success:hover:not(:disabled) {
+    background-color: var(--add-to-cart-success-bg);
+    border-color: var(--add-to-cart-success-border);
+  }
 }
 
 /* ─── Sold out state ───────────────────────────────────── */
 .ds-add-to-cart--sold-out {
   opacity: var(--opacity-medium);
   cursor: not-allowed;
-  pointer-events: none;
 }
 
 /* ─── Icon in success state ────────────────────────────── */
+/* The confirmation lands in two beats: the icon springs in (spring is
+   reserved for small UI like this 16px glyph), then the check draws
+   itself along its path. pathLength="1" normalises the stroke so the
+   dash math is independent of the path's real length. */
 .ds-add-to-cart__icon {
   flex-shrink: 0;
+  animation: ds-add-to-cart-pop var(--transition-duration-slow) var(--transition-easing-spring) both;
+}
+
+.ds-add-to-cart__check {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: ds-add-to-cart-draw var(--transition-duration-slower) var(--transition-easing-emphasized)
+    var(--transition-duration-fast) forwards;
+}
+
+@keyframes ds-add-to-cart-pop {
+  from {
+    opacity: 0;
+    transform: scale(var(--scale-pop));
+  }
+}
+
+@keyframes ds-add-to-cart-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 /* ─── Live region — visually hidden ────────────────────── */
@@ -52,5 +89,16 @@
 @media (prefers-reduced-motion: reduce) {
   .ds-add-to-cart--success {
     transition: none;
+  }
+
+  /* Static check, no pop — the global reset would otherwise still run
+     the 0.01ms animation, which is fine, but be explicit. */
+  .ds-add-to-cart__icon {
+    animation: none;
+  }
+
+  .ds-add-to-cart__check {
+    animation: none;
+    stroke-dashoffset: 0;
   }
 }

@@ -27,9 +27,15 @@ Object.defineProperty(globalThis, 'localStorage', {
   configurable: true,
 });
 
+// `region` (all content inside landmarks) is a whole-page rule: a component
+// rendered on its own, or a popover portalled to <body>, can never pass it.
+// It must go through `globalOptions` — configureAxe() returns a NEW axe
+// function, and tests import the default `axe` from jest-axe, so a plain
+// `rules` object here was silently ignored. The global axe-core config is
+// shared by every axe call in the file.
 configureAxe({
-  rules: {
-    region: { enabled: false },
+  globalOptions: {
+    rules: [{ id: 'region', enabled: false }],
   },
 });
 

@@ -24,6 +24,38 @@ describe('Input', () => {
     });
   });
 
+  describe('size', () => {
+    it('defaults to md', () => {
+      render(<Input aria-label="Email" />);
+      expect(screen.getByRole('textbox')).toHaveClass('ds-input-field--md');
+    });
+
+    it.each(['sm', 'lg'] as const)('applies the %s size class to the field', (size) => {
+      render(<Input aria-label="Email" size={size} />);
+      expect(screen.getByRole('textbox')).toHaveClass(`ds-input-field--${size}`);
+    });
+  });
+
+  describe('ref and className', () => {
+    it('forwards the ref and className to the <input> itself', () => {
+      const ref = { current: null as HTMLInputElement | null };
+      render(<Input label="Email" ref={ref} className="extra" />);
+      const input = screen.getByRole('textbox');
+      expect(ref.current).toBe(input);
+      expect(input).toHaveClass('ds-input-field', 'extra');
+    });
+  });
+
+  describe('trailingAdornment', () => {
+    it('renders the trailing adornment hidden from assistive tech', () => {
+      const { container } = render(<Input label="Price" trailingAdornment="USD" />);
+      const adornment = container.querySelector('.ds-input-adornment--trailing');
+      expect(adornment).toHaveTextContent('USD');
+      expect(adornment).toHaveAttribute('aria-hidden', 'true');
+      expect(container.querySelector('.ds-input-wrapper')).toHaveClass('ds-input-wrapper--trailing');
+    });
+  });
+
   describe('hint', () => {
     it('renders hint text', () => {
       render(<Input hint="We never share your email" />);
@@ -92,9 +124,10 @@ describe('Input', () => {
   });
 
   describe('adornments', () => {
-    it('renders leading adornment', () => {
+    it('renders leading adornment, hidden from assistive tech', () => {
       render(<Input leadingAdornment={<span data-testid="icon" />} />);
       expect(screen.getByTestId('icon')).toBeInTheDocument();
+      expect(screen.getByTestId('icon').parentElement).toHaveAttribute('aria-hidden', 'true');
     });
 
     it('renders trailing adornment', () => {
@@ -115,6 +148,30 @@ describe('Input', () => {
         </div>,
       );
       expect(await axe(container)).toHaveNoViolations();
+    });
+  });
+
+
+  // ─── Regressions (QA break pass) ─────────────────────────
+
+  describe('regressions', () => {
+    it('aria-describedby never points at the hidden hint while an error shows', () => {
+      render(<Input label="Email" hint="We never share it" error="Required" />);
+      const ids = (screen.getByRole('textbox').getAttribute('aria-describedby') ?? '').split(/\s+/).filter(Boolean);
+      expect(ids.length).toBeGreaterThan(0);
+      for (const id of ids) expect(document.getElementById(id), `dangling id ${id}`).not.toBeNull();
+    });
+
+    it('merges a consumer aria-describedby instead of dropping the error link', () => {
+      render(
+        <>
+          <span id="extra">Extra</span>
+          <Input label="Email" error="Required" aria-describedby="extra" />
+        </>,
+      );
+      const ids = screen.getByRole('textbox').getAttribute('aria-describedby') ?? '';
+      expect(ids).toContain('extra');
+      expect(ids).toMatch(/-error/);
     });
   });
 });

@@ -7,8 +7,14 @@
 }
 
 .ds-checkbox-root--disabled {
-  opacity: var(--opacity-medium);
   cursor: not-allowed;
+}
+
+/* Disabled fades the control and its label, not the hint: a hint often says
+   how to enable it ("Add a phone number to enable"), and at 0.382 opacity it
+   fell to 1.75:1. Same as Input, Select and Textarea, which fade only the field. */
+.ds-checkbox-root--disabled .ds-checkbox-field {
+  opacity: var(--opacity-medium);
 }
 
 /* ─── Field row (box + label side-by-side) ───────────────── */
@@ -16,11 +22,12 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-2);
+  min-width: 0;
 }
 
 /* ─── Checkbox box ───────────────────────────────────────── */
 .ds-checkbox-box {
-  --checkbox-border-color: var(--color-border);
+  --checkbox-border-color: var(--color-border-control);
   --checkbox-bg:           var(--color-background-surface);
   --checkbox-radius:       var(--radius-sm);
 
@@ -29,8 +36,11 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  /* The box is a <button>: without this the UA's 6px inline padding
+     outgrows the 13px sm box and it renders 14×13, not square. */
+  padding: 0;
   background-color: var(--checkbox-bg);
-  border: 1.5px solid var(--checkbox-border-color);
+  border: var(--border-width-md) solid var(--checkbox-border-color);
   border-radius: var(--checkbox-radius);
   outline: none;
   cursor: pointer;
@@ -52,45 +62,54 @@
   height: var(--size-checkbox-md);
 }
 
-/* ─── Touch hit area ─────────────────────────────────────── */
-/* Visual size stays 13px/21px; the interactive zone expands to
-   --size-hit-area (44px). Guarded by pointer: coarse because
-   stacked checkboxes (filter panels) sit closer than 44px and
-   their zones would overlap for precise pointers. */
+/* ─── Hit area ───────────────────────────────────────────── */
+/* Visual size stays 13px/21px. Every pointer gets at least the WCAG 2.5.8
+   (AA) 24px target: the 13px box alone failed it in CollectionFilters,
+   where the first option sits too close to the accordion trigger for the
+   spacing exception. 24px zones fit stacked rows (≥3.6px to spare,
+   measured). --spacing-6 = 24px, as for the Carousel dots (token gap: no
+   --size-target-min). */
+.ds-checkbox-box::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: max(100%, var(--spacing-6));
+  height: max(100%, var(--spacing-6));
+}
+
+/* Touch: --size-hit-area (44px). Coarse only because stacked checkboxes
+   (filter panels) sit closer than 44px and the zones would overlap for
+   precise pointers. */
 @media (pointer: coarse) {
   .ds-checkbox-box::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
     width: max(100%, var(--size-hit-area));
     height: max(100%, var(--size-hit-area));
   }
 }
 
-/* Hover */
-.ds-checkbox-box:hover:not([data-disabled]) {
-  border-color: var(--color-border-strong);
-}
-
-/* Active (pressed) */
-.ds-checkbox-box:active:not([data-disabled]) {
-  border-color: var(--color-primary);
-  transform: scale(var(--scale-press));
-}
-
-.ds-checkbox-box[data-state="checked"]:active:not([data-disabled]),
-.ds-checkbox-box[data-state="indeterminate"]:active:not([data-disabled]) {
-  background-color: var(--color-primary-active);
-  border-color: var(--color-primary-active);
-  transform: scale(var(--scale-press));
+/* Hover — only where a real pointer hovers: touch screens (iOS Safari)
+   keep :hover after a tap, so a box just unticked kept a darker edge that
+   reads as a state. */
+@media (hover: hover) {
+  /* Not on an error box: this rule outranks .ds-checkbox-box--error, so
+     hovering swapped the red edge for grey. Input/Textarea/Select keep
+     their error edge on hover too. */
+  .ds-checkbox-box:hover:not([data-disabled]):not(.ds-checkbox-box--error) {
+    border-color: var(--color-foreground-subtle); /* darker than the resting border-control edge */
+  }
 }
 
 /* Focus */
 .ds-checkbox-box:focus-visible {
   border-color: var(--color-primary);
   box-shadow: var(--focus-ring);
+  /* Invisible normally. Forced-colors mode (Windows High Contrast) drops
+     box-shadow and repaints outlines in a system color, so this becomes
+     the focus indicator there instead of nothing. */
+  outline: var(--border-width-lg) solid transparent;
+  outline-offset: var(--border-width-lg);
 }
 
 /* Checked / indeterminate */
@@ -100,10 +119,30 @@
   border-color: var(--color-primary);
 }
 
-.ds-checkbox-box[data-state="checked"]:hover:not([data-disabled]),
-.ds-checkbox-box[data-state="indeterminate"]:hover:not([data-disabled]) {
-  background-color: var(--color-primary-hover);
-  border-color: var(--color-primary-hover);
+@media (hover: hover) {
+  .ds-checkbox-box[data-state="checked"]:hover:not([data-disabled]),
+  .ds-checkbox-box[data-state="indeterminate"]:hover:not([data-disabled]) {
+    background-color: var(--color-primary-hover);
+    border-color: var(--color-primary-hover);
+  }
+}
+
+/* Active (pressed). A mouse press is also a hover, so these come after
+   both hover rules and match their weight (0-4-0) — the pressed edge used
+   to lose to the hover edge. An error box keeps its red edge, like Select. */
+.ds-checkbox-box:active:not([data-disabled]) {
+  transform: scale(var(--scale-press));
+}
+
+.ds-checkbox-box:active:not([data-disabled]):not(.ds-checkbox-box--error) {
+  border-color: var(--color-primary);
+}
+
+.ds-checkbox-box[data-state="checked"]:active:not([data-disabled]),
+.ds-checkbox-box[data-state="indeterminate"]:active:not([data-disabled]) {
+  background-color: var(--color-primary-active);
+  border-color: var(--color-primary-active);
+  transform: scale(var(--scale-press));
 }
 
 /* Error state */
@@ -113,6 +152,12 @@
 
 .ds-checkbox-box--error:focus-visible {
   box-shadow: var(--focus-ring-error);
+}
+
+/* An unchecked error box keeps its red edge while focused (the generic
+   focus rule turned it dark) — Input, Select and Textarea keep theirs. */
+.ds-checkbox-box--error[data-state="unchecked"]:focus-visible {
+  border-color: var(--color-destructive);
 }
 
 /* Disabled */
@@ -128,26 +173,53 @@
   color: var(--color-primary-foreground);
 }
 
-/* Indeterminate — replace checkmark with a dash */
-.ds-checkbox-indicator[data-state="indeterminate"] svg {
-  display: none;
+/* The tick draws itself when the indicator mounts (Radix mounts it on
+   check). pathLength="1" normalises the dash math. The dash is a plain
+   fade-in — it has no direction to draw along. */
+.ds-checkbox-icon--check path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: ds-checkbox-draw var(--transition-duration-slow) var(--transition-easing-emphasized) forwards;
 }
 
-.ds-checkbox-indicator[data-state="indeterminate"]::before {
-  content: '';
-  display: block;
-  width: var(--spacing-2);
-  height: 1.75px;
-  background-color: var(--color-primary-foreground);
-  border-radius: 1px;
+.ds-checkbox-icon--dash {
+  animation: ds-checkbox-fade var(--transition-duration-normal) var(--transition-easing-emphasized);
+}
+
+@keyframes ds-checkbox-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes ds-checkbox-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-checkbox-icon--check path {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}
+
+/* One glyph per state: check when checked, dash when indeterminate */
+.ds-checkbox-indicator[data-state="checked"] .ds-checkbox-icon--dash,
+.ds-checkbox-indicator[data-state="indeterminate"] .ds-checkbox-icon--check {
+  display: none;
 }
 
 /* ─── Label ──────────────────────────────────────────────── */
 .ds-checkbox-label {
+  min-width: 0;
   font-size: var(--font-size-sm);
   color: var(--color-foreground);
   line-height: var(--line-height-snug);
+  overflow-wrap: anywhere;
   cursor: pointer;
+  -webkit-user-select: none; /* Safari ignores the unprefixed property */
   user-select: none;
   text-box-trim: both;
   text-box-edge: cap alphabetic;
@@ -169,12 +241,31 @@
   font-size: var(--font-size-xs);
   color: var(--color-foreground-secondary);
   line-height: var(--line-height-normal);
-  padding-left: calc(var(--size-checkbox-md) + var(--spacing-2));
+  padding-inline-start: calc(var(--size-checkbox-md) + var(--spacing-2));
+  overflow-wrap: anywhere;
 }
 
 .ds-checkbox-error {
   font-size: var(--font-size-xs);
   color: var(--color-destructive);
   line-height: var(--line-height-normal);
-  padding-left: calc(var(--size-checkbox-md) + var(--spacing-2));
+  padding-inline-start: calc(var(--size-checkbox-md) + var(--spacing-2));
+  overflow-wrap: anywhere;
+}
+
+/* sm box is 13px, not 21px — indent the hint/error to its label, not md's */
+.ds-checkbox-root--sm .ds-checkbox-hint,
+.ds-checkbox-root--sm .ds-checkbox-error {
+  padding-inline-start: calc(var(--size-checkbox-sm) + var(--spacing-2));
+}
+
+/* ─── Print ─────────────────────────────────────────────── */
+/* The checked/indeterminate box is a fill with a white mark: printed as an empty box. Browsers drop backgrounds when printing by default ("economy"), so
+   the state vanished on paper; exact keeps these fills. (-webkit- for
+   Safari < 15.4 and Chrome < 136, which only read the prefixed form.) */
+@media print {
+  .ds-checkbox-root {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }

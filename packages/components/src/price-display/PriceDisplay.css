@@ -43,6 +43,9 @@
 .ds-price-display--lg .ds-text { font-size: var(--font-size-lg); }
 
 /* ─── Screen-reader only ─────────────────────────────── */
+/* Global class, also declared in CartDrawer.css and PredictiveSearch.css so
+   each component works when its CSS is loaded alone. Keep all three
+   copies identical — they share one selector, so any drift merges. */
 .ds-sr-only {
   position: absolute;
   width: 1px;
@@ -50,7 +53,8 @@
   padding: 0;
   margin: -1px;
   overflow: hidden;
+  clip: rect(0, 0, 0, 0); /* legacy fallback */
   clip-path: inset(50%);
   white-space: nowrap;
-  border-width: 0;
+  border: 0;
 }

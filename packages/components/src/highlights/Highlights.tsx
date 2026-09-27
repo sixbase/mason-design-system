@@ -1,6 +1,10 @@
 import { forwardRef } from 'react';
 import type { HTMLAttributes, ReactNode } from 'react';
+import { Text } from '../typography/Typography';
 import './Highlights.css';
+
+/** Titles already ending in terminal punctuation don't get another period. */
+const TERMINAL_PUNCTUATION = /[.!?…]$/u;
 
 export interface HighlightsProps extends HTMLAttributes<HTMLDivElement> {}
 
@@ -26,7 +30,10 @@ Highlights.displayName = 'Highlights';
 export interface HighlightProps extends HTMLAttributes<HTMLDivElement> {
   /** Image node for the 4:5 card. Omit for an empty light placeholder. */
   image?: ReactNode;
-  /** Short lead phrase — rendered slightly heavier with a trailing period. */
+  /**
+   * Short lead phrase — rendered slightly heavier. A trailing period is added
+   * unless the title already ends in `.`, `!`, `?` or `…`.
+   */
   title?: string;
   /** Supporting copy — rendered lighter and muted, inline after the title. */
   description?: string;
@@ -48,10 +55,17 @@ export const Highlight = forwardRef<HTMLDivElement, HighlightProps>(
           {image ?? <div className="ds-highlights__placeholder" aria-hidden="true" />}
         </div>
         {(title || description) && (
-          <p className="ds-highlights__text">
-            {title && <span className="ds-highlights__title">{title}</span>}{' '}
+          <Text size="lg" className="ds-highlights__text">
+            {title && (
+              <span className="ds-highlights__title">
+                {title}
+                {/* In markup, not CSS ::after — a CSS period can't see that
+                    "Cast with intent." already ends in one (rendered ".."). */}
+                {!TERMINAL_PUNCTUATION.test(title.trimEnd()) && '.'}
+              </span>
+            )}{' '}
             {description && <span className="ds-highlights__desc">{description}</span>}
-          </p>
+          </Text>
         )}
       </div>
     );

@@ -24,6 +24,7 @@
 | Create a two-column layout | Layout grid + split modifier | `.ds-layout .ds-layout--golden` |
 | Space between major sections | Section rhythm | `.ds-section` |
 | Make a column sticky (PDP, Cart) | Sticky utility | `.ds-layout__sticky` |
+| Put a full-width row (a section title) inside a split | Span utility | `.ds-layout__span-all` |
 | Show a product card grid (2→3→4 cols) | Product grid component | `.ds-grid` (NOT the layout grid) |
 | Wrap non-page content in a container | General container | `.ds-container` (NOT `.ds-page-container`) |
 
@@ -73,9 +74,9 @@ Is one side clearly the "main" content?
 | Max-width | 1200px | 1200px | 1200px |
 | Page margins | `--spacing-4` (16px) | `--spacing-8` (32px) | `--spacing-12` (48px) |
 
-Applied to `<main>` in `FullWidthLayout.astro`.
+Applied to `<main>` — in the workbench by `PageChrome` (`apps/workbench/src/specimens/pages/PageChrome.tsx`).
 
-**Why 1200px instead of `--size-content-xl` (1280px)?** 1200px divides more cleanly into 12 columns and provides slightly more generous margins at large viewports. `--size-content-xl` (1280px) remains at its current value for full-width shell elements (Header, Footer). **For page content max-width, always use `.ds-page-container` (which references `--size-container`, 1200px), never `--size-content-xl`.** See `06-decisions-log.md` "Layout Grid System" and "Container Width Clarification."
+**Why 1200px instead of `--size-content-xl` (1280px)?** 1200px divides more cleanly into 12 columns and provides slightly more generous margins at large viewports. Header and Footer inner widths also use `--size-container` (since 2026-07-01); `--size-content-xl` (1280px) is now only the Container component's `xl` size. **For page content max-width, always use `.ds-page-container` (which references `--size-container`, 1200px), never `--size-content-xl`.** See `06-decisions-log.md` "Layout Grid System" and "Container Width Clarification."
 
 ### Storefront divergence: 1300px visible on wide screens
 
@@ -83,8 +84,9 @@ The Shopify storefront (`sixbase/mason-storefront`) deliberately runs a **wider 
 
 **This is a documented divergence, not drift** (owner decision, 2026-07-01):
 - The storefront's 1300px frame is **storefront-side and stays there** — do not port it back into the design system.
-- The design system's own container (`--size-container`, 1200px) governs the React library and the docs site.
+- The design system's own container (`--size-container`, 1200px) governs the React library and the workbench. (The DS AnnouncementBar is the one exception — it uses the wide frame; open item in `12`.)
 - Both widths are tokens, so neither side hardcodes a number. If either value changes, update this section and the decisions log.
+- **Large-desktop tier (≥1600px):** the storefront widens the frame again to `--size-container-ultra` (1680px) with a 64px gutter (`assets/layout.css`), because the 1396px frame left 200px+ of dead margin. Copy sections cap their own measure, so the extra width goes to media and grids, never to longer lines of text. The token was first hand-added in the theme; it now lives in `tokens.json` (2026-09-27) so a token resync keeps it.
 
 ---
 
@@ -93,10 +95,12 @@ The Shopify storefront (`sixbase/mason-storefront`) deliberately runs a **wider 
 ```css
 .ds-layout {
   display: grid;
-  grid-template-columns: repeat(12, 1fr);
+  grid-template-columns: repeat(12, minmax(0, 1fr));   /* minmax(0, …) so a long word can't widen a track */
   gap: var(--spacing-6);   /* 24px universal gutter */
 }
 ```
+
+Two-column splits repeat per row (odd/even children), so a third and fourth child start a new row with the same split. The positional rules are wrapped in `:where()` to stay at class specificity — that is how the mobile stack rule wins without `!important`. A `.ds-layout__span-all` child spans the row and doesn't shift the odd/even count.
 
 ### Gutters
 
@@ -179,7 +183,8 @@ For PDP and Cart layouts where one column stays visible during scroll:
 ```css
 .ds-layout__sticky {
   position: sticky;
-  top: var(--spacing-6);   /* 24px from viewport top */
+  /* clears a sticky Header, which publishes --sticky-header-height on <html> */
+  top: calc(var(--sticky-header-height, var(--spacing-0)) + var(--spacing-6));
   align-self: start;
 }
 ```
@@ -192,7 +197,7 @@ Becomes `position: static` below 768px (when layout collapses to single column).
 
 | Breakpoint | Width | Grid Behavior |
 |------------|-------|---------------|
-| Mobile | < 768px | **All layouts collapse to single column.** Items stack vertically. |
+| Mobile | < 768px | **All layouts collapse to a single track** (`minmax(0, 1fr)`, not 12 — twelve empty tracks keep eleven gutters and overflow a narrow parent). Items stack vertically. |
 | Tablet | 768–1023px | Gutters step to 16px. Quarters → 2-up. Thirds → 2-up. |
 | Desktop | ≥ 1024px | Full 12-column grid. 24px gutters. |
 
@@ -215,6 +220,8 @@ Becomes `position: static` below 768px (when layout collapses to single column).
 Use the decision tree above. Default to Golden (7+5) for any two-column layout.
 
 ### Step 2: Write the markup
+
+In React, use the components that output these classes — `PageContainer`, `Section`, `LayoutGrid variant="golden" section`, `LayoutGridItem sticky | spanAll` (from `@ds/components`). Raw classes work the same in Liquid or plain HTML.
 
 ```html
 <!-- Single column section -->
@@ -256,10 +263,11 @@ Use the decision tree above. Default to Golden (7+5) for any two-column layout.
 
 ## Pages Using the Grid
 
+Workbench store pages. Home, Product and Cart use the layout grid; Collection, Search, Sale, Account and Terms use `.ds-grid` or their own page-level columns.
+
 | Page | Splits Used | Section Rhythm | Sticky |
 |------|-------------|----------------|--------|
-| Homepage | Full (single-column sections) | `.ds-section` on hero, featured, features, newsletter | No |
-| Collection | Full + `.ds-grid` for product cards | Continuous flow (no section breaks) | No |
+| Homepage | Full (single-column sections) | `.ds-section` on the major sections | No |
 | Product Detail | Golden (7+5) for gallery+details, Full for lifestyle/features | `.ds-section` on each major area | Yes — details column |
 | Cart | Golden (7+5) for items+summary | `.ds-section` on header | Yes — order summary |
 
@@ -286,7 +294,7 @@ Use the decision tree above. Default to Golden (7+5) for any two-column layout.
 packages/components/src/layout-grid/layout-grid.css
 ```
 
-Imported in `packages/components/src/index.ts` — bundled with component styles. Available to any page that imports `@ds/components/styles`.
+Imported by `LayoutGrid.tsx`, so it is in `@ds/components/styles` (everything) and in `@ds/components/styles/layout-grid.css` on its own. Media queries use the breakpoint token values written as raw widths with a `/* @breakpoint-md = 768px */` comment — custom properties can't be used in `@media`, and `check-css` rejects any other width.
 
 ---
 

@@ -57,10 +57,22 @@ export const Slider = forwardRef<ElementRef<typeof RadixSlider.Root>, SliderProp
     },
     ref,
   ) {
-    const [internalValues, setInternalValues] = useState<number[]>(
-      value ?? defaultValue ?? [min],
+    // A scale with no width (every product the same price: min === max, or
+    // inverted data: min > max) made Radix divide by zero — the thumb got
+    // `left: calc(0px + (% * nan))` and fell off the track. Nothing can be
+    // chosen on it, so it renders disabled with the thumb at the start.
+    const degenerate = !(max > min);
+    const isDisabled = disabled || degenerate;
+    // Clamp what we show and announce — controlled and default values alike.
+    // Radix pins an out-of-range thumb to the track end but still reported
+    // aria-valuenow="500" with max 200, and showValue printed 500 beside a
+    // thumb sitting at 200.
+    const clampValue = (v: number) => Math.min(degenerate ? min : max, Math.max(min, v));
+    const [internalValues, setInternalValues] = useState<number[]>(() =>
+      (value ?? defaultValue ?? [min]).map(clampValue),
     );
-    const values = value ?? internalValues;
+    const controlledValues = value?.map(clampValue);
+    const values = controlledValues ?? internalValues;
     const isRange = values.length > 1;
 
     const handleValueChange = (next: number[]) => {
@@ -80,7 +92,7 @@ export const Slider = forwardRef<ElementRef<typeof RadixSlider.Root>, SliderProp
 
     const classes = [
       'ds-slider',
-      disabled && 'ds-slider--disabled',
+      isDisabled && 'ds-slider--disabled',
       className,
     ]
       .filter(Boolean)
@@ -91,7 +103,9 @@ export const Slider = forwardRef<ElementRef<typeof RadixSlider.Root>, SliderProp
         {(label || showValue) && (
           <div className="ds-slider__header">
             {label && (
-              <Text as="span" size="sm" className="ds-slider__label">
+              // Medium, like every other field label (Input, Select,
+              // Textarea, RadioGroup, VariantSelector) — it was regular 400.
+              <Text as="span" size="sm" weight="medium" className="ds-slider__label">
                 {label}
               </Text>
             )}
@@ -107,11 +121,11 @@ export const Slider = forwardRef<ElementRef<typeof RadixSlider.Root>, SliderProp
           ref={ref}
           className="ds-slider__root"
           min={min}
-          max={max}
-          value={value}
-          defaultValue={defaultValue}
+          max={degenerate ? min + 1 : max}
+          value={controlledValues}
+          defaultValue={defaultValue?.map(clampValue)}
           onValueChange={handleValueChange}
-          disabled={disabled}
+          disabled={isDisabled}
           {...rootProps}
         >
           <RadixSlider.Track className="ds-slider__track">

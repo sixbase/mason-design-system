@@ -26,6 +26,20 @@ describe('PriceDisplay', () => {
     expect(srOnly).toHaveTextContent('Original price:');
   });
 
+  // Read aloud, a sale used to be "$38.00 Original price: $48.00" — the
+  // first number had no role. It now reads as a pair.
+  it('reads a sale as "Sale price … Original price …"', () => {
+    const { container } = render(<PriceDisplay price="$38.00" comparePrice="$48.00" />);
+    expect(container.firstChild).toHaveTextContent(
+      /^Sale price:\s*\$38\.00\s*Original price:\s*\$48\.00$/,
+    );
+  });
+
+  it('adds no sale label to a regular price', () => {
+    const { container } = render(<PriceDisplay price="$48.00" emphasis="sale" />);
+    expect(container.firstChild).toHaveTextContent(/^\$48\.00$/);
+  });
+
   it('applies default size class', () => {
     const { container } = render(<PriceDisplay price="$48.00" />);
     expect(container.querySelector('.ds-price-display--md')).toBeInTheDocument();

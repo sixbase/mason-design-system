@@ -3,7 +3,9 @@
    ========================================================================== */
 
 .ds-progress-bar {
-  --progress-bar-track-color: var(--color-background-subtle);
+  /* Border color, same as the Slider track. background-subtle was ~1.1:1
+     against the page in both themes, so a 0% bar showed no bar at all. */
+  --progress-bar-track-color: var(--color-border);
   --progress-bar-fill-color: var(--color-primary);
   --progress-bar-radius: var(--radius-full);
   --progress-bar-height: var(--spacing-2);
@@ -45,7 +47,11 @@
   border: none;
   border-radius: var(--progress-bar-radius);
   overflow: hidden;
-  background: none;
+  /* Firefox paints the unfilled track with the element's own background
+     (::-moz-progress-bar is only the fill) — `background: none` left the
+     track invisible there. WebKit's ::-webkit-progress-bar sits on top
+     with the same color, so this is a no-op in Chrome/Safari. */
+  background-color: var(--progress-bar-track-color);
 }
 
 /* WebKit track background */
@@ -124,6 +130,35 @@
 }
 
 /* ==========================================================================
+   Forced colors (Windows High Contrast)
+   Author backgrounds are forced to Canvas, so track and fill both vanish
+   and the bar carries no information. Outline the track and paint the
+   fill in the system Highlight color. Vendor pseudo-elements stay in
+   separate rules — one unknown selector drops the whole list.
+   ========================================================================== */
+
+@media (forced-colors: active) {
+  .ds-progress-bar__track {
+    outline: var(--border-width-sm) solid CanvasText;
+  }
+
+  .ds-progress-bar__track::-webkit-progress-value {
+    forced-color-adjust: none;
+    background-color: Highlight;
+  }
+
+  .ds-progress-bar__track::-moz-progress-bar {
+    forced-color-adjust: none;
+    background-color: Highlight;
+  }
+
+  .ds-progress-bar__indeterminate-fill {
+    forced-color-adjust: none;
+    background-color: Highlight;
+  }
+}
+
+/* ==========================================================================
    Reduced motion
    ========================================================================== */
 
@@ -142,5 +177,35 @@
     animation: none;
     left: 50%;
     transform: translateX(-50%);
+  }
+}
+
+/* Same when the page switches motion off (<html data-motion="off">). The
+   global reset only reaches elements and ::before/::after, so the fill
+   pseudo-elements still animated their width; and it only shortens the
+   sweep to one instant pass, which left the indeterminate fill parked at
+   the start edge — a 38% bar that read as "38% done" instead of "busy". */
+:root[data-motion="off"] .ds-progress-bar__track::-webkit-progress-value {
+  transition: none;
+}
+
+:root[data-motion="off"] .ds-progress-bar__track::-moz-progress-bar {
+  transition: none;
+}
+
+:root[data-motion="off"] .ds-progress-bar__indeterminate-fill {
+  animation: none;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* ─── Print ─────────────────────────────────────────────── */
+/* The fill IS the value: every bar printed empty. Browsers drop backgrounds when printing by default ("economy"), so
+   the state vanished on paper; exact keeps these fills. (-webkit- for
+   Safari < 15.4 and Chrome < 136, which only read the prefixed form.) */
+@media print {
+  .ds-progress-bar {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }

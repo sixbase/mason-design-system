@@ -2,6 +2,7 @@ import { forwardRef, useState, useCallback } from 'react';
 import type { HTMLAttributes, ReactNode } from 'react';
 import { Text } from '../typography/Typography';
 import { X } from '../icon';
+import { safeHref } from '../internal/safe-url';
 import './AnnouncementBar.css';
 
 // ─── Types ────────────────────────────────────────────────
@@ -32,6 +33,8 @@ export const AnnouncementBar = forwardRef<HTMLElement, AnnouncementBarProps>(
     ref,
   ) {
     const [dismissed, setDismissed] = useState(false);
+    // A javascript:/data: link from store data renders as plain text (internal/safe-url)
+    const linkHref = safeHref(href);
 
     const handleDismiss = useCallback(() => {
       setDismissed(true);
@@ -40,7 +43,11 @@ export const AnnouncementBar = forwardRef<HTMLElement, AnnouncementBarProps>(
 
     if (dismissed) return null;
 
-    const classes = ['ds-announcement-bar', className]
+    const classes = [
+      'ds-announcement-bar',
+      dismissible && 'ds-announcement-bar--dismissible',
+      className,
+    ]
       .filter(Boolean)
       .join(' ');
 
@@ -59,8 +66,8 @@ export const AnnouncementBar = forwardRef<HTMLElement, AnnouncementBarProps>(
         {...props}
       >
         <div className="ds-announcement-bar__inner">
-          {href ? (
-            <a href={href} className="ds-announcement-bar__link">
+          {linkHref ? (
+            <a href={linkHref} className="ds-announcement-bar__link">
               {message}
             </a>
           ) : (

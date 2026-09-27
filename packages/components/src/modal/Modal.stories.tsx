@@ -1,7 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useState } from 'react';
 import { Button } from '../button';
+import { Divider } from '../divider';
 import { Input } from '../input';
+import { Popover, PopoverArrow, PopoverContent, PopoverTrigger } from '../popover';
+import { Text } from '../typography/Typography';
 import {
   Modal,
   ModalBody,
@@ -18,6 +21,17 @@ const meta: Meta<typeof Modal> = {
   title: 'Components/Modal',
   component: Modal,
   tags: ['autodocs'],
+  parameters: {
+    docs: {
+      // Every state opens on load (so it can be seen without a click); in
+      // their own frames they don't cover the docs page or each other.
+      story: { inline: false, iframeHeight: 560 },
+      description: {
+        component:
+          'A window that opens over the page and must be closed before you carry on — confirmations, forms, size guides.',
+      },
+    },
+  },
 };
 export default meta;
 
@@ -25,9 +39,9 @@ type Story = StoryObj<typeof Modal>;
 
 export const Default: Story = {
   render: () => (
-    <Modal>
+    <Modal defaultOpen>
       <ModalTrigger asChild>
-        <Button>Open Modal</Button>
+        <Button>Edit profile</Button>
       </ModalTrigger>
       <ModalContent>
         <ModalHeader>
@@ -38,8 +52,8 @@ export const Default: Story = {
         </ModalHeader>
         <ModalBody>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}>
-            <Input label="Name" defaultValue="Jane Doe" />
-            <Input label="Email" defaultValue="jane@example.com" />
+            <Input label="Name" defaultValue="Maya Chen" />
+            <Input label="Email" type="email" defaultValue="maya@example.com" />
           </div>
         </ModalBody>
         <ModalFooter>
@@ -55,15 +69,15 @@ export const Default: Story = {
 
 export const Small: Story = {
   render: () => (
-    <Modal>
+    <Modal defaultOpen>
       <ModalTrigger asChild>
-        <Button variant="destructive">Delete item</Button>
+        <Button variant="destructive">Delete address</Button>
       </ModalTrigger>
       <ModalContent size="sm">
         <ModalHeader>
-          <ModalTitle>Delete this item?</ModalTitle>
+          <ModalTitle>Delete this address?</ModalTitle>
           <ModalDescription>
-            This action cannot be undone. The item will be permanently removed.
+            12 Alder Street, Portland will be removed from your saved addresses.
           </ModalDescription>
         </ModalHeader>
         <ModalFooter>
@@ -79,7 +93,7 @@ export const Small: Story = {
 
 export const Large: Story = {
   render: () => (
-    <Modal>
+    <Modal defaultOpen>
       <ModalTrigger asChild>
         <Button>View Details</Button>
       </ModalTrigger>
@@ -92,16 +106,11 @@ export const Large: Story = {
         </ModalHeader>
         <ModalBody>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)' }}>
-            <p style={{ margin: 0 }}>
-              Organic Cotton T-Shirt × 2 — $58.00
-            </p>
-            <p style={{ margin: 0 }}>
-              Merino Wool Beanie × 1 — $32.00
-            </p>
-            <hr style={{ border: 'none', borderTop: '1px solid var(--color-border)', margin: 'var(--spacing-1) 0' }} />
-            <p style={{ margin: 0, fontWeight: 'var(--font-weight-semibold)' }}>
-              Total: $90.00
-            </p>
+            <Text>Minimal Canvas Tote × 1 — $48.00</Text>
+            <Text>Handmade Ceramic Mug × 2 — $64.00</Text>
+            <Text>Merino Wool Beanie × 1 — $32.00</Text>
+            <Divider />
+            <Text weight="semibold">Total: $144.00</Text>
           </div>
         </ModalBody>
         <ModalFooter>
@@ -116,7 +125,7 @@ export const Large: Story = {
 
 export const FullScreenOnMobile: Story = {
   render: () => (
-    <Modal>
+    <Modal defaultOpen>
       <ModalTrigger asChild>
         <Button>Open full-screen modal</Button>
       </ModalTrigger>
@@ -145,33 +154,94 @@ export const FullScreenOnMobile: Story = {
   ),
 };
 
+/** Opened and closed by the page (`open` + `onOpenChange`) instead of its own trigger. */
 export const Controlled: Story = {
+  name: 'Opened by the page',
   render: function ControlledStory() {
-    const [open, setOpen] = useState(false);
+    const [open, setOpen] = useState(true);
     return (
       <>
-        <Button onClick={() => setOpen(true)}>Controlled open</Button>
+        <Button onClick={() => setOpen(true)}>Open newsletter sign-up</Button>
         <Modal open={open} onOpenChange={setOpen}>
           <ModalContent>
             <ModalHeader>
-              <ModalTitle>Controlled modal</ModalTitle>
+              <ModalTitle>Get 10% off your first order</ModalTitle>
               <ModalDescription>
-                This modal's open state is managed externally.
+                New arrivals and restocks, once a month. No spam.
               </ModalDescription>
             </ModalHeader>
             <ModalBody>
-              <p style={{ margin: 0 }}>
-                Open state: <code>{String(open)}</code>
-              </p>
+              <Input label="Email" type="email" placeholder="you@example.com" />
             </ModalBody>
             <ModalFooter>
               <Button variant="secondary" onClick={() => setOpen(false)}>
-                Close programmatically
+                No thanks
               </Button>
+              <Button onClick={() => setOpen(false)}>Subscribe</Button>
             </ModalFooter>
           </ModalContent>
         </Modal>
       </>
     );
   },
+};
+
+export const LongContent: Story = {
+  name: 'Long content (body scrolls)',
+  render: () => (
+    <Modal defaultOpen>
+      <ModalTrigger asChild>
+        <Button>Read the returns policy</Button>
+      </ModalTrigger>
+      <ModalContent>
+        <ModalHeader>
+          <ModalTitle>Returns policy</ModalTitle>
+          <ModalDescription>Header and footer stay put; only the body scrolls.</ModalDescription>
+        </ModalHeader>
+        <ModalBody>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)' }}>
+            {Array.from({ length: 12 }, (_, i) => (
+              <Text key={i}>
+                {i + 1}. Items can be returned within 30 days of delivery, unworn and with
+                their tags attached. Refunds go back to the original payment method.
+              </Text>
+            ))}
+          </div>
+        </ModalBody>
+        <ModalFooter>
+          <ModalClose asChild>
+            <Button>Got it</Button>
+          </ModalClose>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  ),
+};
+
+export const WithPopover: Story = {
+  name: 'Popover inside a modal (stacking)',
+  render: () => (
+    <Modal defaultOpen>
+      <ModalTrigger asChild>
+        <Button>Open modal</Button>
+      </ModalTrigger>
+      <ModalContent size="sm">
+        <ModalHeader>
+          <ModalTitle>Choose a size</ModalTitle>
+          <ModalDescription>The popover must open above the modal, not behind it.</ModalDescription>
+        </ModalHeader>
+        <ModalBody>
+          <Popover defaultOpen>
+            <PopoverTrigger asChild>
+              <Button variant="secondary">Size guide</Button>
+            </PopoverTrigger>
+            <PopoverContent>
+              <PopoverArrow />
+              Between sizes? Size up for a relaxed fit.
+            </PopoverContent>
+          </Popover>
+        </ModalBody>
+      </ModalContent>
+    </Modal>
+  ),
 };

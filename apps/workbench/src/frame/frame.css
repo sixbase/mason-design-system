@@ -1,0 +1,103 @@
+/* ─── Workbench frame ──────────────────────────────────────
+   The document inside each device preview. Only the frame's own chrome
+   (state labels, spacing between states) is styled here — never the
+   components. Components render exactly as they ship. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: var(--font-family-body);
+  color: var(--color-foreground);
+  background-color: var(--color-background);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* ─── State list ─────────────────────────────────────────── */
+.wb-story + .wb-story {
+  border-top: var(--border-width-sm) solid var(--color-border);
+}
+
+.wb-story__label {
+  padding: var(--spacing-3) var(--spacing-4) 0;
+  font-family: var(--font-family-code);
+  font-size: var(--font-size-tight-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--color-foreground-secondary);
+}
+
+.wb-story__canvas--padded {
+  padding: var(--spacing-4);
+}
+
+/* `safe center`: a specimen wider than the frame overflows to the right —
+   the whole frame then scrolls sideways, which is itself the signal that
+   something doesn't fit this width — instead of being cut off both sides. */
+.wb-story__canvas--centered {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: safe center;
+  gap: var(--spacing-4);
+  min-height: calc(var(--spacing-24) * 1.5);
+  padding: var(--spacing-6) var(--spacing-4);
+}
+
+.wb-story__canvas--fullscreen {
+  padding: var(--spacing-2) 0 0;
+}
+
+/* Store pages and foundation sheets fill the frame */
+.wb-frame--page {
+  min-height: 100vh;
+}
+
+.wb-frame--foundation {
+  padding: var(--spacing-4);
+}
+
+/* ─── Crash + empty ──────────────────────────────────────── */
+.wb-crash {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  padding: var(--spacing-3) var(--spacing-4);
+  border: var(--border-width-sm) solid var(--color-destructive);
+  border-radius: var(--radius-md);
+  background: var(--color-destructive-subtle);
+  color: var(--color-destructive);
+  font-size: var(--font-size-tight-sm);
+  overflow-wrap: anywhere;
+}
+
+.wb-frame:focus {
+  outline: none;
+}
+
+.wb-empty {
+  margin: 0;
+  padding: var(--spacing-8) var(--spacing-4);
+  text-align: center;
+  color: var(--color-foreground-secondary);
+  font-size: var(--font-size-tight-sm);
+}
+
+/* ─── Outline mode: every box visible, to check alignment ── */
+html.wb-outlines body * {
+  outline: var(--border-width-sm) solid color-mix(in srgb, var(--color-info) 55%, transparent);
+  outline-offset: calc(var(--border-width-sm) * -1);
+}
+
+html.wb-outlines body .wb-story__label,
+html.wb-outlines body .wb-story__label * {
+  outline: none;
+}

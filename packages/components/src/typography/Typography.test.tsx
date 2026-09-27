@@ -1,7 +1,17 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { render, screen } from '@testing-library/react';
 import { axe } from 'jest-axe';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Caption, Code, Heading, Text } from './Typography';
+
+/** Loads a component stylesheet into jsdom (no @media support) for computed-style checks. */
+function injectCss(file: string): () => void {
+  const style = document.createElement('style');
+  style.textContent = readFileSync(resolve(__dirname, file), 'utf8');
+  document.head.appendChild(style);
+  return () => style.remove();
+}
 
 describe('Heading', () => {
   it('renders an h2 by default', () => {
@@ -130,6 +140,52 @@ describe('Code', () => {
     const el = screen.getByText('pnpm build');
     expect(el.tagName).toBe('CODE');
     expect(el).toHaveClass('ds-code');
+  });
+});
+
+describe('Typography styles', () => {
+  let removeCss: () => void;
+  beforeEach(() => {
+    removeCss = injectCss('Typography.css');
+  });
+  afterEach(() => removeCss());
+
+  // Regression: long unbroken strings overflowed narrow columns at 320px.
+  it('wraps long unbroken words in Text and Heading', () => {
+    render(
+      <div>
+        <Heading as="h1">Pneumonoultramicroscopicsilicovolcanoconiosis</Heading>
+        <Text>https://example.com/products/aramid-fiber-case?variant=1234567890</Text>
+      </div>,
+    );
+    expect(getComputedStyle(screen.getByRole('heading')).overflowWrap).toBe('break-word');
+    expect(getComputedStyle(screen.getByText(/example\.com/)).overflowWrap).toBe('break-word');
+  });
+
+  // Regression: `ds-text--normal` / `ds-heading--semibold` had no rules,
+  // so weight="normal" couldn't un-bold a <strong> or bold context.
+  // A computed check can't prove the heading default has a rule — base
+  // .ds-heading is already semibold, so it passed with the rule missing.
+  // Every modifier is checked in source; Text's reset of a bold <strong>,
+  // which the UA stylesheet makes observable, is checked computed.
+  it('gives every weight value a rule, including the defaults', () => {
+    const css = readFileSync(resolve(__dirname, 'Typography.css'), 'utf8');
+    for (const weight of ['normal', 'medium', 'semibold', 'bold']) {
+      for (const block of ['heading', 'text']) {
+        expect(css).toMatch(
+          new RegExp(`\\.ds-${block}--${weight}\\s*\\{\\s*font-weight: var\\(--font-weight-${weight}\\);`),
+        );
+      }
+    }
+    render(<Text as="strong" weight="normal">Unbolded</Text>);
+    expect(getComputedStyle(screen.getByText('Unbolded')).fontWeight).toBe('var(--font-weight-normal)');
+  });
+
+  // Regression: overflow is ignored on plain inline boxes, so
+  // <Text as="span" truncate> never truncated.
+  it('gives inline truncated Text an atomic box so the ellipsis applies', () => {
+    render(<Text as="span" truncate>Very long inline label</Text>);
+    expect(getComputedStyle(screen.getByText('Very long inline label')).display).toBe('inline-block');
   });
 });
 

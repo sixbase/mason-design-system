@@ -1,0 +1,141 @@
+/* ─── @ds/motion — CSS half of the motion layer ───────────
+   Import once, after @ds/tokens/css:  import '@ds/motion/css';
+
+   Everything here runs without JavaScript. The JS half (reveal, flip,
+   flyToCart) handles below-the-fold and interaction-driven motion; this
+   file handles the two things that must happen at first paint or during
+   navigation, before any script could load on a slow connection. */
+
+/* ─── 1. Hero entrance ────────────────────────────────────
+   data-motion="hero" on a wrapper: its children rise in on first paint,
+   one φ-stagger apart. CSS-only on purpose — the hero is above the fold,
+   and waiting for a script to reveal it would push back Largest
+   Contentful Paint on every cellular visit.
+
+   The fades start at --opacity-ghost (9%), never 0. Chrome does not
+   count an element painted at opacity 0 as contentful, so a hero headline
+   fading in from 0 was excluded from LCP until its animation finished:
+   measured on a throttled phone, LCP moved from 0.62s to 1.25s. From 9%
+   the headline is an LCP candidate on the very first frame, and the
+   difference is invisible — the emphasized curve passes 50% in ~100ms.
+
+   Fill mode is `backwards`, not `both`: it holds the start state during
+   the stagger delay, then lets go. A forwards fill keeps every hero child
+   under a finished animation for the life of the page — still listed in
+   getAnimations(), still ahead of author rules in the cascade, with hover
+   and state styles depending on the engine re-resolving the implicit end
+   keyframe. `screen` keeps it out of print: a page printed mid-entrance
+   prints fully opaque. */
+@keyframes ds-motion-rise {
+  from {
+    opacity: var(--opacity-ghost);
+    transform: translateY(var(--motion-distance-lg));
+  }
+}
+
+@keyframes ds-motion-settle {
+  from {
+    opacity: var(--opacity-ghost);
+    transform: scale(calc(2 - var(--scale-enter)));
+  }
+}
+
+@media screen and (prefers-reduced-motion: no-preference) {
+  :root:not([data-motion='off']) [data-motion='hero'] > * {
+    animation: ds-motion-rise var(--transition-duration-slowest) var(--transition-easing-emphasized) backwards;
+  }
+
+  :root:not([data-motion='off']) [data-motion='hero'] > :nth-child(2) {
+    animation-delay: var(--motion-stagger-loose);
+  }
+
+  :root:not([data-motion='off']) [data-motion='hero'] > :nth-child(3) {
+    animation-delay: calc(var(--motion-stagger-loose) * 2);
+  }
+
+  :root:not([data-motion='off']) [data-motion='hero'] > :nth-child(n + 4) {
+    animation-delay: calc(var(--motion-stagger-loose) * 3);
+  }
+
+  /* A hero image frame settles in behind the text */
+  :root:not([data-motion='off']) [data-motion='hero-media'] {
+    animation: ds-motion-settle var(--transition-duration-slowest) var(--transition-easing-emphasized) backwards;
+  }
+}
+
+/* ─── 2. Page transitions ─────────────────────────────────
+   Native cross-document View Transitions: zero JavaScript, zero bytes,
+   works on a plain multi-page site (Astro static, Shopify Liquid).
+   Browsers without support simply navigate as normal.
+
+   The outgoing page fades quickly; the incoming page rises a few pixels
+   as it fades in. Elements that should stay put across pages (a site
+   header, a docs sidebar) opt out with data-motion-persist — each value
+   must be unique on the page, or the browser skips the transition.
+
+   Every animation below is scoped to the `ds-page` transition type, so
+   it only styles the navigations this file opts into. A store's own
+   same-document transition (document.startViewTransition for a theme
+   toggle, a framework router) keeps the browser default instead of
+   inheriting a page rise. Where types aren't supported the selectors
+   drop out and navigation gets the browser's plain cross-fade. */
+@media screen and (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+    types: ds-page;
+  }
+}
+
+@keyframes ds-motion-page-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes ds-motion-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--motion-distance-sm));
+  }
+}
+
+:root:active-view-transition-type(ds-page)::view-transition-old(root) {
+  animation: ds-motion-page-out var(--transition-duration-normal) var(--transition-easing-emphasized-in) both;
+}
+
+:root:active-view-transition-type(ds-page)::view-transition-new(root) {
+  animation: ds-motion-page-in var(--transition-duration-slower) var(--transition-easing-emphasized) both;
+}
+
+[data-motion-persist='header'] {
+  view-transition-name: ds-persist-header;
+}
+
+[data-motion-persist='nav'] {
+  view-transition-name: ds-persist-nav;
+}
+
+/* Persisted regions don't animate at all — they are the fixed frame
+   the new page arrives inside. */
+:root:active-view-transition-type(ds-page)::view-transition-group(ds-persist-header),
+:root:active-view-transition-type(ds-page)::view-transition-group(ds-persist-nav),
+:root:active-view-transition-type(ds-page)::view-transition-new(ds-persist-header),
+:root:active-view-transition-type(ds-page)::view-transition-new(ds-persist-nav) {
+  animation: none;
+}
+
+:root:active-view-transition-type(ds-page)::view-transition-old(ds-persist-header),
+:root:active-view-transition-type(ds-page)::view-transition-old(ds-persist-nav) {
+  display: none;
+}
+
+/* A page that opted out of motion (<html data-motion="off">, e.g. a
+   "pause animations" setting) navigates with a plain cut — no rise, and
+   not the browser's default cross-fade either. The attribute must be on
+   the NEW page's <html> before its first render (server-side, or an
+   inline script in <head>): that document styles the transition. */
+:root:active-view-transition-type(ds-page)[data-motion='off']::view-transition-group(*),
+:root:active-view-transition-type(ds-page)[data-motion='off']::view-transition-old(*),
+:root:active-view-transition-type(ds-page)[data-motion='off']::view-transition-new(*) {
+  animation: none;
+}

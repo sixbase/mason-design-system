@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { render, screen } from '@testing-library/react';
 import { axe } from 'jest-axe';
 import { describe, expect, it } from 'vitest';
@@ -55,6 +57,55 @@ describe('LayoutGrid', () => {
   it('passes through html attributes', () => {
     render(<LayoutGrid data-testid="layout">Content</LayoutGrid>);
     expect(screen.getByTestId('layout')).toBeInTheDocument();
+  });
+});
+
+/** Loads a component stylesheet into jsdom (no @media support) for computed-style checks. */
+function injectCss(file: string): () => void {
+  const style = document.createElement('style');
+  style.textContent = readFileSync(resolve(__dirname, file), 'utf8');
+  document.head.appendChild(style);
+  return () => style.remove();
+}
+
+describe('LayoutGrid styles', () => {
+  const css = readFileSync(resolve(__dirname, 'layout-grid.css'), 'utf8');
+
+  // Regression: splits only styled the first two children; a third
+  // child fell back to a single 1/12 column.
+  it('repeats two-column splits for every row of children', () => {
+    const removeCss = injectCss('layout-grid.css');
+    render(
+      <LayoutGrid variant="golden">
+        <div>One</div>
+        <div>Two</div>
+        <div>Three</div>
+        <div>Four</div>
+      </LayoutGrid>,
+    );
+    const span = (text: string) => getComputedStyle(screen.getByText(text)).getPropertyValue('grid-column');
+    expect(span('Three')).toBe('span 7');
+    expect(span('Four')).toBe('span 5');
+    removeCss();
+  });
+
+  // Regression: stacked mobile layouts kept 12 tracks and eleven 24px
+  // gutters (264px), overflowing any parent narrower than that. jsdom
+  // ignores @media, so this checks the stylesheet source.
+  it('collapses to a single track below 768px', () => {
+    const mobile = css.slice(css.indexOf('@media (max-width: 767px)'));
+    expect(mobile).toMatch(/\.ds-layout\s*\{\s*grid-template-columns:\s*minmax\(0, 1fr\);/);
+  });
+
+  // Regression: the tablet 2-up rules (`> *`) came after
+  // .ds-layout__span-all at the same weight and halved a span-all title
+  // row in thirds/quarters layouts. jsdom ignores @media: source check.
+  it('keeps span-all rows full width in the tablet 2-up collapse', () => {
+    const start = css.indexOf('@media (min-width: 768px) and (max-width: 1023px)');
+    const tablet = css.slice(start, css.indexOf('@media (max-width: 767px)'));
+    expect(start).toBeGreaterThan(-1);
+    expect(tablet).toMatch(/\.ds-layout--quarters > :not\(\.ds-layout__span-all\)\s*\{\s*grid-column: span 6;/);
+    expect(tablet).toMatch(/\.ds-layout--thirds > :not\(\.ds-layout__span-all\)\s*\{\s*grid-column: span 6;/);
   });
 });
 

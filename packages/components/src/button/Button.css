@@ -21,10 +21,11 @@
   font-family: var(--button-font-family);
   font-weight: var(--button-font-weight);
   border-radius: var(--button-radius);
-  border: 1px solid transparent;
+  border: var(--border-width-sm) solid transparent;
   cursor: pointer;
   transition: var(--button-transition);
   text-decoration: none;
+  -webkit-user-select: none; /* Safari ignores the unprefixed property */
   user-select: none;
   outline: none;
   position: relative;
@@ -38,9 +39,14 @@
   text-box-edge: cap alphabetic;
 }
 
-/* Focus ring — visible for keyboard, hidden for mouse */
+/* Focus ring — visible for keyboard, hidden for mouse.
+   The transparent outline paints nothing normally, but forced-colors
+   mode (Windows High Contrast) drops box-shadow and repaints outlines
+   in a system color — without it the focus ring vanishes there. */
 .ds-button:focus-visible {
   box-shadow: var(--focus-ring);
+  outline: var(--border-width-lg) solid transparent;
+  outline-offset: var(--border-width-lg);
 }
 .ds-button--primary:focus-visible {
   box-shadow: var(--shadow-sm), var(--focus-ring);
@@ -73,12 +79,14 @@
   box-shadow: var(--shadow-sm);
 }
 
-.ds-button--primary:hover:not(:disabled) {
-  background-color: var(--color-primary-hover);
-  border-color: var(--color-primary-hover);
+@media (hover: hover) {
+  .ds-button--primary:hover:not(:disabled):not([aria-disabled='true']) {
+    background-color: var(--color-primary-hover);
+    border-color: var(--color-primary-hover);
+  }
 }
 
-.ds-button--primary:active:not(:disabled) {
+.ds-button--primary:active:not(:disabled):not([aria-disabled='true']) {
   background-color: var(--color-primary-active);
   border-color: var(--color-primary-active);
   transform: scale(var(--button-press-scale));
@@ -91,12 +99,14 @@
   border-color: var(--color-border);
 }
 
-.ds-button--secondary:hover:not(:disabled) {
-  background-color: var(--color-secondary-hover);
-  border-color: transparent;
+@media (hover: hover) {
+  .ds-button--secondary:hover:not(:disabled):not([aria-disabled='true']) {
+    background-color: var(--color-secondary-hover);
+    border-color: transparent;
+  }
 }
 
-.ds-button--secondary:active:not(:disabled) {
+.ds-button--secondary:active:not(:disabled):not([aria-disabled='true']) {
   background-color: var(--color-secondary-active);
   transform: scale(var(--button-press-scale));
 }
@@ -108,11 +118,13 @@
   border-color: transparent;
 }
 
-.ds-button--ghost:hover:not(:disabled) {
-  background-color: var(--color-secondary);
+@media (hover: hover) {
+  .ds-button--ghost:hover:not(:disabled):not([aria-disabled='true']) {
+    background-color: var(--color-secondary);
+  }
 }
 
-.ds-button--ghost:active:not(:disabled) {
+.ds-button--ghost:active:not(:disabled):not([aria-disabled='true']) {
   background-color: var(--color-secondary-active);
   transform: scale(var(--button-press-scale));
 }
@@ -124,12 +136,14 @@
   border-color: var(--color-destructive);
 }
 
-.ds-button--destructive:hover:not(:disabled) {
-  background-color: var(--color-destructive-hover);
-  border-color: var(--color-destructive-hover);
+@media (hover: hover) {
+  .ds-button--destructive:hover:not(:disabled):not([aria-disabled='true']) {
+    background-color: var(--color-destructive-hover);
+    border-color: var(--color-destructive-hover);
+  }
 }
 
-.ds-button--destructive:active:not(:disabled) {
+.ds-button--destructive:active:not(:disabled):not([aria-disabled='true']) {
   background-color: var(--color-destructive-active);
   border-color: var(--color-destructive-active);
   transform: scale(var(--button-press-scale));
@@ -140,13 +154,37 @@
 .ds-button[aria-disabled="true"] {
   opacity: var(--opacity-medium);
   cursor: not-allowed;
+}
+
+/* Clicks pass through only where nothing else stops them: a native disabled
+   button, and a disabled asChild link (a middle-click would still open it).
+   A focusable aria-disabled <button> (loading, Sold Out) keeps its clicks —
+   the click handler swallows them. With pointer-events: none a second click
+   on a busy Add to Bag fell through to the page, and the browser moved
+   focus to the nearest focusable ancestor (<main tabindex="-1"> on every
+   store page): keyboard and screen-reader users lost their place, and the
+   cart drawer, opened a moment later, handed focus back to <main>. */
+.ds-button:disabled,
+.ds-button[aria-disabled="true"]:not(button) {
   pointer-events: none;
 }
 
+/* An aria-disabled button stays focusable (Sold Out, a Next with nowhere to
+   go), so its focus ring must still show. Opacity fades the ring with the
+   button: at --opacity-medium it measured 1.9:1 against the page (the ring
+   needs 3:1). --opacity-high reached only 3.2:1 on the page and 2.9:1 on
+   subtle surfaces, so the focused button returns to full strength. The
+   label ("Sold Out") and the announced "dimmed" still say it does nothing.
+   This also covers a loading button: it keeps keyboard focus through the
+   whole add-to-cart cycle (Button.tsx) and is aria-disabled while busy. */
+.ds-button[aria-disabled="true"]:focus-visible {
+  opacity: var(--opacity-full);
+}
+
 /* ─── Loading state ─────────────────────────────────────── */
-.ds-button--loading {
+/* Doubled class: outranks the aria-disabled not-allowed cursor above. */
+.ds-button.ds-button--loading {
   cursor: wait;
-  pointer-events: none;
 }
 
 .ds-button__spinner {
@@ -161,6 +199,16 @@
 
 @keyframes ds-button-spin {
   to { transform: rotate(360deg); }
+}
+
+/* Forced colors paints the transparent gap in the text colour, so the
+   spinner became a closed ring that doesn't visibly turn. Button system
+   colours are kept: ring in ButtonText, gap in ButtonFace. */
+@media (forced-colors: active) {
+  .ds-button__spinner {
+    border-color: ButtonText;
+    border-right-color: ButtonFace;
+  }
 }
 
 /* ─── Icon-only variant ─────────────────────────────────── */
@@ -199,7 +247,7 @@
   .ds-button {
     transform: translateY(0.05em);
   }
-  .ds-button:active:not(:disabled) {
+  .ds-button:active:not(:disabled):not([aria-disabled='true']) {
     transform: translateY(0.05em) scale(var(--button-press-scale));
   }
 }
@@ -212,7 +260,27 @@
     animation: none;
     opacity: var(--opacity-high);
   }
-  .ds-button:active:not(:disabled) {
+  .ds-button:active:not(:disabled):not([aria-disabled='true']) {
     transform: none;
+  }
+
+  /* Keep the fallback nudge while pressed — `transform: none`
+     above would drop it and the whole button would jump 0.05em
+     on every press. Condition mirrors the fallback block above. */
+  @supports not (text-box-trim: both) {
+    .ds-button:active:not(:disabled):not([aria-disabled='true']) {
+      transform: translateY(0.05em);
+    }
+  }
+}
+
+/* ─── Print ─────────────────────────────────────────────── */
+/* Primary/destructive labels are light text on a fill: "Add to Bag" and "Checkout" printed white-on-white. Browsers drop backgrounds when printing by default ("economy"), so
+   the state vanished on paper; exact keeps these fills. (-webkit- for
+   Safari < 15.4 and Chrome < 136, which only read the prefixed form.) */
+@media print {
+  .ds-button {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }

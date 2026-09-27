@@ -2,9 +2,18 @@
 .ds-color-picker {
   --color-picker-size: var(--spacing-8);
   --color-picker-border-width: var(--spacing-phi-1);
+  /* Hairline on every swatch so white/cream swatches don't dissolve into a
+     light page (and black/navy into a dark one). The edge is what shows the
+     swatch is a control, so it needs 3:1 (WCAG 1.4.11): a 14.6% foreground
+     tint measured 1.36:1 light / 1.54:1 dark — a cream swatch was 1.06:1
+     against the page. The control border is ≥3:1 in every mode. */
+  --color-picker-edge: var(--color-border-control);
 
   display: flex;
+  /* Wrap onto new rows — ten md swatches are ~390px, wider than a phone. */
+  flex-wrap: wrap;
   gap: var(--spacing-2);
+  min-width: 0;
 }
 
 /* ─── Sizes ─────────────────────────────────────────────── */
@@ -19,15 +28,24 @@
 }
 
 /* ─── Swatch button ─────────────────────────────────────── */
+/* The selection ring is an outline OFFSET from the swatch, with the page
+   showing through the gap. It used to be a border painted on the swatch's
+   own edge in --color-foreground — on a black swatch the selected state was
+   indistinguishable from the unselected one. */
 .ds-color-picker__btn {
+  --color-picker-ring: transparent;
+
   position: relative;
   width: var(--color-picker-size);
   height: var(--color-picker-size);
   border-radius: var(--radius-full);
-  border: var(--color-picker-border-width) solid transparent;
+  border: none;
+  box-shadow: inset 0 0 0 var(--border-width-sm) var(--color-picker-edge);
+  outline: var(--color-picker-border-width) solid var(--color-picker-ring);
+  outline-offset: var(--color-picker-border-width);
   cursor: pointer;
   padding: 0;
-  transition: border-color var(--transition-fast);
+  transition: outline-color var(--transition-fast);
 }
 
 /* ─── Touch hit area ────────────────────────────────────── */
@@ -45,25 +63,80 @@
     width: max(100%, var(--size-hit-area));
     height: max(100%, var(--size-hit-area));
   }
+
+  /* Wrapped rows: open the row gap enough that the 44px zones of one row
+     don't cover the swatches of the next. */
+  .ds-color-picker {
+    row-gap: max(var(--spacing-2), calc(var(--size-hit-area) - var(--color-picker-size)));
+  }
 }
 
-.ds-color-picker__btn:hover {
-  border-color: var(--color-border-strong);
+/* Hover ring only where a real pointer hovers: touch screens (iOS Safari)
+   keep :hover after a tap, and a ring is this control's selection mark. */
+@media (hover: hover) {
+  .ds-color-picker__btn:hover:not(.ds-color-picker__btn--active) {
+    --color-picker-ring: var(--color-border-strong);
+  }
 }
 
 .ds-color-picker__btn--active {
-  border-color: var(--color-foreground);
+  --color-picker-ring: var(--color-foreground);
 }
 
 /* ─── Focus ─────────────────────────────────────────────── */
 .ds-color-picker__btn:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
+  box-shadow:
+    inset 0 0 0 var(--border-width-sm) var(--color-picker-edge),
+    var(--focus-ring);
+  /* Restated so the global *:focus-visible outline (same specificity)
+     can never replace the selection ring, whatever the load order. */
+  outline: var(--color-picker-border-width) solid var(--color-picker-ring);
+  outline-offset: var(--color-picker-border-width);
+}
+
+/* The selected swatch's ring (outline, 2–4px out) paints over the standard
+   focus ring (box-shadow, same 2–4px band), so focusing the selected swatch
+   changed nothing on screen — and focus always lands on the selected one.
+   Keep the page-coloured gap, then draw the focus ring just outside the
+   selection ring (4–6px). */
+.ds-color-picker__btn--active:focus-visible {
+  box-shadow:
+    inset 0 0 0 var(--border-width-sm) var(--color-picker-edge),
+    0 0 0 var(--color-picker-border-width) var(--color-background),
+    0 0 0 calc(var(--color-picker-border-width) * 2 + var(--border-width-lg)) var(--color-focus-ring);
+}
+
+/* ─── Forced colors (Windows High Contrast) ─────────────── */
+/* Forced colors repaint every background to the canvas colour, which
+   turned all swatches into identical blank circles. The colour IS the
+   content here, so opt out, and draw ring + focus with system colours. */
+@media (forced-colors: active) {
+  .ds-color-picker__btn {
+    forced-color-adjust: none;
+    --color-picker-edge: CanvasText;
+  }
+
+  .ds-color-picker__btn--active {
+    --color-picker-ring: Highlight;
+  }
+
+  @media (hover: hover) {
+    .ds-color-picker__btn:hover:not(.ds-color-picker__btn--active) {
+      --color-picker-ring: CanvasText;
+    }
+  }
+
+  .ds-color-picker__btn:focus-visible {
+    box-shadow:
+      inset 0 0 0 var(--border-width-sm) CanvasText,
+      0 0 0 calc(var(--color-picker-border-width) * 3) CanvasText;
+  }
 }
 
 /* ─── Selected-label layout (showLabel) ─────────────────── */
 .ds-color-picker-root {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--spacing-3);
   font-family: var(--font-family-body);
@@ -73,4 +146,16 @@
   font-size: var(--font-size-sm);
   color: var(--color-foreground-secondary);
   line-height: var(--line-height-snug);
+  overflow-wrap: anywhere;
+}
+
+/* ─── Print ─────────────────────────────────────────────── */
+/* Each swatch IS its fill: every colour printed as an empty circle. Browsers drop backgrounds when printing by default ("economy"), so
+   the state vanished on paper; exact keeps these fills. (-webkit- for
+   Safari < 15.4 and Chrome < 136, which only read the prefixed form.) */
+@media print {
+  .ds-color-picker {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }

@@ -1,7 +1,6 @@
 /* ─── Component tokens ─────────────────────────────── */
 .ds-icon {
   --icon-size: var(--size-icon-md);
-  --icon-stroke-width: 1.5;
 }
 
 /* ─── Base styles ──────────────────────────────────── */

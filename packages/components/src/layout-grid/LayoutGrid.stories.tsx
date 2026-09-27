@@ -1,11 +1,20 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { Text } from '../typography/Typography';
 import { LayoutGrid, LayoutGridItem, PageContainer, Section } from './LayoutGrid';
 
 const meta: Meta<typeof LayoutGrid> = {
   title: 'Layout/LayoutGrid',
   component: LayoutGrid,
   tags: ['autodocs'],
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component:
+          'The page’s 12-column structure and its fixed splits (7 + 5, halves, thirds…). Pages are built on these.',
+      },
+    },
+  },
 };
 
 export default meta;
@@ -15,17 +24,14 @@ const Block = ({ label, tall = false }: { label: string; tall?: boolean }) => (
   <div
     style={{
       background: 'var(--color-background-subtle)',
-      border: '1px dashed var(--color-border)',
+      border: 'var(--border-width-sm) dashed var(--color-border)',
       borderRadius: 'var(--radius-md)',
       padding: 'var(--spacing-6)',
       minHeight: tall ? 'var(--spacing-phi-89)' : undefined,
       textAlign: 'center',
-      fontFamily: 'var(--font-family-body)',
-      fontSize: 'var(--font-size-sm)',
-      color: 'var(--color-foreground-secondary)',
     }}
   >
-    {label}
+    <Text as="span" size="sm" muted>{label}</Text>
   </div>
 );
 
@@ -190,7 +196,7 @@ export const SectionRhythm: Story = {
 };
 
 export const SpanAll: Story = {
-  name: 'Span-all utility',
+  name: 'One item across the full width',
   render: () => (
     <PageContainer>
       <LayoutGrid variant="thirds">

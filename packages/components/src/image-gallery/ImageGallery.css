@@ -1,5 +1,9 @@
 /* ─── ImageGallery ───────────────────────────────────────── */
 .ds-image-gallery {
+  /* Component tokens */
+  --gallery-thumb-size: var(--spacing-16);
+  --gallery-thumb-border: var(--spacing-phi-1);
+
   display: flex;
   flex-direction: column;
   gap: var(--spacing-2);
@@ -32,12 +36,18 @@
   border-radius: var(--radius-lg);
   overflow: hidden;
   background-color: var(--color-background-subtle);
-  touch-action: pan-y;
-  cursor: grab;
+  /* Horizontal swipes are ours; vertical scroll AND pinch-zoom stay with the
+     browser — bare pan-y blocked pinch-zooming into the product photo. */
+  touch-action: pan-y pinch-zoom;
   flex-shrink: 0;
 }
 
-.ds-image-gallery__main:active {
+/* Grab affordance only when there is another image to swipe to. */
+.ds-image-gallery__main--swipeable {
+  cursor: grab;
+}
+
+.ds-image-gallery__main--swipeable:active {
   cursor: grabbing;
 }
 
@@ -46,6 +56,25 @@
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+/* The newly selected image settles in: a fade with a slight scale-down,
+   like a photo being set on the table. The keyed remount triggers it. */
+.ds-image-gallery__img--enter {
+  animation: ds-image-gallery-enter var(--transition-duration-slower) var(--transition-easing-emphasized) both;
+}
+
+@keyframes ds-image-gallery-enter {
+  from {
+    opacity: 0;
+    transform: scale(calc(2 - var(--scale-press)));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-image-gallery__img--enter {
+    animation: none;
+  }
 }
 
 /* ─── Thumbnails ─────────────────────────────────────────── */
@@ -62,16 +91,29 @@
     flex-direction: column;
     overflow-x: visible;
     overflow-y: auto;
+    /* Size containment: the column's content height no longer feeds the row
+       height. Without it, a tall column (≈9+ thumbs) set the flex line's
+       height and stretch overrode the main image's aspect ratio. Now the
+       main image sets the height, the column stretches to it and scrolls.
+       Containment zeroes the intrinsic width too, so it is set explicitly:
+       one thumb (border-box, below). */
+    contain: size;
+    width: var(--gallery-thumb-size);
+    flex-shrink: 0;
   }
 }
 
 /* ─── Thumbnail button ───────────────────────────────────── */
 .ds-image-gallery__thumb {
+  position: relative;
   flex-shrink: 0;
-  width: var(--spacing-16);
-  height: var(--spacing-16);
+  /* The border sits inside the thumb size whatever the page's own
+     box-sizing, so the thumbs-left column above is exactly one thumb wide. */
+  box-sizing: border-box;
+  width: var(--gallery-thumb-size);
+  height: var(--gallery-thumb-size);
   padding: 0;
-  border: var(--spacing-phi-1) solid transparent;
+  border: var(--gallery-thumb-border) solid transparent;
   border-radius: var(--radius-md);
   overflow: hidden;
   background: transparent;
@@ -83,9 +125,39 @@
   border-color: var(--color-foreground);
 }
 
+/* The strip is a scroll container, so an outer ring is clipped on every
+   side. Inset ring (lesson: focus-ring-inset-overflow) — drawn on an overlay
+   because an inset box-shadow paints beneath the thumbnail image. */
 .ds-image-gallery__thumb:focus-visible {
   outline: none;
-  box-shadow: var(--focus-ring);
+}
+
+.ds-image-gallery__thumb:focus-visible::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: var(--focus-ring-inset);
+  pointer-events: none;
+}
+
+/* Forced colors paints every border — transparent ones included — in the
+   text colour, so all thumbs looked selected, and the box-shadow focus ring
+   vanished. System colours are kept: idle = canvas (invisible), selected =
+   Highlight, focus = an inset CanvasText outline on the overlay. */
+@media (forced-colors: active) {
+  .ds-image-gallery__thumb {
+    border-color: Canvas;
+  }
+
+  .ds-image-gallery__thumb--active {
+    border-color: Highlight;
+  }
+
+  .ds-image-gallery__thumb:focus-visible::after {
+    outline: var(--border-width-lg) solid CanvasText;
+    outline-offset: calc(-1 * var(--border-width-lg));
+  }
 }
 
 .ds-image-gallery__thumb-img {

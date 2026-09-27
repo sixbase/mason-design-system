@@ -11,7 +11,7 @@ const meta: Meta<typeof Pagination> = {
     docs: {
       description: {
         component:
-          'Navigation for multi-page content. SPA mode uses buttons with `onPageChange`. SSR/Shopify mode uses anchor tags with `baseUrl` for crawlable pagination.',
+          'Page numbers under a long list, with previous and next.',
       },
     },
   },
@@ -48,8 +48,6 @@ function InteractivePagination(props: {
   );
 }
 
-// ─── Default ──────────────────────────────────────────────
-
 export const Default: Story = {
   args: {
     currentPage: 5,
@@ -67,32 +65,6 @@ export const Default: Story = {
   ),
 };
 
-// ─── Few pages (no ellipsis) ──────────────────────────────
-
-export const FewPages: Story = {
-  render: () => <InteractivePagination totalPages={5} />,
-};
-
-// ─── Many pages ──────────────────────────────────────────
-
-export const ManyPages: Story = {
-  render: () => <InteractivePagination totalPages={100} initialPage={50} />,
-};
-
-// ─── First page ──────────────────────────────────────────
-
-export const FirstPage: Story = {
-  render: () => <InteractivePagination totalPages={20} initialPage={1} />,
-};
-
-// ─── Last page ───────────────────────────────────────────
-
-export const LastPage: Story = {
-  render: () => <InteractivePagination totalPages={20} initialPage={20} />,
-};
-
-// ─── Sizes ───────────────────────────────────────────────
-
 export const Sizes: Story = {
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-6)' }}>
@@ -102,9 +74,9 @@ export const Sizes: Story = {
   ),
 };
 
-// ─── SSR mode (links) ────────────────────────────────────
-
+/** With `baseUrl` each page is a real link (…?page=4) that search engines can follow — how the Shopify theme uses it. */
 export const SSRMode: Story = {
+  name: 'As links (Shopify collection pages)',
   render: () => (
     <Pagination
       currentPage={3}
@@ -115,15 +87,28 @@ export const SSRMode: Story = {
   ),
 };
 
-// ─── Two pages ───────────────────────────────────────────
+export const FirstPage: Story = {
+  render: () => <InteractivePagination totalPages={20} initialPage={1} />,
+};
+
+export const LastPage: Story = {
+  render: () => <InteractivePagination totalPages={20} initialPage={20} />,
+};
+
+export const FewPages: Story = {
+  render: () => <InteractivePagination totalPages={5} />,
+};
 
 export const TwoPages: Story = {
   render: () => <InteractivePagination totalPages={2} />,
 };
 
-// ─── Wider sibling count ─────────────────────────────────
+export const ManyPages: Story = {
+  render: () => <InteractivePagination totalPages={100} initialPage={50} />,
+};
 
 export const WiderSiblingCount: Story = {
+  name: 'Two pages shown either side',
   render: () => (
     <InteractivePagination totalPages={20} siblingCount={2} initialPage={10} />
   ),

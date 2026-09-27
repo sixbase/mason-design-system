@@ -5,6 +5,14 @@ const meta: Meta<typeof StockIndicator> = {
   title: 'Components/StockIndicator',
   component: StockIndicator,
   tags: ['autodocs'],
+  parameters: {
+    docs: {
+      description: {
+        component:
+          'A short line saying whether a product is in stock, running low or sold out.',
+      },
+    },
+  },
   argTypes: {
     status: { control: 'select', options: ['in-stock', 'low-stock', 'out-of-stock'] },
   },

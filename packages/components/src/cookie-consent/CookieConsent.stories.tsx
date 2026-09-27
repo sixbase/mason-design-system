@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useState } from 'react';
 import { Button } from '../button/Button';
+import { Text } from '../typography/Typography';
 import { CookieConsent } from './CookieConsent';
 import type { CookieCategory } from './CookieConsent';
 
@@ -42,17 +43,23 @@ const meta: Meta<typeof CookieConsent> = {
   decorators: [
     // Contain the fixed-position banner within the Storybook canvas
     (Story) => (
-      <div style={{ transform: 'translateZ(0)', position: 'relative', minHeight: 500, overflow: 'hidden' }}>
+      <div style={{ transform: 'translateZ(0)', position: 'relative', minHeight: 'var(--size-modal-md)', overflow: 'hidden' }}>
         <div style={{ padding: 'var(--spacing-6)' }}>
-          <p style={{ color: 'var(--color-foreground-subtle)', fontFamily: 'var(--font-family-body)', fontSize: 'var(--font-size-sm)' }}>
-            Page content behind the banner. Scroll down to see the cookie consent dialog.
-          </p>
+          <Text size="sm" muted>
+            Page content behind the banner. The banner is pinned to the bottom of this box, as it is to the bottom of the screen on a real page.
+          </Text>
         </div>
         <Story />
       </div>
     ),
   ],
   parameters: {
+    docs: {
+      description: {
+        component:
+          'The cookie banner pinned to the bottom of the screen, with Accept, Reject and a preferences panel.',
+      },
+    },
     layout: 'fullscreen',
   },
 };
@@ -67,7 +74,9 @@ export const Default: Story = {
   },
 };
 
+/** Adds the Preferences button; it opens a panel with one switch per cookie type. */
 export const WithCategories: Story = {
+  name: 'With cookie types to choose from',
   args: {
     categories,
     onAccept: (ids: string[]) => console.log('Accepted:', ids),
@@ -90,17 +99,19 @@ export const CustomLabels: Story = {
   },
 };
 
+/** Shown and hidden by the page (`open` + `onOpenChange`) — e.g. a “Cookie settings” link in the footer. */
 export const Controlled: Story = {
+  name: 'Opened by the page',
   render: function ControlledStory() {
-    const [open, setOpen] = useState(false);
+    const [open, setOpen] = useState(true);
 
     return (
       <>
         <div style={{ padding: 'var(--spacing-6)' }}>
-          <Button onClick={() => setOpen(true)}>Show Cookie Banner</Button>
-          <p style={{ marginTop: 'var(--spacing-3)', color: 'var(--color-foreground-subtle)', fontFamily: 'var(--font-family-body)', fontSize: 'var(--font-size-sm)' }}>
+          <Button onClick={() => setOpen(true)}>Cookie settings</Button>
+          <Text size="sm" muted style={{ marginTop: 'var(--spacing-3)' }}>
             Banner is {open ? 'visible' : 'hidden'}
-          </p>
+          </Text>
         </div>
         <CookieConsent
           open={open}

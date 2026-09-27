@@ -12,11 +12,16 @@
   color: var(--color-foreground);
 
   background-color: var(--popover-bg);
-  border: 1px solid var(--color-border);
+  border: var(--border-width-sm) solid var(--color-border);
   border-radius: var(--popover-radius);
   box-shadow: var(--elevation-dropdown);
   padding: var(--popover-padding);
-  z-index: var(--z-index-overlay);
+  /* Popover plane (250): above Modal/Drawer (200) so a floating layer
+     opened from inside a dialog is never trapped behind it, below toasts
+     (300) and tooltips (400). Radix copies this onto the portal wrapper. */
+  z-index: var(--z-index-popover);
+  /* Long unbroken strings wrap instead of forcing a horizontal scrollbar */
+  overflow-wrap: break-word;
 
   /* Readable line length, capped by the collision-padded viewport (mobile safety) */
   max-width: min(var(--popover-max-width), var(--radix-popover-content-available-width));
@@ -25,32 +30,93 @@
 
   /* Animation */
   transform-origin: var(--radix-popover-content-transform-origin);
-  animation: ds-popover-open var(--transition-duration-fast) var(--transition-easing-out);
+  animation: ds-popover-open var(--transition-duration-normal) var(--transition-easing-emphasized);
 }
 
 .ds-popover:focus-visible {
   outline: none;
 }
 
+/* With a close button, reserve its column so content never runs under it
+   (button inset + size + gap). */
+.ds-popover--has-close {
+  /* Inline end — the close button moves to the left in RTL. */
+  padding-inline-end: calc(var(--spacing-2) + var(--size-control-sm) + var(--spacing-2));
+}
+
+/* Opens from the side it's anchored to: a few pixels of drift toward
+   the content plus a slight grow, then leaves faster than it came. */
+.ds-popover[data-side='top']    { --popover-drift-y: var(--motion-distance-sm); }
+.ds-popover[data-side='bottom'] { --popover-drift-y: calc(var(--motion-distance-sm) * -1); }
+.ds-popover[data-side='left']   { --popover-drift-x: var(--motion-distance-sm); }
+.ds-popover[data-side='right']  { --popover-drift-x: calc(var(--motion-distance-sm) * -1); }
+
+.ds-popover[data-state='closed'] {
+  animation: ds-popover-close var(--transition-duration-fast) var(--transition-easing-emphasized-in) forwards;
+}
+
 @keyframes ds-popover-open {
-  from { opacity: 0; transform: scale(0.97); }
-  to   { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: translate(var(--popover-drift-x, 0), var(--popover-drift-y, 0)) scale(var(--scale-enter));
+  }
+}
+
+@keyframes ds-popover-close {
+  to {
+    opacity: 0;
+    transform: scale(var(--scale-enter));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ds-popover { animation: none; }
+  .ds-popover,
+  .ds-popover[data-state='closed'] { animation: none; }
 }
 
 /* ─── Arrow ──────────────────────────────────────────────── */
 .ds-popover__arrow {
+  overflow: visible; /* the edge stroke's outer half sits past the viewBox */
   fill: var(--popover-bg);
+  /* Tuck the base into the panel's border (the wrapper is rotated per
+     side, so -Y always points at the panel): the fill covers the border
+     line under the arrow and the edges join the border cleanly. */
+  transform: translateY(calc(var(--border-width-sm) * -1));
+}
+
+.ds-popover__arrow-fill {
+  fill: var(--popover-bg);
+}
+
+.ds-popover__arrow-edge {
+  fill: none;
+  stroke: var(--color-border);
+  stroke-width: var(--border-width-sm);
+  stroke-linejoin: round;
+  /* Keep the edge 1px when a consumer passes a non-default width/height */
+  vector-effect: non-scaling-stroke;
+}
+
+/* Forced colors repaints the panel (canvas + text-colour border) but not
+   SVG fills/strokes: the arrow kept its theme tokens, so it cut a gap in
+   the High Contrast border with a near-invisible triangle. Match the panel
+   with system colours. */
+@media (forced-colors: active) {
+  .ds-popover__arrow,
+  .ds-popover__arrow-fill {
+    fill: Canvas;
+  }
+
+  .ds-popover__arrow-edge {
+    stroke: CanvasText;
+  }
 }
 
 /* ─── Close button ───────────────────────────────────────── */
 .ds-popover__close {
   position: absolute;
   top: var(--spacing-2);
-  right: var(--spacing-2);
+  inset-inline-end: var(--spacing-2);
 
   display: inline-flex;
   align-items: center;
@@ -70,13 +136,26 @@
   text-box-edge: cap alphabetic;
 }
 
-.ds-popover__close:hover {
-  background-color: var(--color-secondary);
-  color: var(--color-foreground);
+/* Invisible hit-area extender — ≥44px touch target, visible button unchanged */
+.ds-popover__close::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, var(--size-hit-area));
+  height: max(100%, var(--size-hit-area));
+  transform: translate(-50%, -50%);
+}
+
+@media (hover: hover) {
+  .ds-popover__close:hover {
+    background-color: var(--color-secondary);
+    color: var(--color-foreground);
+  }
 }
 
 .ds-popover__close:focus-visible {
-  outline: none;
+  outline: var(--border-width-lg) solid transparent; /* painted in forced-colors mode, where box-shadow rings vanish */
   box-shadow: var(--focus-ring);
 }
 

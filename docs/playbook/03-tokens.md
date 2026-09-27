@@ -9,11 +9,11 @@
 1. **Every visual value must come from a token.** No hex codes, no pixel values, no raw numbers in component or page CSS. If the token doesn't exist, flag it as a gap — do not invent a value.
 2. **All scales derive from the golden ratio (φ).** When adding a new token or scale, derive it from φ, 1/φ, fractional powers of φ, or the Fibonacci sequence. See the math reference below.
 3. **Semantic tokens are what components use.** Components never reference primitives directly except in documented edge cases (see Known Gaps below). If a semantic token doesn't exist for your need, add one — don't reach for the primitive.
-4. **Token renames require a full codebase grep.** CSS variables fail silently. `var(--old-name)` resolves to `initial` with no error. Always `grep -r "old-name" .` before and after renaming.
+4. **Token renames require a full codebase grep.** CSS variables fail silently. `var(--old-name)` resolves to `initial` with no error. Always `grep -r "old-name" .` before and after renaming. `check-css` (in `pnpm lint`) catches undefined `var()` in component CSS only — not in workbench, Storybook or storefront CSS.
 5. **Two spacing scales, two scopes.** Standard 4px grid (`--spacing-*`) is the default for all spacing: component internals, element-to-element gaps, section rhythm, and any "I need some space here" situation. Section rhythm uses `--spacing-16` (64px) via `.ds-section`. Phi scale (`--spacing-phi-*`) is reserved for proportional layout relationships where the mathematical relationship to φ is the actual design intent — sidebar-to-content ratios, aspect ratio approximations, layout split proportions. Never mix scales within the same component. See "Phi vs Standard Spacing" below for detailed rules.
 6. **Never use `color-mix(… %, transparent)` for elements that need WCAG contrast.** The math makes it impossible to reach 3:1 or 4.5:1 at low percentages. Use solid primitive references (typically 50-shade for backgrounds, 600+ for borders/text). See Common Mistakes below.
 7. **Disabled states use `opacity: var(--opacity-medium)`.** Never hardcode `opacity: 0.5`.
-8. **Transitions use shorthand tokens.** Write `var(--transition-fast)`, never raw `100ms cubic-bezier(…)`.
+8. **Timing uses tokens.** Write `var(--transition-fast)` (or a `--transition-duration-*` + `--transition-easing-*` pair), never raw `100ms cubic-bezier(…)`. `check-css` enforces it.
 
 ---
 
@@ -133,7 +133,7 @@ Raw values named by **scale**, not intent.
 
 **Why named palettes instead of `gray`?** Personality (stone = warm, gray = nothing), avoids Tailwind naming collisions, easier to find the right value.
 
-**Ramp structure (2026-07-01):** All five palettes carry the identical 12-step index set: `0, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950`. The accent ramps' original 6 anchors (50, 100, 400, 500, 600, 700) are the brand values and are unchanged; the other 6 steps per accent were derived in OKLCH against stone's lightness curve as the tonal spine, so any accent step sits at the same perceived depth as the same stone step. Hue is held constant within each ramp; chroma tapers toward both ends so ramps converge on the stone backgrounds — step 0 is a barely-tinted wash one breath off white, and the 900/950 steps are quiet tinted near-blacks that sit beside `stone.950` in dark mode. Generation script preserved at the decisions log entry "Accent Ramps Extended to 12 Steps". Guaranteed properties: monotonic lightness per ramp; `600` on white ≥ 4.5:1; `300` on `stone.950` ≥ 9:1 (dark-mode text headroom).
+**Ramp structure (2026-07-01, generator: `packages/tokens/scripts/generate-ramps.mjs`):** All five palettes carry the identical 12-step index set: `0, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950`. The accent ramps' original 6 anchors (50, 100, 400, 500, 600, 700) are the brand values and are unchanged; the other 6 steps per accent were derived in OKLCH against stone's lightness curve as the tonal spine, so any accent step sits at the same perceived depth as the same stone step. Hue is held constant within each ramp; chroma tapers toward both ends so ramps converge on the stone backgrounds — step 0 is a barely-tinted wash one breath off white, and the 900/950 steps are quiet tinted near-blacks that sit beside `stone.950` in dark mode. The generator is `scripts/generate-ramps.mjs` (also quoted in the decisions log entry "Accent Ramps Extended to 12 Steps"). Guaranteed properties: monotonic lightness per ramp; `600` on white ≥ 4.5:1; `300` on `stone.950` ≥ 9:1 (dark-mode text headroom).
 
 ### Tier 2: Semantic Tokens
 
@@ -143,7 +143,7 @@ Map primitives to **purpose**. Components use this layer. Dark mode swaps this l
 "primary":              { "$value": "{primitive.color.stone.800}" },
 "primary-hover":        { "$value": "{primitive.color.stone.900}" },
 "primary-foreground":   { "$value": "{primitive.color.stone.0}" },
-"background":           { "$value": "{primitive.color.stone.0}" },
+"background":           { "$value": "{primitive.color.stone.50}" },
 "foreground":           { "$value": "{primitive.color.stone.950}" }
 ```
 
@@ -153,11 +153,11 @@ Map primitives to **purpose**. Components use this layer. Dark mode swaps this l
 
 Both sides of the contrast pair are defined together — illegible text is impossible if you follow this pattern.
 
-**Complete semantic color set** (defined per mode in `tokens.json` under `semantic.color.light` / `semantic.color.dark` — 32 tokens each, parity enforced by the build):
+**Complete semantic color set** (defined per mode in `tokens.json` under `semantic.color.light` / `semantic.color.dark` — 33 tokens each. The build fails if the two modes list different names, or if a `color-mix()` names a `--color-*` token that doesn't exist — always add both):
 ```
 --color-background           --color-background-subtle      --color-background-surface
 --color-foreground           --color-foreground-secondary   --color-foreground-subtle    --color-foreground-muted
---color-border               --color-border-strong
+--color-border               --color-border-strong          --color-border-control
 --color-primary              --color-primary-hover          --color-primary-active       --color-primary-foreground
 --color-secondary            --color-secondary-hover        --color-secondary-active     --color-secondary-foreground
 --color-destructive          --color-destructive-hover      --color-destructive-active   --color-destructive-foreground   --color-destructive-subtle
@@ -165,7 +165,7 @@ Both sides of the contrast pair are defined together — illegible text is impos
 --color-warning              --color-warning-subtle         --color-warning-foreground
 --color-info                 --color-info-subtle            --color-info-foreground
 --color-focus-ring
---color-overlay              (composite: color-mix with φ-derived 38.2% opacity)
+--color-overlay              (composite, not in the 33: stone-950 at 38.2% light / 61.8% dark)
 ```
 
 **Text tone roles — the contrast contract (light mode, on stone.50):**
@@ -176,6 +176,16 @@ Both sides of the contrast pair are defined together — illegible text is impos
 | `--color-foreground-secondary` | stone.600 | 5.96:1 | **The floor for any normal-size readable text** — hints, captions, placeholders, meta, supporting copy |
 | `--color-foreground-subtle` | stone.500 | 3.87:1 | Large text (≥24px, or ≥18.7px bold) and non-text UI glyphs (chevrons, separators) only — passes 3:1, fails 4.5:1 |
 | `--color-foreground-muted` | stone.400 | 2.52:1 | Disabled and decorative elements only (WCAG-exempt) — never readable text, never state-bearing glyphs |
+
+Dark mode (on stone.950): foreground stone.50 (17.99:1) · secondary stone.300 (10.70:1) · subtle stone.500 (4.65:1; 4.17 on surface) · muted stone.600 (3.02:1). Subtle and muted were tightened on 2026-09-25 so each step sits at the same relative strength as in light mode.
+
+**Boundary roles — the non-text contract (WCAG 1.4.11 needs 3:1):**
+
+| Token | Light | Dark | Permitted use |
+|-------|-------|------|---------------|
+| `--color-border` | stone.200 (1.3:1) | stone.800 | Decorative separation only — dividers, card edges, table rules. **Never the only boundary of a form control** |
+| `--color-border-strong` | stone.300 (1.7:1) | stone.700 | Emphasis dividers, hover borders |
+| `--color-border-control` (2026-09-25) | 38.2% stone.400 + 61.8% stone.500 = `#918A80` (3.24:1 on bg, 3.00 on subtle, 3.41 on surface) | 61.8% stone.500 + 38.2% stone.600 (≥3.4:1) | The resting boundary of Input, Textarea, Select, Checkbox, Radio, Switch-off track — anything a user must find to operate |
 
 ### Tier 3: Component Tokens
 
@@ -205,7 +215,20 @@ Both previously-listed gaps are **resolved** (2026-07-01 audit):
 | No "moderate foreground" | `--color-foreground-secondary` (stone.600 light / stone.300 dark) fills this role — see the text tone roles table above |
 | No variant-specific `*-foreground` | `--color-{success,warning,info,destructive}-foreground` and `*-subtle` all exist in both modes, defined in `tokens.json` |
 
-No known gaps remain. **Rule:** When you find a new gap, add it here AND add a decisions log entry. Don't silently use a primitive — document why the semantic layer doesn't cover it.
+**Open gaps (2026-09-25 audit):**
+
+Still open — the owner's decisions are tracked in `12-audit-2026-09-25.md` → "Open after five rounds".
+
+| Gap | Where it bites | Recommendation |
+|-----|---------------|----------------|
+| ~~No `--z-index-popover`~~ **Resolved 2026-09-25** | Popover/DropdownMenu/Select opened inside a Modal rendered behind it | `--z-index-popover: 250` added; all three use it |
+| No ambient durations above 686ms | Skeleton `1.5s`, StockIndicator `2s`, Spinner `calc(slowest * 2)` | `--transition-duration-ambient: 1110ms` (686 × φ), `ambient-slow: 1796ms` |
+| No optical nudge token | `translateY(0.05em)` text-box-trim fallback repeated ~29× | `--optical-nudge-y: 0.05em` |
+| No compact measures | Popover 42ch, Tooltip 36ch, Tabs 22ch | `--measure-compact: 40ch` (65/φ), `--measure-label: 25ch` (65/φ²) |
+| Dark mode has no elevation | Dark `background-surface` = `background-subtle` (#1F1C18), black shadows invisible on #131010 | Dark surface ramp (surface one step lighter than subtle) — design decision |
+| `-foreground` means two things | "text on the solid fill" for destructive, "text on the tint" for success/warning/info | Rename in a major version: `*-on-solid` / `*-text` |
+
+**Rule:** When you find a new gap, add it here AND add a decisions log entry. Don't silently use a primitive — document why the semantic layer doesn't cover it.
 
 ---
 
@@ -214,24 +237,34 @@ No known gaps remain. **Rule:** When you find a new gap, add it here AND add a d
 Implemented by overriding semantic tokens under `.dark` on `<html>`:
 
 ```css
-:root {
-  --color-background:  #FFFFFF;
-  --color-foreground:  #131010;
-  --color-primary:     #342F2A;
+:root, [data-theme="light"] {
+  color-scheme: light;
+  --color-background:  #FAF9F7;   /* stone.50 */
+  --color-foreground:  #131010;   /* stone.950 */
+  --color-primary:     #342F2A;   /* stone.800 */
 }
 
-.dark {
+.dark, [data-theme="dark"] {
+  color-scheme: dark;
   --color-background:  #131010;
   --color-foreground:  #FAF9F7;
   --color-primary:     #E3DED6;
 }
 ```
 
-**To enable:** Add `class="dark"` to `<html>`. Components need zero dark-mode-specific code.
+**To enable:** Add `class="dark"` (or `data-theme="dark"`) to `<html>` — or to any element, for a dark region. Components need zero dark-mode-specific code. The Header's theme toggle (`showThemeToggle`) flips `.dark` on `<html>` and remembers the choice in `localStorage` (`ds-theme`).
 
-**In Storybook:** `preview.ts` decorator toggles `.dark` on `document.body` when dark background is selected.
+**In Storybook:** `preview.ts` decorator toggles `.dark` on `document.body` when dark background is selected. **In the workbench:** the toolbar's Theme control sets it per frame.
+
+**Two more automatic modes (2026-09-25):** `@media print` forces the light tokens on every theme; `@media (prefers-contrast: more)` raises `--color-border` to the control border and moves subtle/muted text one step stronger. Components need no changes.
 
 **Dark mode + `color-mix`:** Mixing against `transparent` produces unpredictable results in dark mode. Mixing against `var(--color-background-subtle)` (an opaque dark color) works because both sides are opaque.
+
+**Composite tokens are emitted per mode (2026-09-25).** `--focus-ring*` and `--color-overlay` are built from semantic colors, so `build-css.mjs` (`compositeBlock()`) writes them inside *both* the light and dark blocks. A custom property's `var()` references resolve where it is declared — declared once on `:root`, a nested `.dark` region (a dark promo band, a workbench frame) inherited the light ring. Each mode block also sets `color-scheme`, so native scrollbars and form widgets match the theme.
+
+**Focus ring (2026-09-25):** solid 2px `--color-focus-ring` outside a 2px gap in `--color-background` (8.7:1 light, 7.1:1 dark). The previous 3px ring at 20% alpha measured 1.4:1 — invisible to many keyboard users. Components pair `box-shadow: var(--focus-ring)` with `outline: var(--border-width-lg) solid transparent` so Windows High Contrast still paints a ring. Full focus rules: `14-accessibility.md`.
+
+**Overlay (2026-09-25):** `--color-overlay` always darkens (stone-950 at 38.2% light / 61.8% dark). It was previously a mix of `--color-foreground`, which is near-white in dark mode, so dark-mode dialogs *lightened* the page.
 
 ---
 
@@ -289,8 +322,8 @@ is a `clamp(min, preferred + Nvw, max)` where the px listed above is the **max**
 grow back up with the screen — so type resizes continuously with viewport width,
 with **no breakpoints**. `xs` and `sm` stay fixed (legibility at small sizes).
 
-Example — `--font-size-4xl: clamp(2.125rem, 1.39rem + 3.76vw, 3.375rem)` renders
-~34px on a 375px phone and caps at 54px on desktop. Because heading classes
+Example — `--font-size-4xl: clamp(1.9433rem, 1.2083rem + 3.76vw, 3.375rem)` renders
+~31px on a 375px phone and caps at 54px on desktop. Because heading classes
 (`.ds-heading--4xl` etc.) and body classes (`.ds-text--lg` etc.) consume these
 tokens directly, every consumer inherits the fluid behavior automatically —
 avoid re-declaring `font-size` at breakpoints unless a specific design step-down
@@ -347,7 +380,7 @@ Font families:   body (IBM Plex Sans), code (JetBrains Mono), numeric (JetBrains
                  Named by role, not classification — see 06-decisions-log.md
                  numeric = numerals/amounts (prices, quantities, page numbers, %),
                  monospace for tabular alignment. Applied via --font-family-numeric.
-Font weights:    normal (400) → medium (500) → semibold (600) → bold (700)
+Font weights:    light (300) → normal (400) → medium (500) → semibold (600) → bold (700)
 Line heights:    none (1) → tight (1.15) → snug (1.382) → normal (1.5) → relaxed (1.618=φ) → loose (2)
                  φ derivations: tight=1.15 (visual override, see decisions log)
                                 snug=1+1/φ²=1.382, normal=1.5 (conventional, see decisions log)
@@ -427,7 +460,7 @@ rem intercept = (min − slope × 375) / 16. Example (`fluid-md`): slope = 16 / 
 
 ### Radius
 
-Fibonacci sequence: `none` (0) → `sm` (2px) → `md` (5px) → `lg` (8px) → `xl` (13px) → `2xl` (21px) → `full` (9999px)
+Fibonacci sequence: `none` (0) → `xs` (1px) → `sm` (2px) → `md` (5px) → `lg` (8px) → `xl` (13px) → `2xl` (21px) → `3xl` (34px) → `full` (9999px)
 
 ### Shadows
 
@@ -468,6 +501,25 @@ Two further duration steps exist for animation loops (no shorthand — pair with
 ```
 Ambient rhythms slower than this scale (e.g. StockIndicator's 2s pulse) are declared as component tokens with an inline rationale — they are status breathing, not interaction feedback.
 
+**Easing (2026-09-25).** The original four curves are Material-standard. Four expressive curves were added, with control points taken from φ powers (0.146 = φ⁻⁴, 0.382 = φ⁻², 0.618 = φ⁻¹, 1.618 = φ):
+
+| Token | Value | Role |
+|-------|-------|------|
+| `--transition-easing-emphasized` | `cubic-bezier(0.146, 1, 0.382, 1)` | Arrivals — reveals, hero, overlays opening. ≈ expo-out |
+| `--transition-easing-emphasized-in` | `cubic-bezier(0.618, 0, 0.854, 0)` | Exits — the mirror of emphasized |
+| `--transition-easing-glide` | `cubic-bezier(0.618, 0, 0.382, 1)` | Moves between two resting places — FLIP, sliding indicators |
+| `--transition-easing-spring` | `cubic-bezier(0.382, 1.618, 0.618, 1)` | Small confirmations — overshoots ~10%, then settles. ≤44px UI only, never on large surfaces |
+
+**Motion primitives (2026-09-25).** Stagger continues the ×φ duration series downward; distance reuses the φ spacing steps:
+```
+--motion-stagger-tight:  38ms   ← 100 ÷ φ²
+--motion-stagger-normal: 62ms   ← 100 ÷ φ
+--motion-stagger-loose:  100ms
+--motion-distance-sm: 10px   md: 16px   lg: 26px   xl: 42px   (phi-5 … phi-21)
+```
+
+**JS export.** `@ds/tokens` exports `motion` (durations/staggers in ms, distances in px, easings as bezier tuples) for GSAP. It reads `src/motion.json`, a subset that `build-css.mjs` generates from `tokens.json` — edit `tokens.json`, never `motion.json`. `@ds/motion` registers every easing token as a GSAP ease named `ds.<token>` (e.g. `ds.emphasized`) with its own cubic-bezier solver, so CSS and GSAP run identical curves. See `13-motion.md` and the workbench's Foundations → Motion sheet.
+
 ```css
 /* ✅ Do this */
 transition: background-color var(--transition-fast);
@@ -503,7 +555,7 @@ Note: 34→42→55 approximates √φ step ratio (42/34=1.235, 55/42=1.310, avg�
 | `--size-content-lg` | 960px | Wide content areas, feature sections |
 | `--size-content-xl` | 1280px | Container component `xl` size |
 | `--size-container` | 1200px | THE page container in the DS/docs — `.ds-page-container`, Header/Footer inner width |
-| `--size-container-wide` | 1396px | Wide-screen page frame: the STOREFRONT's page container, header, footer, and announcement bar (1300px visible + 48px padding each side); also the docs-site AnnouncementBar |
+| `--size-container-wide` | 1396px | Wide-screen page frame: the STOREFRONT's page container, header, footer, and announcement bar (1300px visible + 48px padding each side). The DS AnnouncementBar also uses it — unlike Header/Footer; open item in `12` |
 
 **⚠️ Page content max-width: always use `.ds-page-container` (which references `--size-container`, 1200px).** The 1200px value was chosen for cleaner 12-column grid math (see `09-layout-grid.md`). As of the 2026-07-01 audit, Header, Footer, and the layout grid all reference `--size-container` — the value is defined exactly once.
 
@@ -565,6 +617,9 @@ meta to take effect on notched devices.
 | Token | Value | Purpose |
 |-------|-------|---------|
 | `--scale-press` | 0.98 | Pressed-state `transform: scale(var(--scale-press))` — previously a magic number in Button, Checkbox, Modal, Drawer, VariantSelector |
+| `--scale-enter` | 0.96 | Starting scale for surfaces that grow in — Modal, Popover, DropdownMenu, Tooltip (replaced a 0.96/0.97 mix) |
+| `--scale-zoom` | 1.03 | Hover zoom of a photo inside its frame (Card image). Hover-gated (`@media (hover: hover)`) |
+| `--scale-pop` | 0.382 (1/φ²) | Starting scale for small glyphs that spring in — the AddToCart check. Pair with `--transition-easing-spring`; never on large surfaces |
 | `--size-hit-area` | 44px | Minimum touch **hit zone** (invisible) — Apple HIG/WCAG 2.5.8 floor. Distinct from `--size-touch-target` (36px), which is the *visual* icon-button size; extend the hit area with padding or a pseudo-element, not by growing the visual |
 | `--size-swipe-threshold` | 50px | Minimum drag distance to register a swipe (carousels, drawers) — JS-consumable via the tokens JSON export |
 
@@ -584,8 +639,9 @@ EmptyState; components should reference the token. `ch` units only — never a p
 ### Z-Index
 
 ```
-base (0) → raised (10) → overlay (100) → modal (200) → toast (300) → tooltip (400)
+base (0) → raised (10) → sticky (50) → overlay (100) → modal (200) → popover (250) → toast (300) → tooltip (400)
 ```
+`popover` sits above `modal` so a Select, Popover or DropdownMenu opened inside a Modal or Drawer renders in front of it.
 
 Always `var(--z-index-*)`. Never hardcode z-index numbers.
 
@@ -593,15 +649,17 @@ Always `var(--z-index-*)`. Never hardcode z-index numbers.
 
 ## Transparent Color Variants
 
-For semi-transparent versions of CSS variables (focus rings, overlays):
+For semi-transparent versions of CSS variables — today only decorative composites such as `--color-overlay` (the modal backdrop). The focus ring used to be one; it is solid now.
 
 ```css
-/* ✅ Works in dark mode — variable resolves to current mode's value first */
-box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-focus-ring) 20%, transparent);
+/* ✅ Works in dark mode — the variable resolves to the current mode's value first */
+--color-overlay: color-mix(in srgb, var(--color-stone-950) 38.2%, transparent);
 
-/* ❌ Breaks in dark mode — hardcoded hex doesn't respond to .dark */
-box-shadow: 0 0 0 3px rgba(78, 71, 63, 0.2);
+/* ❌ Breaks in dark mode — a hardcoded colour doesn't respond to .dark */
+background: rgba(19, 16, 16, 0.382);
 ```
+
+Mixing two opaque tokens is fine for contrast work — `--color-border-control` is 38.2% stone-400 + 61.8% stone-500.
 
 ### ⚠️ `color-mix` with `transparent` — WCAG limitation
 
@@ -610,7 +668,7 @@ box-shadow: 0 0 0 3px rgba(78, 71, 63, 0.2);
 - At 18% mix: borders can't reach 3:1
 - Even at 50%: often insufficient
 
-**Use `color-mix(… %, transparent)` ONLY for purely decorative elements** (focus rings, hover glows). For any element that needs WCAG contrast (badge backgrounds, borders, text), use solid primitive references.
+**Use `color-mix(… %, transparent)` ONLY for purely decorative elements** (overlays, hover glows) — never for focus rings, borders, badge fills or text. For any element that needs WCAG contrast (badge backgrounds, borders, text), use solid primitive references.
 
 **For dark mode `color-mix`:** Mix against `var(--color-background-subtle)` (opaque), not `transparent`. Both sides opaque = predictable result.
 
@@ -624,9 +682,11 @@ box-shadow: 0 0 0 3px rgba(78, 71, 63, 0.2);
 
 ```bash
 pnpm --filter @ds/tokens build
-# Step 1: tsup → dist/index.mjs + dist/index.js (TypeScript exports)
-# Step 2: node scripts/build-css.mjs → dist/tokens.css (CSS variables)
+# Step 1: node scripts/build-css.mjs → dist/tokens.css (CSS variables) + src/motion.json (JS motion subset)
+# Step 2: tsup → dist/index.mjs + dist/index.js (the `motion` JS export)
 ```
+
+`build-css.mjs` resolves every `{primitive.*}` reference in `tokens.json` and **throws** on one that doesn't exist — a bad reference fails the build instead of shipping `undefined` (`07` → `#token-build-fails-silently`).
 
 **`build-css.mjs` generates:**
 
@@ -636,13 +696,16 @@ pnpm --filter @ds/tokens build
 | Semantic tokens (light) | `:root, [data-theme="light"]` | `--color-primary`, etc. |
 | Semantic tokens (dark) | `.dark, [data-theme="dark"]` | Same names, different primitives |
 | Transition shorthands | `:root` | `--transition-fast/normal/slow` |
-| Composite tokens | `:root` / `.dark` | `--color-overlay`, `--focus-ring-color` |
+| Composite tokens | inside **each** mode block | `--color-overlay`, `--focus-ring*` |
+| Print | `@media print` | Light tokens on every theme |
+| More contrast | `@media (prefers-contrast: more)` | Stronger borders and subtle/muted text |
+| Page globals | `*`, `html`, form elements | Thin token-coloured scrollbars, `.ds-scroll-hidden`, iOS text-size and tap-flash, `font-family: inherit` on form controls |
 | Global focus-visible | `*:focus-visible` | Safety net for non-library elements |
-| Reduced motion | `@media (prefers-reduced-motion)` | Accessibility requirement |
+| Reduced motion | `@media (prefers-reduced-motion: reduce)` and `:root[data-motion="off"]` | Cuts animations/transitions/delays to ~0 with `!important` (the only sanctioned `!important`); `.ds-motion-safe` opts out — see `13-motion.md` |
 
 ### ⚠️ Watch mode limitation
 
-`tsup --watch` only rebuilds TypeScript exports. It does NOT regenerate `tokens.css`. If you change `tokens.json` and need CSS updates, run the full build:
+`pnpm dev` runs `build-css.mjs` once at start, then only `tsup --watch`. Later edits to `tokens.json` do NOT regenerate `tokens.css` (the workbench and Storybook read it from `dist`). Re-run the build:
 
 ```bash
 pnpm --filter @ds/tokens build
@@ -655,8 +718,8 @@ pnpm --filter @ds/tokens build
 1. Add the value to `packages/tokens/src/tokens.json` in the correct tier
 2. If it's a composite token (like `--color-overlay`), add it to `build-css.mjs`
 3. Run `pnpm --filter @ds/tokens build` to regenerate `dist/tokens.css`
-4. Rebuild downstream: `pnpm --filter @ds/components build`
-5. The new CSS variable is now available everywhere that imports `@ds/tokens/css`
+4. The new CSS variable is now available everywhere that imports `@ds/tokens/css` (the workbench picks it up on reload; rebuild `@ds/components` only for its `dist`)
+5. Update this document's reference table
 
 ## How to Rename a Token
 
@@ -667,7 +730,7 @@ pnpm --filter @ds/tokens build
 5. `grep -r "old-token-name" .` again — verify zero results
 6. Rebuild and test: `pnpm build && pnpm test`
 
-**CSS variables fail silently.** There is no build error when a variable doesn't exist. The only way to catch stale references is to search for them.
+**CSS variables fail silently.** There is no build error when a variable doesn't exist. `pnpm lint` (`check-css`) flags undefined `var()` in component CSS; everywhere else (workbench, Storybook, storefront) only a search finds them.
 
 ## How to Extend a Scale
 

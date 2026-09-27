@@ -13,16 +13,26 @@
   font-weight: var(--font-weight-medium);
   color: var(--color-foreground);
   line-height: var(--line-height-snug);
+  /* Long unbroken strings (emails, URLs, compound words) wrap instead of
+     pushing the form wider than a 320px viewport. Same on hint/error. */
+  overflow-wrap: anywhere;
 }
 
 .ds-input-label--required::after {
   content: ' *';
+  /* Empty alt text: the star is visual. It was read as part of the
+     field's name ("Full name star"); the field's `required` state is
+     what screen readers announce. Browsers without the alt syntax
+     drop this line and keep the one above. */
+  content: ' *' / '';
   color: var(--color-destructive);
 }
 
 /* ─── Input field ───────────────────────────────────────────── */
 .ds-input-field {
-  --input-border-color: var(--color-border);
+  /* border-control, not border: the resting edge is the only thing that
+     shows where the field is, so it needs 3:1 (WCAG 1.4.11) */
+  --input-border-color: var(--color-border-control);
   --input-bg: var(--color-background-surface);
   --input-radius: var(--radius-md);
 
@@ -32,7 +42,7 @@
   padding: 0 var(--spacing-3);
   color: var(--color-foreground);
   background-color: var(--input-bg);
-  border: 1px solid var(--input-border-color);
+  border: var(--border-width-sm) solid var(--input-border-color);
   border-radius: var(--input-radius);
   outline: none;
   transition:
@@ -69,11 +79,18 @@
 .ds-input-field:focus {
   border-color: var(--color-primary);
   box-shadow: var(--focus-ring);
+  /* Invisible normally. Forced-colors mode (Windows High Contrast) drops
+     box-shadow and repaints outlines in a system color, so this becomes
+     the focus indicator there instead of nothing. */
+  outline: var(--border-width-lg) solid transparent;
+  outline-offset: var(--border-width-lg);
 }
 
 /* Hover (non-focused, non-disabled, non-readonly) */
-.ds-input-field:hover:not(:focus):not(:disabled):not([readonly]):not([aria-invalid="true"]) {
-  border-color: var(--color-border-strong);
+@media (hover: hover) {
+  .ds-input-field:hover:not(:focus):not(:disabled):not([readonly]):not([aria-invalid="true"]) {
+    border-color: var(--color-foreground-subtle); /* darker than the resting border-control edge */
+  }
 }
 
 /* Read-only — subtle background, otherwise behaves like a normal
@@ -102,6 +119,9 @@
 /* ─── With icons / adornments ──────────────────────────────── */
 .ds-input-wrapper {
   position: relative;
+  /* Contain the adornment's stacking to this field, so raising it above the
+     input cannot reach past the wrapper. */
+  isolation: isolate;
   display: flex;
   align-items: center;
   width: 100%;
@@ -111,28 +131,41 @@
   width: 100%;
 }
 
+/* Logical sides: in RTL the leading adornment sits on the right. */
 .ds-input-wrapper--leading .ds-input-field {
-  padding-left: calc(var(--spacing-3) + var(--size-icon) + var(--spacing-2));
+  padding-inline-start: calc(var(--spacing-3) + var(--size-icon) + var(--spacing-2));
 }
 
 .ds-input-wrapper--trailing .ds-input-field {
-  padding-right: calc(var(--spacing-3) + var(--size-icon) + var(--spacing-2));
+  padding-inline-end: calc(var(--spacing-3) + var(--size-icon) + var(--spacing-2));
 }
 
 .ds-input-adornment {
   position: absolute;
+  /*
+   * Raised deliberately. The optical-centering fallback below puts a transform
+   * on .ds-input-field, and a transformed element becomes a stacking context
+   * painted at the z-index:0 layer. The leading adornment is a *previous*
+   * sibling with z-index:auto, so the input's opaque background painted over
+   * it and the leading "$" vanished — while the trailing adornment, which
+   * comes after the input, survived. Every browser without text-box-trim hit
+   * this, Safari included. Isolation on the wrapper keeps this local.
+   */
+  z-index: var(--z-index-raised);
   display: flex;
   align-items: center;
-  color: var(--color-foreground-subtle);
+  /* Secondary, like the placeholder: a text adornment ("USD", "kg") is normal
+     text and needs 4.5:1 — subtle was 4.06:1 on a white field */
+  color: var(--color-foreground-secondary);
   pointer-events: none;
 }
 
 .ds-input-adornment--leading {
-  left: var(--spacing-3);
+  inset-inline-start: var(--spacing-3);
 }
 
 .ds-input-adornment--trailing {
-  right: var(--spacing-3);
+  inset-inline-end: var(--spacing-3);
 }
 
 /* ─── Helper text / error message ──────────────────────────── */
@@ -140,12 +173,14 @@
   font-size: var(--font-size-xs);
   color: var(--color-foreground-secondary);
   line-height: var(--line-height-normal);
+  overflow-wrap: anywhere;
 }
 
 .ds-input-error {
   font-size: var(--font-size-xs);
   color: var(--color-destructive);
   line-height: var(--line-height-normal);
+  overflow-wrap: anywhere;
 }
 
 /* ─── iOS zoom guard ─────────────────────────────────────── */

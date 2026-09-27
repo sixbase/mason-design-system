@@ -111,14 +111,15 @@ describe('Tooltip', () => {
     expect(visible).toHaveAttribute('data-side', 'bottom');
   });
 
+  // The tooltip portals to <body>; scanning `container` checked only the trigger.
   it('has no accessibility violations when open', async () => {
-    const { container } = render(
+    const { baseElement } = render(
       <Tooltip content="Accessible tooltip" defaultOpen>
         <button type="button">Trigger</button>
       </Tooltip>,
     );
     await screen.findByRole('tooltip');
-    expect(await axe(container)).toHaveNoViolations();
+    expect(await axe(baseElement)).toHaveNoViolations();
   });
 
   it('has no accessibility violations when closed', async () => {

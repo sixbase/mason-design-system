@@ -1,4 +1,7 @@
 import { act, render, screen } from '@testing-library/react';
+import { Profiler, StrictMode } from 'react';
+import { hydrateRoot } from 'react-dom/client';
+import { renderToString } from 'react-dom/server';
 import { axe } from 'jest-axe';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Countdown } from './Countdown';
@@ -139,13 +142,44 @@ describe('Countdown', () => {
     expect(onComplete).toHaveBeenCalledTimes(1);
   });
 
+  // Counts live timers: the old spy on clearInterval passed without any
+  // cleanup, because setup itself calls clearInterval once.
   it('cleans up its interval on unmount', () => {
-    const clearSpy = vi.spyOn(globalThis, 'clearInterval');
     const { unmount } = render(<Countdown target={targetIn(HOUR)} />);
+    expect(vi.getTimerCount()).toBeGreaterThan(0);
 
     unmount();
-    expect(clearSpy).toHaveBeenCalled();
-    clearSpy.mockRestore();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('removes its visibilitychange listener on unmount', () => {
+    const add = vi.spyOn(document, 'addEventListener');
+    const remove = vi.spyOn(document, 'removeEventListener');
+    const { unmount } = render(<Countdown target={targetIn(HOUR)} />);
+    const added = add.mock.calls.filter(([type]) => type === 'visibilitychange').map(([, fn]) => fn);
+    expect(added.length).toBeGreaterThan(0);
+
+    unmount();
+    const removed = remove.mock.calls.filter(([type]) => type === 'visibilitychange').map(([, fn]) => fn);
+    added.forEach((fn) => expect(removed).toContain(fn));
+    add.mockRestore();
+    remove.mockRestore();
+  });
+
+  // The timer effect is keyed to the target only; an inline onComplete that
+  // changes every render must still be the one that fires.
+  it('calls the latest onComplete, not the one from the first render', () => {
+    const first = vi.fn();
+    const latest = vi.fn();
+    const target = targetIn(3_000);
+    const { rerender } = render(<Countdown target={target} onComplete={first} />);
+    rerender(<Countdown target={target} onComplete={latest} />);
+
+    act(() => {
+      vi.advanceTimersByTime(3_000);
+    });
+    expect(first).not.toHaveBeenCalled();
+    expect(latest).toHaveBeenCalledTimes(1);
   });
 
   // ─── hideZeroUnits ──────────────────────────────────────
@@ -245,5 +279,127 @@ describe('Countdown', () => {
     // axe runs its own async checks — keep fake timers out of its way.
     vi.useRealTimers();
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  // ─── Regressions ────────────────────────────────────────
+
+  it('renders zeros (not NaN) for an unparseable target, with no timer and no onComplete', () => {
+    const onComplete = vi.fn();
+    const { container } = render(<Countdown target="not a date" onComplete={onComplete} />);
+    expect(getValues(container)).toEqual(['00', '00', '00', '00']);
+    expect(container.textContent).not.toMatch(/NaN/);
+    expect(vi.getTimerCount()).toBe(0);
+    // A typo'd date must not trigger completion side effects
+    expect(onComplete).not.toHaveBeenCalled();
+  });
+
+  it('fires onComplete once under StrictMode (effect replay)', () => {
+    const onComplete = vi.fn();
+    render(
+      <StrictMode>
+        <Countdown target={targetIn(-1000)} onComplete={onComplete} />
+      </StrictMode>,
+    );
+    expect(onComplete).toHaveBeenCalledTimes(1);
+  });
+
+  it('server-renders placeholders and hydrates without a mismatch', () => {
+    const target = targetIn(HOUR);
+    const html = renderToString(<Countdown target={target} />);
+    expect(html).toContain('--');
+    expect(html).not.toContain('59');
+
+    const host = document.createElement('div');
+    host.innerHTML = html;
+    document.body.appendChild(host);
+    // The clock moves between server render and hydration
+    vi.setSystemTime(new Date(NOW.getTime() + 1500));
+    const onRecoverableError = vi.fn();
+    act(() => {
+      hydrateRoot(host, <Countdown target={target} />, { onRecoverableError });
+    });
+    // Was: "Text content does not match server-rendered HTML" → client re-render
+    expect(onRecoverableError).not.toHaveBeenCalled();
+    expect(getValues(host)).toEqual(['00', '00', '59', '58']);
+    host.remove();
+  });
+
+  // ─── Paused while unseen (performance) ──────────────────
+
+  describe('while it cannot be seen', () => {
+    const setVisibility = (state: 'visible' | 'hidden') =>
+      act(() => {
+        Object.defineProperty(document, 'visibilityState', { value: state, configurable: true });
+        document.dispatchEvent(new Event('visibilitychange'));
+      });
+
+    afterEach(() => {
+      // Back to jsdom's own getter
+      delete (document as { visibilityState?: string }).visibilityState;
+      vi.unstubAllGlobals();
+    });
+
+    it('stops re-rendering in a background tab, fires onComplete on time, and catches up on return', () => {
+      const onComplete = vi.fn();
+      let renders = 0;
+      const { container } = render(
+        <Profiler id="countdown" onRender={() => renders++}>
+          <Countdown target={targetIn(20_000)} onComplete={onComplete} />
+        </Profiler>,
+      );
+      renders = 0;
+      setVisibility('hidden');
+      // Was one render per second for as long as the tab stayed open
+      for (let i = 0; i < 10; i += 1) act(() => vi.advanceTimersByTime(1000));
+      expect(renders).toBe(0);
+
+      setVisibility('visible');
+      expect(getValues(container)).toEqual(['00', '00', '00', '10']);
+
+      setVisibility('hidden');
+      for (let i = 0; i < 10; i += 1) act(() => vi.advanceTimersByTime(1000));
+      // The one timer kept armed for the target moment
+      expect(onComplete).toHaveBeenCalledTimes(1);
+      expect(getAnnouncement(container)).toBe('Countdown complete');
+    });
+
+    it('pauses once scrolled far out of view and resumes before it is back', () => {
+      let callback: IntersectionObserverCallback = () => {};
+      const observe = vi.fn();
+      const disconnect = vi.fn();
+      vi.stubGlobal(
+        'IntersectionObserver',
+        class {
+          constructor(cb: IntersectionObserverCallback) {
+            callback = cb;
+          }
+          observe = observe;
+          disconnect = disconnect;
+          unobserve() {}
+          takeRecords() {
+            return [];
+          }
+        },
+      );
+      const report = (isIntersecting: boolean) =>
+        act(() => callback([{ isIntersecting } as IntersectionObserverEntry], {} as IntersectionObserver));
+
+      let renders = 0;
+      const { container, unmount } = render(
+        <Profiler id="countdown" onRender={() => renders++}>
+          <Countdown target={targetIn(HOUR)} />
+        </Profiler>,
+      );
+      expect(observe).toHaveBeenCalledTimes(1);
+      report(false);
+      renders = 0;
+      for (let i = 0; i < 10; i += 1) act(() => vi.advanceTimersByTime(1000));
+      expect(renders).toBe(0);
+
+      report(true);
+      expect(getValues(container)).toEqual(['00', '00', '59', '50']);
+      unmount();
+      expect(disconnect).toHaveBeenCalled();
+    });
   });
 });

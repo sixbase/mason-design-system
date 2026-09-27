@@ -13,16 +13,24 @@
   font-weight: var(--font-weight-medium);
   color: var(--color-foreground);
   line-height: var(--line-height-snug);
+  /* Long unbroken strings wrap instead of widening the form past a 320px
+     viewport. Same on hint/error. */
+  overflow-wrap: anywhere;
 }
 
 .ds-textarea-label--required::after {
   content: ' *';
+  /* Empty alt text: the star is visual. It was read as part of the
+     field's name ("Full name star"); the field's `required` state is
+     what screen readers announce. Browsers without the alt syntax
+     drop this line and keep the one above. */
+  content: ' *' / '';
   color: var(--color-destructive);
 }
 
 /* ─── Textarea field ───────────────────────────────────────── */
 .ds-textarea-field {
-  --textarea-border-color: var(--color-border);
+  --textarea-border-color: var(--color-border-control);
   --textarea-bg: var(--color-background-surface);
   --textarea-radius: var(--radius-md);
 
@@ -34,7 +42,7 @@
   color: var(--color-foreground);
   line-height: var(--line-height-normal);
   background-color: var(--textarea-bg);
-  border: 1px solid var(--textarea-border-color);
+  border: var(--border-width-sm) solid var(--textarea-border-color);
   border-radius: var(--textarea-radius);
   outline: none;
   resize: vertical;
@@ -52,17 +60,37 @@
   field-sizing: content;
   resize: none;
   overflow: hidden;
+  /* `rows` lines + vertical padding + borders (border-box) — the same
+     starting height whether the browser sizes natively or via the JS fallback */
+  min-height: calc(
+    var(--textarea-rows, 4) * 1lh + var(--spacing-2) * 2 + var(--border-width-sm) * 2
+  );
 }
 
 /* Focus */
 .ds-textarea-field:focus {
   border-color: var(--color-primary);
   box-shadow: var(--focus-ring);
+  /* Invisible normally. Forced-colors mode (Windows High Contrast) drops
+     box-shadow and repaints outlines in a system color, so this becomes
+     the focus indicator there instead of nothing. */
+  outline: var(--border-width-lg) solid transparent;
+  outline-offset: var(--border-width-lg);
 }
 
-/* Hover (non-focused, non-disabled) */
-.ds-textarea-field:hover:not(:focus):not(:disabled):not([aria-invalid="true"]) {
-  border-color: var(--color-border-strong);
+/* Hover (non-focused, non-disabled, non-readonly) */
+@media (hover: hover) {
+  .ds-textarea-field:hover:not(:focus):not(:disabled):not([readonly]):not([aria-invalid="true"]) {
+    border-color: var(--color-foreground-subtle); /* darker than the resting border-control edge */
+  }
+}
+
+/* Read-only — matches Input: subtle background, text stays selectable,
+   no resize handle (the content is not the user's to grow) */
+.ds-textarea-field[readonly] {
+  background-color: var(--color-background-subtle);
+  cursor: default;
+  resize: none;
 }
 
 /* Error state */
@@ -83,10 +111,11 @@
 }
 
 /* iOS zoom guard: Safari zooms the page when a focused field is below 16px
-   (1rem). On touch devices, never let the textarea drop under that threshold. */
+   (1rem). --font-size-base is fluid and dips below 1rem on small viewports,
+   so the guard uses --font-size-tight-base (fixed 1rem), like Input. */
 @media (pointer: coarse) {
   .ds-textarea-field {
-    font-size: max(1rem, var(--font-size-base));
+    font-size: var(--font-size-tight-base);
   }
 }
 
@@ -95,10 +124,12 @@
   font-size: var(--font-size-xs);
   color: var(--color-foreground-secondary);
   line-height: var(--line-height-normal);
+  overflow-wrap: anywhere;
 }
 
 .ds-textarea-error {
   font-size: var(--font-size-xs);
   color: var(--color-destructive);
   line-height: var(--line-height-normal);
+  overflow-wrap: anywhere;
 }

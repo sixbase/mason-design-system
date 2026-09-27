@@ -70,4 +70,24 @@ describe('Highlights', () => {
     );
     expect(await axe(container)).toHaveNoViolations();
   });
+
+  it('adds a period to a bare title', () => {
+    const { container } = render(<Highlight title="Designed to last" description="Made well." />);
+    expect(container.querySelector('.ds-highlights__title')).toHaveTextContent(/^Designed to last\.$/);
+  });
+
+  it('never doubles punctuation on titles that already end in it', () => {
+    // The old CSS ::after period rendered "Cast with intent.." (see stories)
+    const { container, rerender } = render(<Highlight title="Cast with intent." />);
+    expect(container.querySelector('.ds-highlights__title')).toHaveTextContent(/^Cast with intent\.$/);
+    rerender(<Highlight title="Built to last!" />);
+    expect(container.querySelector('.ds-highlights__title')).toHaveTextContent(/^Built to last!$/);
+  });
+
+  it('renders the text block with the Text primitive, not a raw <p>', () => {
+    const { container } = render(<Highlight title="Cast with intent." />);
+    const text = container.querySelector('.ds-highlights__text');
+    expect(text?.tagName).toBe('P');
+    expect(text).toHaveClass('ds-text', 'ds-text--lg');
+  });
 });

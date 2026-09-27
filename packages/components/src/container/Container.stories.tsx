@@ -1,11 +1,20 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { Text } from '../typography/Typography';
 import { Container } from './Container';
 
 const meta: Meta<typeof Container> = {
   title: 'Layout/Container',
   component: Container,
   tags: ['autodocs'],
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component:
+          'Keeps page content to a readable width and adds side padding on small screens.',
+      },
+    },
+  },
 };
 
 export default meta;
@@ -14,15 +23,12 @@ type Story = StoryObj<typeof Container>;
 const Placeholder = ({ label }: { label: string }) => (
   <div style={{
     background: 'var(--color-background-subtle)',
-    border: '1px dashed var(--color-border)',
+    border: 'var(--border-width-sm) dashed var(--color-border)',
     borderRadius: 'var(--radius-md)',
     padding: 'var(--spacing-8)',
     textAlign: 'center',
-    fontFamily: 'var(--font-family-body)',
-    fontSize: 'var(--font-size-sm)',
-    color: 'var(--color-foreground-subtle)',
   }}>
-    {label}
+    <Text as="span" size="sm" muted>{label}</Text>
   </div>
 );
 
@@ -49,6 +55,18 @@ export const Fluid: Story = {
   render: () => (
     <Container fluid>
       <Placeholder label="Fluid — no max-width, responsive padding only" />
+    </Container>
+  ),
+};
+
+/** `noPadding` drops the side padding — for a container nested inside another one. */
+export const NoPadding: Story = {
+  name: 'Nested, without side padding',
+  render: () => (
+    <Container>
+      <Container size="md" noPadding>
+        <Placeholder label="md container inside the default one — no extra side padding" />
+      </Container>
     </Container>
   ),
 };

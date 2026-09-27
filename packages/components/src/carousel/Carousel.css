@@ -7,16 +7,25 @@
    * at each breakpoint (base / tablet ≥768px / desktop ≥1024px). Values are
    * unchanged from the original implementation; they intentionally leave a
    * sliver of the next slide visible as a scroll affordance:
-   *   sm  70% → 45% → 33.333%  (~1.4 → 2.2 → 3 slides in view)
-   *   md  85% → 65% → 50%      (~1.2 → 1.5 → 2 slides in view)
+   *   sm  70% → 45% → 3 up     (~1.4 → 2.2 → 3 slides in view)
+   *   md  85% → 65% → 2 up     (~1.2 → 1.5 → 2 slides in view)
    *   lg  95% → 80% → 66.666%  (~1   → 1.25 → 1.5 slides in view)
+   *
+   * The two whole-number desktop presets subtract their share of the gap.
+   * A bare 50% / 33.333% plus the gaps overflowed the viewport by one gap
+   * (2-up) or two (3-up), so the last "fully visible" slide was sliced
+   * 12–24px short and lost its right-hand corners — it read as a clipping
+   * bug, not a scroll hint (visible on the homepage "Featured Products" and
+   * PDP "In the Wild" rows).
+   * The partial presets keep their intentional peek.
    */
+  --carousel-gap: var(--spacing-3);
   --carousel-slide-sm: 70%;
   --carousel-slide-sm-tablet: 45%;
-  --carousel-slide-sm-desktop: 33.333%;
+  --carousel-slide-sm-desktop: calc((100% - 2 * var(--carousel-gap)) / 3);
   --carousel-slide-md: 85%;
   --carousel-slide-md-tablet: 65%;
-  --carousel-slide-md-desktop: 50%;
+  --carousel-slide-md-desktop: calc((100% - var(--carousel-gap)) / 2);
   --carousel-slide-lg: 95%;
   --carousel-slide-lg-tablet: 80%;
   --carousel-slide-lg-desktop: 66.666%;
@@ -32,28 +41,66 @@
   display: flex;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
   padding-bottom: var(--spacing-2);
+  gap: var(--carousel-gap);
+}
+
+/* Set by Carousel.tsx while a Prev/Next/dot scroll that replaced one still
+   in flight (rapid clicks) is running. Safari cancels a re-targeted smooth
+   scroll on a mandatory snap container at the next style change and snaps
+   back a slide; the scroll ends on a snap position, where snapping resumes. */
+.ds-carousel__track--gliding {
+  scroll-snap-type: none;
 }
 
 /* The track is keyboard-focusable (arrow keys scroll by one slide). Inset
-   ring so it isn't clipped by the root's overflow: hidden. */
-.ds-carousel__track:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring-inset);
+   so it isn't clipped by the root's overflow: hidden — as an outline, not
+   the inset box-shadow token: an inset shadow paints beneath the content,
+   and the slides cover the whole track, so the ring never showed (lesson:
+   focus-ring-inset-overflow). A real outline also survives forced-colors
+   mode.
+   But a scroll container's own outline ALSO paints beneath its scrolled
+   content (Chromium, WebKit and Gecko alike, measured): the slides still
+   hid it everywhere but the gaps. So the ring is drawn a second time by
+   .ds-carousel__focus-ring — a sibling laid over the track, which paints
+   after the slides. The track's own outline stays as the fallback. */
+.ds-carousel__track:focus-visible,
+.ds-carousel__track:focus-visible + .ds-carousel__focus-ring {
+  outline: var(--border-width-lg) solid var(--color-focus-ring);
+  outline-offset: calc(var(--border-width-lg) * -1);
 }
 
-/* Gap variants */
-.ds-carousel--gap-sm .ds-carousel__track {
-  gap: var(--spacing-2);
+/* Positioning context for the ring overlay; exactly the track's box. */
+.ds-carousel__viewport {
+  position: relative;
 }
 
-.ds-carousel--gap-md .ds-carousel__track {
-  gap: var(--spacing-3);
+.ds-carousel__focus-ring {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
 }
 
-.ds-carousel--gap-lg .ds-carousel__track {
-  gap: var(--spacing-4);
+/* Laid over the slides, the ring now sits on product imagery, not the page:
+   the dark-mode ring (light grey) measured 1.9:1 on light photos. A band
+   of page colour inside it — the two-tone idea of --focus-ring, turned
+   inward — keeps it ≥3:1 on any image in both themes. */
+.ds-carousel__track:focus-visible + .ds-carousel__focus-ring {
+  box-shadow: inset 0 0 0 calc(var(--border-width-lg) * 2) var(--color-background);
+}
+
+/* Gap variants — one custom property feeds both the track gap and the
+   desktop slide-width math above, so they can never disagree. */
+.ds-carousel--gap-sm {
+  --carousel-gap: var(--spacing-2);
+}
+
+.ds-carousel--gap-md {
+  --carousel-gap: var(--spacing-3);
+}
+
+.ds-carousel--gap-lg {
+  --carousel-gap: var(--spacing-4);
 }
 
 /* ─── Slide ─────────────────────────────────────────────── */
@@ -126,7 +173,7 @@
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  z-index: 1;
+  z-index: var(--z-index-raised);
 
   display: inline-flex;
   align-items: center;
@@ -135,7 +182,7 @@
   height: var(--carousel-control-size);
   padding: 0;
 
-  border: 1px solid var(--color-border);
+  border: var(--border-width-sm) solid var(--color-border);
   border-radius: var(--radius-full);
   background-color: var(--color-background-surface);
   color: var(--color-foreground);
@@ -148,12 +195,18 @@
     transform var(--transition-fast);
 }
 
+/* Logical sides: in RTL the track runs right-to-left, so "previous" sits on
+   the right and "next" on the left, and the chevrons turn to match. */
 .ds-carousel__control--prev {
-  left: var(--spacing-2);
+  inset-inline-start: var(--spacing-2);
 }
 
 .ds-carousel__control--next {
-  right: var(--spacing-2);
+  inset-inline-end: var(--spacing-2);
+}
+
+.ds-carousel__control .ds-icon:dir(rtl) {
+  transform: scaleX(-1);
 }
 
 /* Invisible hit-area extender — guarantees a ≥44px touch target
@@ -168,27 +221,40 @@
   transform: translate(-50%, -50%);
 }
 
-.ds-carousel__control:not(:disabled):hover {
-  background-color: var(--color-secondary);
+@media (hover: hover) {
+  .ds-carousel__control:not([aria-disabled='true']):hover {
+    background-color: var(--color-secondary);
+  }
 }
 
-.ds-carousel__control:not(:disabled):active {
+.ds-carousel__control:not([aria-disabled='true']):active {
   transform: translateY(-50%) scale(var(--scale-press));
 }
 
 .ds-carousel__control:focus-visible {
-  outline: none;
+  outline: var(--border-width-lg) solid transparent; /* painted in forced-colors mode, where box-shadow rings vanish */
   box-shadow: var(--focus-ring);
 }
 
-.ds-carousel__control:disabled {
+.ds-carousel__control[aria-disabled='true'] {
   opacity: var(--opacity-medium);
   cursor: default;
+}
+
+/* The end controls stay focusable (aria-disabled), and the fade took their
+   focus ring down to 1.9:1 (2.9:1 even at --opacity-high over a light
+   slide). Focused, they return to full strength — same rule as Button. */
+.ds-carousel__control[aria-disabled='true']:focus-visible {
+  opacity: var(--opacity-full);
 }
 
 /* ─── Dot indicators ────────────────────────────────────── */
 .ds-carousel__indicators {
   display: flex;
+  /* Wrap, don't clip: on coarse pointers each dot is a 44px box, so 8+
+     slides outgrow a 320px phone and the root's overflow: hidden cut the
+     last dots off (unreachable). */
+  flex-wrap: wrap;
   justify-content: center;
   gap: var(--spacing-1);
   margin-top: var(--spacing-2);
@@ -214,16 +280,34 @@
   height: var(--spacing-2);
   border-radius: var(--radius-full);
   background-color: var(--color-foreground-subtle);
-  transition: background-color var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    width var(--transition-duration-slow) var(--transition-easing-glide);
 }
 
+/* The active dot stretches into a pill, so position reads at a glance.
+   It grows inside its fixed 24px box — siblings never reflow. */
 .ds-carousel__indicator--active::before {
+  width: var(--spacing-5);
   background-color: var(--color-foreground);
 }
 
 .ds-carousel__indicator:focus-visible {
-  outline: none;
+  outline: var(--border-width-lg) solid transparent; /* painted in forced-colors mode, where box-shadow rings vanish */
   box-shadow: var(--focus-ring);
+}
+
+/* Forced colors repaints backgrounds to the canvas colour, so the dots
+   (background-only pseudo-elements) vanished entirely. System colours are
+   left alone: dots in ButtonText, the active pill in Highlight. */
+@media (forced-colors: active) {
+  .ds-carousel__indicator::before {
+    background-color: ButtonText;
+  }
+
+  .ds-carousel__indicator--active::before {
+    background-color: Highlight;
+  }
 }
 
 /* Dots sit adjacent, so overlapping pseudo-element hit areas would steal
@@ -247,7 +331,18 @@
     transition: none;
   }
 
-  .ds-carousel__control:not(:disabled):active {
+  .ds-carousel__control:not([aria-disabled='true']):active {
     transform: translateY(-50%);
+  }
+}
+
+/* ─── Print ─────────────────────────────────────────────── */
+/* The position dots are fills. Browsers drop backgrounds when printing by default ("economy"), so
+   the state vanished on paper; exact keeps these fills. (-webkit- for
+   Safari < 15.4 and Chrome < 136, which only read the prefixed form.) */
+@media print {
+  .ds-carousel__indicators {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }

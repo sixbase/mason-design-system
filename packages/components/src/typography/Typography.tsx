@@ -15,6 +15,7 @@ export interface HeadingProps extends HTMLAttributes<HTMLHeadingElement> {
   size?: HeadingSize;
   /** Font weight override. Defaults to semibold. */
   weight?: HeadingWeight;
+  /** Secondary foreground colour (`--color-foreground-secondary`) */
   muted?: boolean;
   /** Single-line ellipsis truncation. */
   truncate?: boolean;
@@ -36,15 +37,6 @@ export interface HeadingProps extends HTMLAttributes<HTMLHeadingElement> {
   display?: boolean;
 }
 
-/**
- * Heading
- *
- * Renders semantic heading elements (h1–h4) with consistent typographic scale.
- *
- * @example
- * <Heading as="h1">Page title</Heading>
- * <Heading as="h3" muted>Section subtitle</Heading>
- */
 /** Default visual size for each heading level */
 const defaultSizeMap: Record<HeadingLevel, HeadingSize> = {
   h1: '4xl',
@@ -66,6 +58,15 @@ const displaySizeMap: Record<HeadingSize, 'md' | 'lg' | 'xl' | '2xl'> = {
   '4xl': '2xl',
 };
 
+/**
+ * Heading
+ *
+ * Renders semantic heading elements (h1–h4) with consistent typographic scale.
+ *
+ * @example
+ * <Heading as="h1">Page title</Heading>
+ * <Heading as="h3" muted>Section subtitle</Heading>
+ */
 export const Heading = forwardRef<HTMLHeadingElement, HeadingProps>(function Heading(
   {
     as: Tag = 'h2',
@@ -109,9 +110,13 @@ export type TextElement = 'p' | 'span' | 'div' | 'label' | 'strong' | 'em';
 export type TextLineClamp = 1 | 2 | 3;
 
 export interface TextProps extends HTMLAttributes<HTMLElement> {
+  /** Element to render. Default `p`; use `span` inside inline or flex contexts. */
   as?: TextElement;
+  /** Type scale step. Default `base`. */
   size?: TextSize;
+  /** Font weight. Defaults to the body weight (normal). */
   weight?: TextWeight;
+  /** Secondary foreground colour (`--color-foreground-secondary`) */
   muted?: boolean;
   /** Single-line ellipsis truncation. Mutually exclusive with `lineClamp`. */
   truncate?: boolean;

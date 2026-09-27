@@ -48,7 +48,10 @@
   background-color: var(--color-background-subtle);
 }
 
+/* Any <img> passed as the image node fills the tile — consumers shouldn't
+   have to know the internal .ds-highlights__img class (kept for back-compat). */
 .ds-highlights__img,
+.ds-highlights__media > img,
 .ds-highlights__placeholder {
   display: block;
   width: 100%;
@@ -56,24 +59,19 @@
   object-fit: cover;
 }
 
-.ds-highlights__text {
+/* Rendered by <Text size="lg">; two-class selector beats the .ds-text /
+   .ds-text--lg class tie (lesson: raw-html-in-components). */
+.ds-highlights__item .ds-highlights__text {
   /* Golden-ratio spacing: top gap is the phi step up from the 16px card
      gutter (≈26px); side insets are that divided by phi (≈16px). */
   margin: var(--spacing-phi-13) var(--spacing-phi-8) 0;
   /* Title + description flow inline as one continuous sentence. */
-  font-size: var(--font-size-lg);
   line-height: var(--line-height-normal);
 }
 
 .ds-highlights__title {
   /* Slightly heavier than the description to lead the sentence. */
   font-weight: var(--font-weight-medium);
-}
-
-/* Terminal period on each title — kept out of the content so stored titles
-   stay clean; inherits the title's weight and color. */
-.ds-highlights__title::after {
-  content: ".";
 }
 
 .ds-highlights__desc {

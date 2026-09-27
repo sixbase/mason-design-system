@@ -8,6 +8,14 @@ const meta: Meta<typeof ColorPicker> = {
   title: 'Components/ColorPicker',
   component: ColorPicker,
   tags: ['autodocs'],
+  parameters: {
+    docs: {
+      description: {
+        component:
+          'Round colour swatches for choosing a product finish, like Brushed Brass or Carbon Black.',
+      },
+    },
+  },
   argTypes: {
     size: { control: 'select', options: ['sm', 'md', 'lg'] },
   },
@@ -44,14 +52,17 @@ function Controlled(props: Partial<React.ComponentProps<typeof ColorPicker>>) {
   );
 }
 
-/* ─── Stories ──────────────────────────────────────────────────── */
-
 export const Default: Story = {
   render: () => <Controlled />,
 };
 
 export const Preselected: Story = {
   render: () => <Controlled value="brushed-brass" />,
+};
+
+/** `showLabel` names the chosen finish beside the swatches. Arrow keys move between them. */
+export const WithSelectedLabel: Story = {
+  render: () => <ControlledWithLabel />,
 };
 
 export const Small: Story = {
@@ -75,21 +86,6 @@ function ControlledWithLabel(props: Partial<React.ComponentProps<typeof ColorPic
     />
   );
 }
-
-export const WithSelectedLabel: Story = {
-  render: () => <ControlledWithLabel />,
-};
-
-export const KeyboardNavigation: Story = {
-  render: () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)' }}>
-      <Text as="span" size="sm" muted>
-        Tab into the group, then use arrow keys — Left/Right/Up/Down move and select.
-      </Text>
-      <ControlledWithLabel />
-    </div>
-  ),
-};
 
 export const AllSizes: Story = {
   render: () => (

@@ -92,7 +92,8 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipProps>(function Tooltip
             {...contentProps}
           >
             {content}
-            <RadixTooltip.Arrow className="ds-tooltip__arrow" />
+            {/* Decorative: without aria-hidden the SVG surfaced as an unnamed image */}
+            <RadixTooltip.Arrow className="ds-tooltip__arrow" aria-hidden="true" />
           </RadixTooltip.Content>
         </RadixTooltip.Portal>
       </RadixTooltip.Root>

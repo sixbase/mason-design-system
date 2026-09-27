@@ -2,16 +2,23 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "docs",
+      "name": "workbench",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@ds/docs", "dev"],
-      "port": 4321,
-      "autoPort": true
+      "runtimeArgs": [
+        "--filter",
+        "@ds/workbench",
+        "dev"
+      ],
+      "port": 4321
     },
     {
       "name": "storybook",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@ds/storybook", "dev"],
+      "runtimeArgs": [
+        "--filter",
+        "@ds/storybook",
+        "dev"
+      ],
       "port": 6006
     }
   ]

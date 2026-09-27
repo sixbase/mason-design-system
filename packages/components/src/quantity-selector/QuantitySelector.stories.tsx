@@ -7,6 +7,14 @@ const meta: Meta<typeof QuantitySelector> = {
   title: 'Components/QuantitySelector',
   component: QuantitySelector,
   tags: ['autodocs'],
+  parameters: {
+    docs: {
+      description: {
+        component:
+          'Minus and plus buttons around a number, for choosing how many.',
+      },
+    },
+  },
 };
 export default meta;
 
@@ -23,7 +31,7 @@ export const Default: Story = {
 
 export const Sizes: Story = {
   render: () => (
-    <div style={{ display: 'flex', gap: 'var(--spacing-4)', alignItems: 'center' }}>
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-4)', alignItems: 'center' }}>
       <Controlled size="sm" />
       <Controlled size="md" />
       <Controlled size="lg" />
@@ -32,7 +40,14 @@ export const Sizes: Story = {
 };
 
 export const WithLimits: Story = {
+  name: 'With limits (1 to 5)',
   render: () => <Controlled min={1} max={5} value={3} />,
+};
+
+/** At the limit the plus button turns off (here, only 5 left in stock). At 1, minus does. */
+export const AtMaximum: Story = {
+  name: 'At the maximum (plus turned off)',
+  render: () => <Controlled min={1} max={5} value={5} />,
 };
 
 export const Disabled: Story = {
@@ -40,6 +55,7 @@ export const Disabled: Story = {
 };
 
 export const TypedEntry: Story = {
+  name: 'Typing a number',
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)' }}>
       <Text as="span" size="sm" muted>

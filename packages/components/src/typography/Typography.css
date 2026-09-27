@@ -4,14 +4,22 @@
   color: var(--color-foreground);
   margin: 0;
 
-  /* Optical centering: trim em-box to cap height + baseline */
-  text-box-trim: both;
-  text-box-edge: cap alphabetic;
+  /* Long unbroken strings (URLs, SKUs, German compounds) wrap
+     instead of overflowing narrow columns at 320px. break-word
+     (not anywhere) so ordinary words never split mid-word. */
+  overflow-wrap: break-word;
+
+  /* No text-box-trim here: Typography is flowing text, and the
+     playbook reserves optical trimming for fixed-height controls
+     (see 04-components.md → "Do NOT apply to … Typography"). */
 
   /* Optimal reading width: --measure-reading (65ch ≈ 65 characters
      per line). Only applies to block-level renderings (p, div) —
-     inline elements (span, label) ignore max-width automatically. */
-  max-width: var(--measure-reading);
+     inline elements (span, label) ignore max-width automatically.
+     min(100%, …) for the same reason as .ds-heading below: as a centred
+     flex item the paragraph otherwise sizes to its longest word and
+     overflows a 320px screen. */
+  max-width: min(100%, var(--measure-reading));
 }
 
 /* ─── Heading levels ───────────────────────────────────────── */
@@ -21,10 +29,16 @@
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-tight);
   margin: 0;
-
-  /* Optical centering: trim em-box to cap height + baseline */
-  text-box-trim: both;
-  text-box-edge: cap alphabetic;
+  overflow-wrap: break-word;
+  /* break-word doesn't lower min-content, so as a flex/grid item (hero,
+     section headers) a heading refused to shrink below its longest word:
+     one German compound ("Versandkostenfreigrenze…") at 4xl pushed a 320px
+     page 140px sideways. min-width: 0 lets it shrink on a row's main axis,
+     max-width: 100% caps it on a column's cross axis (align-items: start
+     sizes items to min-content); break-word then wraps inside the box. In
+     normal block flow both are no-ops. */
+  min-width: 0;
+  max-width: 100%;
 
   /* Balance multi-line headings: the browser evens out line
      lengths instead of leaving an orphaned final word. Keeps
@@ -61,8 +75,12 @@
 .ds-heading--display-2xl { font-size: var(--font-size-display-2xl); }
 
 /* ─── Weight modifiers (heading) ──────────────────────────── */
+/* Every HeadingWeight value needs a rule — including the default
+   (semibold) — or `weight="semibold"` can't beat a context that
+   changed the weight. */
 .ds-heading--normal   { font-weight: var(--font-weight-normal); }
 .ds-heading--medium   { font-weight: var(--font-weight-medium); }
+.ds-heading--semibold { font-weight: var(--font-weight-semibold); }
 .ds-heading--bold     { font-weight: var(--font-weight-bold); }
 
 /* ─── Body sizes ───────────────────────────────────────────── */
@@ -98,10 +116,7 @@
   line-height: var(--line-height-normal);
   color: var(--color-foreground-secondary);
   margin: 0;
-
-  /* Optical centering: trim em-box to cap height + baseline */
-  text-box-trim: both;
-  text-box-edge: cap alphabetic;
+  overflow-wrap: break-word;
 }
 
 /* ─── Inline code ──────────────────────────────────────────── */
@@ -109,7 +124,7 @@
   font-family: var(--font-family-code);
   font-size: 0.9em;
   background-color: var(--color-background-subtle);
-  border: 1px solid var(--color-border);
+  border: var(--border-width-sm) solid var(--color-border);
   border-radius: var(--radius-sm);
   padding: 0.1em 0.35em;
   color: var(--color-foreground);
@@ -122,6 +137,9 @@
 }
 
 /* ─── Weight modifiers ─────────────────────────────────────── */
+/* `normal` is not a no-op: Text as="strong"/"label", or Text inside
+   bold copy, inherits a heavier weight that weight="normal" must reset. */
+.ds-text--normal   { font-weight: var(--font-weight-normal); }
 .ds-text--medium   { font-weight: var(--font-weight-medium); }
 .ds-text--semibold { font-weight: var(--font-weight-semibold); }
 .ds-text--bold     { font-weight: var(--font-weight-bold); }
@@ -132,6 +150,15 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* overflow does nothing on a plain inline box, so Text rendered as
+   an inline element needs an atomic box for the ellipsis to apply.
+   vertical-align keeps the clipped box on the text baseline row. */
+.ds-text--truncate:where(span, label, strong, em) {
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: bottom;
 }
 
 /* ─── Line clamp ───────────────────────────────────────────── */
@@ -157,8 +184,8 @@
   /* Approximate cap: n lines × the loosest body line-height token.
      No ellipsis, but the box height stays bounded. */
   .ds-text--clamp-1 { max-height: calc(1em * var(--line-height-normal)); }
-  .ds-text--clamp-2 { max-height: calc(2em * var(--line-height-normal)); }
-  .ds-text--clamp-3 { max-height: calc(3em * var(--line-height-normal)); }
+  .ds-text--clamp-2 { max-height: calc(1em * var(--line-height-normal) * 2); }
+  .ds-text--clamp-3 { max-height: calc(1em * var(--line-height-normal) * 3); }
 }
 
 /* ─── Reading width utility ───────────────────────────────── */
@@ -169,11 +196,3 @@
   max-width: var(--measure-reading);
 }
 
-/* ─── Optical centering fallback ─────────────────────────── */
-@supports not (text-box-trim: both) {
-  .ds-text,
-  .ds-heading,
-  .ds-caption {
-    transform: translateY(0.05em);
-  }
-}

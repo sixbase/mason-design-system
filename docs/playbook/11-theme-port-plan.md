@@ -1,6 +1,8 @@
 # 11 — Theme Port Execution Plan
 
 > How to parallelize the Shopify theme port across multiple Claude Code agents without merge conflicts. Intended to be a throwaway operational plan — delete or mark complete when all streams land.
+>
+> **Status (2026-09-26):** historical. The streams below landed (see the roadmap in `10-shopify-theme.md`), and the theme now lives in its own repo (`sixbase/mason-storefront`) — read theme paths as that repo's root. The remaining port work is now one prioritised list: `15-storefront-port-plan.md` (84 items, audit round 5).
 
 ---
 

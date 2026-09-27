@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe, toHaveNoViolations } from 'jest-axe';
@@ -167,6 +169,15 @@ describe('AddToCartButton', () => {
       rerender(<AddToCartButton status="success" />);
       expect(live).toHaveTextContent('Added!');
     });
+
+    // Regression (a11y audit): the reset to idle announced "Add to Bag" on
+    // its own after "Added!", which reads like a second action.
+    it('stays quiet when the cycle returns to idle', () => {
+      const { rerender } = render(<AddToCartButton status="success" />);
+      const live = document.querySelector('.ds-add-to-cart__live');
+      rerender(<AddToCartButton status="idle" />);
+      expect(live).toBeEmptyDOMElement();
+    });
   });
 
   describe('accessibility', () => {
@@ -187,5 +198,31 @@ describe('AddToCartButton', () => {
       const results = await axe(container);
       expect(results).toHaveNoViolations();
     });
+  });
+});
+
+// Round 5 (shopper journeys): Added! and Sold Out used pointer-events:
+// none, so a second click fell through and the browser moved focus to
+// <main tabindex="-1">. The click handler already ignores these states.
+describe('AddToCartButton stylesheet', () => {
+  const css = readFileSync(resolve(__dirname, 'AddToCartButton.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  it('keeps pointer events in every state, so focus stays on the button', () => {
+    expect(css).not.toMatch(/pointer-events/);
+  });
+
+  it('does not look pressed or hovered while showing Added!', () => {
+    expect(css).toMatch(
+      /\.ds-add-to-cart\.ds-add-to-cart--success:active:not\(:disabled\)\s*\{[^}]*background-color: var\(--add-to-cart-success-bg\);[^}]*transform: none;/,
+    );
+    expect(css).toMatch(/\.ds-add-to-cart\.ds-add-to-cart--success:hover:not\(:disabled\)/);
+  });
+
+  it('ignores a second click while showing Added!', async () => {
+    const onClick = vi.fn();
+    render(<AddToCartButton status="success" onClick={onClick} />);
+    const button = screen.getByRole('button');
+    await userEvent.dblClick(button);
+    expect(onClick).not.toHaveBeenCalled();
+    expect(button).toHaveFocus();
   });
 });

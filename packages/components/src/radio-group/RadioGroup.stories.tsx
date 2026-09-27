@@ -5,9 +5,17 @@ const meta: Meta<typeof RadioGroup> = {
   title: 'Components/RadioGroup',
   component: RadioGroup,
   tags: ['autodocs'],
+  parameters: {
+    docs: {
+      description: {
+        component:
+          'A list where you pick exactly one option — shipping speed, payment method.',
+      },
+    },
+  },
   argTypes: {
-    size: { control: 'select' },
-    orientation: { control: 'select' },
+    size: { control: 'select', options: ['sm', 'md'] },
+    orientation: { control: 'select', options: ['vertical', 'horizontal'] },
   },
 };
 export default meta;
@@ -30,6 +38,27 @@ export const WithDescriptions: Story = {
       <RadioGroupItem value="standard" label="Standard" description="4–7 business days · Free" />
       <RadioGroupItem value="express" label="Express" description="1–2 business days · $12.00" />
       <RadioGroupItem value="overnight" label="Overnight" description="Next business day · $28.00" />
+    </RadioGroup>
+  ),
+};
+
+export const Horizontal: Story = {
+  render: () => (
+    <RadioGroup label="Condition" orientation="horizontal" defaultValue="new">
+      <RadioGroupItem value="new" label="New" />
+      <RadioGroupItem value="refurbished" label="Refurbished" />
+      <RadioGroupItem value="used" label="Used" />
+    </RadioGroup>
+  ),
+};
+
+export const Small: Story = {
+  render: () => (
+    <RadioGroup label="Sort by" size="sm" defaultValue="featured">
+      <RadioGroupItem value="featured" label="Featured" />
+      <RadioGroupItem value="price-asc" label="Price: low to high" />
+      <RadioGroupItem value="price-desc" label="Price: high to low" />
+      <RadioGroupItem value="newest" label="Newest" />
     </RadioGroup>
   ),
 };
@@ -63,33 +92,28 @@ export const Disabled: Story = {
   ),
 };
 
+/** A disabled group keeps its hint readable, so the reason still shows. */
+export const DisabledWithHint: Story = {
+  render: () => (
+    <RadioGroup
+      label="Delivery date"
+      hint="Scheduled delivery isn’t available for your postcode yet"
+      disabled
+      defaultValue="asap"
+    >
+      <RadioGroupItem value="asap" label="As soon as possible" />
+      <RadioGroupItem value="scheduled" label="Pick a day" />
+    </RadioGroup>
+  ),
+};
+
 export const DisabledItem: Story = {
+  name: 'One option unavailable',
   render: () => (
     <RadioGroup label="Shipping method" defaultValue="standard">
       <RadioGroupItem value="standard" label="Standard" />
       <RadioGroupItem value="express" label="Express" />
       <RadioGroupItem value="overnight" label="Overnight" disabled />
-    </RadioGroup>
-  ),
-};
-
-export const Small: Story = {
-  render: () => (
-    <RadioGroup label="Sort by" size="sm" defaultValue="featured">
-      <RadioGroupItem value="featured" label="Featured" />
-      <RadioGroupItem value="price-asc" label="Price: low to high" />
-      <RadioGroupItem value="price-desc" label="Price: high to low" />
-      <RadioGroupItem value="newest" label="Newest" />
-    </RadioGroup>
-  ),
-};
-
-export const Horizontal: Story = {
-  render: () => (
-    <RadioGroup label="Condition" orientation="horizontal" defaultValue="new">
-      <RadioGroupItem value="new" label="New" />
-      <RadioGroupItem value="refurbished" label="Refurbished" />
-      <RadioGroupItem value="used" label="Used" />
     </RadioGroup>
   ),
 };

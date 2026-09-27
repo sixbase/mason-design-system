@@ -10,7 +10,7 @@ const meta: Meta<typeof Button> = {
     docs: {
       description: {
         component:
-          'The primary interactive element. Supports four variants, three sizes, loading state, and polymorphic rendering.',
+          'The standard button: four styles, three sizes, plus loading, disabled and icon versions.',
       },
     },
   },
@@ -38,8 +38,6 @@ const meta: Meta<typeof Button> = {
 export default meta;
 type Story = StoryObj<typeof Button>;
 
-// ─── Primary stories ──────────────────────────────────────────
-
 export const Primary: Story = {
   args: {
     children: 'Button',
@@ -60,23 +58,9 @@ export const Destructive: Story = {
   args: { ...Primary.args, variant: 'destructive', children: 'Delete' },
 };
 
-// ─── Sizes ───────────────────────────────────────────────────
-
-export const Sizes: Story = {
-  render: () => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)' }}>
-      <Button size="sm">Small</Button>
-      <Button size="md">Medium</Button>
-      <Button size="lg">Large</Button>
-    </div>
-  ),
-};
-
-// ─── All variants ─────────────────────────────────────────────
-
 export const AllVariants: Story = {
   render: () => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)' }}>
+    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--spacing-3)' }}>
       <Button variant="primary">Primary</Button>
       <Button variant="secondary">Secondary</Button>
       <Button variant="ghost">Ghost</Button>
@@ -85,7 +69,15 @@ export const AllVariants: Story = {
   ),
 };
 
-// ─── States ───────────────────────────────────────────────────
+export const Sizes: Story = {
+  render: () => (
+    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--spacing-3)' }}>
+      <Button size="sm">Small</Button>
+      <Button size="md">Medium</Button>
+      <Button size="lg">Large</Button>
+    </div>
+  ),
+};
 
 export const Loading: Story = {
   args: { ...Primary.args, loading: true, children: 'Saving...' },
@@ -99,7 +91,7 @@ export const FullWidth: Story = {
   args: { ...Primary.args, fullWidth: true },
   decorators: [
     (Story) => (
-      <div style={{ width: '320px' }}>
+      <div style={{ width: '100%', maxWidth: 'var(--size-modal-sm)' }}>
         <Story />
       </div>
     ),
@@ -148,7 +140,7 @@ export const WithTrailingIcon: Story = {
 
 export const IconOnly: Story = {
   render: () => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)' }}>
+    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--spacing-3)' }}>
       <Button size="sm" iconOnly aria-label="Add item (small)">
         <PlusIcon />
       </Button>
@@ -162,12 +154,12 @@ export const IconOnly: Story = {
   ),
 };
 
-// ─── Polymorphic ──────────────────────────────────────────────
-
+/** `asChild` gives a real link (it navigates, opens in a new tab) the button's look. */
 export const AsLink: Story = {
+  name: 'As a link (looks like a button)',
   render: () => (
     <Button asChild variant="secondary">
-      <a href="#example">Open link</a>
+      <a href="/collections/new-arrivals">Shop new arrivals</a>
     </Button>
   ),
 };

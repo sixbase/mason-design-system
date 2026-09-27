@@ -48,8 +48,13 @@ export const Skeleton = forwardRef<HTMLDivElement, SkeletonProps>(function Skele
   const resolvedWidth = typeof width === 'number' ? `${width}px` : width;
   const resolvedHeight = typeof height === 'number' ? `${height}px` : height;
 
+  // Computed counts (e.g. `expectedLength / 40`) can be fractional or NaN —
+  // a fractional count never matched `i === lines - 1`, so no line got the
+  // shorter "last line" treatment.
+  const lineCount = Number.isFinite(lines) ? Math.max(1, Math.floor(lines)) : 1;
+
   // Text variant with multiple lines renders a group
-  if (variant === 'text' && lines > 1) {
+  if (variant === 'text' && lineCount > 1) {
     const groupClasses = [
       'ds-skeleton-group',
       !animate && 'ds-skeleton--static',
@@ -66,8 +71,8 @@ export const Skeleton = forwardRef<HTMLDivElement, SkeletonProps>(function Skele
         style={{ ...style, width: resolvedWidth }}
         {...props}
       >
-        {Array.from({ length: lines }, (_, i) => {
-          const isLast = i === lines - 1;
+        {Array.from({ length: lineCount }, (_, i) => {
+          const isLast = i === lineCount - 1;
           const lineClasses = [
             'ds-skeleton',
             'ds-skeleton--text',

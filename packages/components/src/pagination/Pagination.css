@@ -1,7 +1,6 @@
 /* ─── Pagination component tokens ────────────────────────── */
 .ds-pagination {
   --pagination-gap: var(--spacing-1);
-  --pagination-page-size: var(--size-control-md);
   --pagination-radius: var(--radius-md);
   --pagination-font-weight: var(--font-weight-medium);
 
@@ -21,6 +20,13 @@
   gap: var(--pagination-gap);
 }
 
+/* The only icons here are the Previous/Next chevrons. In RTL the row flips
+   (Next sits on the left), so the chevrons must point the other way too —
+   they were showing "Next ›" pointing back at page 1. */
+.ds-pagination .ds-icon:dir(rtl) {
+  transform: scaleX(-1);
+}
+
 /* Page-number buttons render numerals in the numeric family. Overrides the
    Button's own font-family token rather than its font-family property. */
 .ds-pagination__pages .ds-button {
@@ -37,6 +43,7 @@
   font-variant-numeric: tabular-nums;
   font-weight: var(--pagination-font-weight);
   border-radius: var(--pagination-radius);
+  -webkit-user-select: none; /* Safari ignores the unprefixed property */
   user-select: none;
 
   text-box-trim: both;
@@ -46,6 +53,29 @@
 .ds-pagination__page--current {
   background-color: var(--color-primary);
   color: var(--color-primary-foreground);
+}
+
+/* "Page " before the current number — read aloud, never painted */
+.ds-pagination__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Forced colors drops the fill, so the current page became the only
+   unboxed number in a row of bordered buttons — it read like the "…"
+   filler, not "you are here". Highlight is the system "selected" pair. */
+@media (forced-colors: active) {
+  .ds-pagination__page--current {
+    background-color: Highlight;
+    color: HighlightText;
+  }
 }
 
 /* Current page sizes — match button icon-only dimensions */
@@ -69,6 +99,7 @@
   width: var(--size-control-md);
   height: var(--size-control-md);
   color: var(--color-foreground-subtle);
+  -webkit-user-select: none; /* Safari ignores the unprefixed property */
   user-select: none;
 }
 
@@ -78,14 +109,22 @@
 }
 
 /* ─── Page info text (mobile) ────────────────────────────── */
-/* "Page X of Y" — numeric family, two-class specificity beats .ds-text. */
+/* "Page X of Y" — numeric family, two-class specificity beats .ds-text.
+   The info is the only flexible part of the mobile row: min-width: 0 lets
+   it shrink and wrap (balanced) instead of pushing Next off-screen — at
+   320px the two labelled buttons leave ~68px, narrower than "Page 5 of 20". */
 .ds-pagination .ds-pagination__info {
   font-family: var(--font-family-numeric);
   font-variant-numeric: tabular-nums;
   color: var(--color-foreground-secondary);
-  white-space: nowrap;
   text-align: center;
+  text-wrap: balance;
   flex: 1;
+  min-width: 0;
+}
+
+.ds-pagination__mobile > .ds-button {
+  flex-shrink: 0;
 }
 
 /* ─── Mobile layout ──────────────────────────────────────── */
@@ -117,25 +156,10 @@
 }
 
 /* ─── Touch hit areas ────────────────────────────────────── */
-/* Visual sizes stay compact (34/42px controls); on coarse pointers
-   every page button and prev/next gets an invisible ≥44px hit area.
-   Coarse-only guard: page buttons sit 4px apart, so the expanded
-   areas overlap slightly — acceptable for touch, wrong for mouse. */
-@media (pointer: coarse) {
-  .ds-pagination .ds-button {
-    position: relative;
-  }
-
-  .ds-pagination .ds-button::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: max(100%, var(--size-hit-area));
-    height: max(100%, var(--size-hit-area));
-  }
-}
+/* Every page button and prev/next is a <Button>, which already gives its
+   sm/md sizes an invisible ≥44px hit area on coarse pointers (Button.css).
+   Page buttons sit 4px apart, so those areas overlap slightly — fine for
+   touch, and fine pointers keep exact bounds. */
 
 /* ─── Optical centering fallback ─────────────────────────── */
 @supports not (text-box-trim: both) {
@@ -148,5 +172,16 @@
 @media (prefers-reduced-motion: reduce) {
   .ds-pagination__page {
     transition: none;
+  }
+}
+
+/* ─── Print ─────────────────────────────────────────────── */
+/* The current page is light text on a fill: printed white-on-white. Browsers drop backgrounds when printing by default ("economy"), so
+   the state vanished on paper; exact keeps these fills. (-webkit- for
+   Safari < 15.4 and Chrome < 136, which only read the prefixed form.) */
+@media print {
+  .ds-pagination {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }

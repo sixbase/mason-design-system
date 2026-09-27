@@ -1,8 +1,10 @@
 import { forwardRef } from 'react';
 import type { HTMLAttributes, ReactNode } from 'react';
 import { Heading } from '../typography/Typography';
+import type { HeadingLevel } from '../typography/Typography';
 import { Text } from '../typography/Typography';
 import { Button } from '../button/Button';
+import { safeHref } from '../internal/safe-url';
 import './EmptyState.css';
 
 // ─── Types ────────────────────────────────────────────────
@@ -27,6 +29,12 @@ export interface EmptyStateProps extends HTMLAttributes<HTMLDivElement> {
   secondaryAction?: EmptyStateAction;
   /** Compact layout for constrained contexts (e.g. Cart Drawer) */
   compact?: boolean;
+  /**
+   * Heading level (default `h2`). Size is unchanged — pick the level that
+   * fits the page outline, e.g. `h3` inside a drawer or section that already
+   * has its own `h2`.
+   */
+  headingLevel?: Exclude<HeadingLevel, 'h1'>;
 }
 
 // ─── Component ────────────────────────────────────────────
@@ -40,6 +48,7 @@ export const EmptyState = forwardRef<HTMLDivElement, EmptyStateProps>(
       action,
       secondaryAction,
       compact = false,
+      headingLevel = 'h2',
       className,
       ...props
     },
@@ -57,7 +66,7 @@ export const EmptyState = forwardRef<HTMLDivElement, EmptyStateProps>(
       <div ref={ref} className={classes} {...props}>
         {icon && <div className="ds-empty-state__icon">{icon}</div>}
 
-        <Heading as="h2" size={compact ? 'xl' : '2xl'} className="ds-empty-state__heading">
+        <Heading as={headingLevel} size={compact ? 'xl' : '2xl'} className="ds-empty-state__heading">
           {heading}
         </Heading>
 
@@ -71,12 +80,12 @@ export const EmptyState = forwardRef<HTMLDivElement, EmptyStateProps>(
           <div className="ds-empty-state__actions">
             {action && (
               <Button asChild variant="primary">
-                <a href={action.href}>{action.label}</a>
+                <a href={safeHref(action.href)}>{action.label}</a>
               </Button>
             )}
             {secondaryAction && (
               <Button asChild variant="ghost">
-                <a href={secondaryAction.href}>{secondaryAction.label}</a>
+                <a href={safeHref(secondaryAction.href)}>{secondaryAction.label}</a>
               </Button>
             )}
           </div>

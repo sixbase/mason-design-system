@@ -1,6 +1,6 @@
 # 04 — Components
 
-> Architecture, patterns, accessibility requirements, and documentation standards for every component.
+> Architecture, patterns, and review standards for every component. Accessibility rules are collected in `14-accessibility.md`; motion rules in `13-motion.md`.
 
 ---
 
@@ -8,16 +8,20 @@
 
 Read these before building or modifying any component.
 
-1. **4-file rule.** Every component has exactly: `{Component}.tsx`, `{Component}.css`, `{Component}.test.tsx`, `{Component}.stories.tsx`, `index.ts`. All built in the same session. No exceptions.
+1. **4-file rule.** Every component has at least: `{Component}.tsx`, `{Component}.css`, `{Component}.test.tsx`, `{Component}.stories.tsx`, `index.ts` (Icon adds `icons.tsx`, the registry). All built in the same session. No exceptions.
 2. **Components own their styles.** All visual styling lives in the component's CSS file. Demo pages and example pages never override component appearance.
 3. **If something looks wrong on a page, fix the component — not the page.** The fix must benefit every page that uses the component.
 4. **No overrides.** Block components never target a primitive's internal CSS classes. If the primitive doesn't support what you need, update the primitive first. See the No Overrides section below.
 5. **No raw values.** Every CSS value references a token. If the token doesn't exist, flag it as a gap.
 6. **`forwardRef` on everything.** Every component accepts a ref. Set `displayName`.
-7. **Accessibility passes or the component doesn't ship.** Every component passes axe with zero violations. Keyboard navigation works. Focus states are visible.
+7. **Accessibility passes or the component doesn't ship.** Every component passes axe with zero violations. Keyboard navigation works. Focus states are visible. Full list: `14-accessibility.md`.
 8. **Always use `<Heading>` and `<Text>`.** Never raw `<h1>`–`<h6>` or `<p>` — not in components, not in demos, not anywhere.
-9. **Disabled state uses `opacity: var(--opacity-medium)`.** Never `opacity: 0.5`.
-10. **`display: none` on a child component's class = missing API.** Flag it and fix the component. Don't work around it in consumer CSS.
+9. **Disabled state uses `opacity: var(--opacity-medium)`.** Never `opacity: 0.5`. Fade the control and the label beside it (checkbox, switch, radio option) — never the field or group label above it, and never the hint, which often explains how to enable it. One fade only: never opacity plus a muted colour. A focusable `aria-disabled` control un-fades while focused, or its focus ring fades too.
+10. **Hover only where a pointer hovers.** Wrap every `:hover` rule in `@media (hover: hover)`; touch screens keep `:hover` after a tap. Exception: `:not(:hover)` keyboard-highlight rules stay ungated. `check-css` enforces it.
+11. **Hit areas:** at least 24×24px for every pointer (WCAG 2.5.8), 44px on touch, grown invisibly (pseudo-element) without changing the φ control heights — and grown outward, never over a neighbouring field.
+12. **`display: none` on a child component's class = missing API.** Flag it and fix the component. Don't work around it in consumer CSS.
+13. **Use the shared helpers** in `src/internal/` (below) — never a second money formatter, a hand-rolled live region, an unchecked data-driven `href`, or `document.activeElement` to find a dialog's opener.
+14. **`pnpm lint` and `pnpm typecheck` pass.** Lint runs `check-css` over every component CSS file; typecheck compiles every story.
 
 ---
 
@@ -30,8 +34,10 @@ Read these before building or modifying any component.
 | `display: none` on child's internal class | Fragile, invisible, breaks on refactor | Add a prop or render slot to the component |
 | Forgetting `font-family` on portalled content | Select dropdown, Modal content use wrong font | Explicitly declare `font-family: var(--font-family-body)` on Radix Portal elements |
 | `color-mix(… 8%, transparent)` for badge bg | Fails WCAG contrast — mathematically impossible | Use solid primitive (e.g., `--color-sage-50`) |
-| Inline `style={{ }}` in gallery/demo code | Invisible to search, impossible to update globally | Use `demo-utilities.css` shared classes |
-| Raw `<p>` or `<h2>` in demos | Doesn't use the design system's own components | Use `<Text>` and `<Heading>` |
+| Visual inline `style={{ }}` in stories or workbench sheets | Invisible to search, drifts from tokens | Layout wrappers only, with `var(--token)` values; anything visual belongs in the component |
+| Raw `<p>` or `<h2>` in stories or sheets | Doesn't use the design system's own components | Use `<Text>` and `<Heading>` |
+| Native `disabled` on a control that disables itself while focused | Focus drops to `<body>` | `aria-disabled="true"` and ignore the click |
+| `:hover` outside `@media (hover: hover)` | Hover sticks after a tap on phones | Gate it (`check-css` fails the lint) |
 | Hardcoded `opacity: 0.5` | Not φ-derived, inconsistent | `var(--opacity-medium)` — 0.382 |
 | Fixed-width component in fluid grid | Phantom gaps, uneven whitespace | Provide a `fluid` variant |
 
@@ -101,9 +107,12 @@ export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
 | Default size is `'md'` | `size = 'md'` | Middle of scale |
 | Boolean props false by default | `loading = false` | Opt-in |
 | Polymorphic via `asChild` | `asChild?: boolean` | Radix Slot — the correct way |
-| Loading disables interaction | `disabled={loading}` | Prevents double-submit |
+| Loading blocks activation, keeps focus | `aria-disabled` + `aria-busy`, click swallowed — never native `disabled` | Prevents double-submit without dropping focus to `<body>` |
 | Icons are `ReactNode` | `leadingIcon?: ReactNode` | Accepts any icon library |
 | Error strings, not booleans | `error?: string` | Text is both indicator and message |
+| Prices are integer hundredths | `price={4800}` + `currency`/`locale` props | See "Internal Helpers" → `format-money` |
+| Every prop set is exported | `export type { ButtonProps }` from `index.ts` | Consumers can wrap and extend |
+| Wrap Radix parts, never rename them | `forwardRef` wrapper with its own `displayName` | Renaming the Radix object renames it for every user on the page |
 
 ---
 
@@ -125,7 +134,21 @@ return <Comp className={classes} {...props}>{children}</Comp>
 </Button>
 ```
 
-Used in: Button, Typography Text.
+Used in: Button, plus the trigger/close parts that wrap Radix (Modal, Popover, Tooltip, DropdownMenu). Typography does **not** use `asChild` — `Heading` and `Text` take `as` (the element to render).
+
+---
+
+## Internal Helpers (`src/internal/`)
+
+Shared, not exported from the package. Use them — each exists because the hand-rolled version broke.
+
+| Helper | Use it when | Why |
+|--------|-------------|-----|
+| `format-money.ts` — `formatMoney(cents, currency, locale)`, `currencyDecimals()` | Any component shows a price | Amounts are integer hundredths for **every** currency (Shopify's convention: $48.00 = 4800, ¥4,800 = 480000); Intl shows each currency's own decimals. One cached formatter per locale + currency (constructing one costs ~160µs on a phone). Locale is always explicit, so server and browser agree (no hydration mismatch). |
+| `use-change-announcement.ts` — `useChangeAnnouncement(message)` | A count or status should be read aloud when it changes | Returns `''` on first render and the new text on change. A live region rendered with its text is skipped or read twice. |
+| `dialog-opener.ts` — `trackDialogOpeners()`, `dialogOpener()` | An overlay must return focus on close | Safari doesn't focus a clicked button, so `document.activeElement` is `<body>`; this remembers the last pressed control. |
+| `safe-url.ts` — `safeHref(href)` (added 2026-09-26) | Any `href` that comes from store data (menus, breadcrumbs, cart lines, announcement links) | React 18 renders `href="javascript:…"` as given. Returns the href unchanged when safe, `undefined` (an inert link) for `javascript:`, `vbscript:` and `data:`. |
+| `dev-warning.ts` — `devWarning(key, message)` | A prop combination is misuse (icon-only button without a name, unnamed popover, controlled value without `onChange`) | One console warning per kind of misuse, development only — dead code in production bundles. Tests call `resetDevWarnings()`. |
 
 ---
 
@@ -186,8 +209,41 @@ Declare once on root. Children inherit. **Exception:** Radix Portal content (Sel
 
 ```css
 /* ✅ */  transition: background-color var(--transition-fast);
+/* ✅ */  transition: transform var(--transition-duration-slow) var(--transition-easing-emphasized);
 /* ❌ */  transition: background-color 100ms cubic-bezier(0.4, 0, 0.2, 1);
 ```
+
+### Hover, disabled, hit areas
+
+```css
+/* Hover only where a pointer hovers — touch keeps :hover after a tap */
+@media (hover: hover) {
+  .ds-x:hover:not(:disabled):not([aria-disabled='true']) { background-color: var(--color-secondary-hover); }
+}
+
+/* One fade, on the control (and its inline label) — never on the hint */
+.ds-x:disabled,
+.ds-x[aria-disabled='true'] { opacity: var(--opacity-medium); cursor: not-allowed; }
+
+/* Grow the hit zone invisibly, outward; the visible size stays on the φ ladder.
+   The element needs position: relative. Isolated control: no media guard.
+   Controls with close neighbours: wrap in @media (pointer: coarse). */
+.ds-x::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, var(--size-hit-area));
+  height: max(100%, var(--size-hit-area));
+  transform: translate(-50%, -50%);
+}
+```
+
+Which hit-area pattern fits (isolated, adjacent, flush-stacked, inline) is in `07-lessons-learned.md#hit-area-selection`.
+
+### Where `check-css` draws the line
+
+`packages/components/scripts/check-css.mjs` runs in `pnpm lint` and fails on: undefined `var()`, component tokens nothing reads, raw values (colours, lengths, durations, curves, bare z-index/font-weight/opacity/line-height/scale numbers), `!important` outside reduced-motion, `@media` widths that aren't the breakpoint tokens (640/768/1024/1280, or one less for `max-width`), and ungated `:hover`. Its header lists the allowed exceptions (0, %, `fr`, `deg`, viewport units, `ch`, `1em`, the 0.05em optical nudge, the visually-hidden 1px pattern, `@container` lengths, and named per-file one-offs). Media queries can't read custom properties, so write the raw width with a comment: `/* @breakpoint-md = 768px */`.
 
 ---
 
@@ -226,44 +282,15 @@ Any CSS in a composed component that targets a primitive's internal class:
 
 ---
 
-## Optical Text Centering (`text-box-trim`)
+## Optical Text Centering — current state (open decision)
 
-Fixed-height controls appear off-center because browsers center the em box, not the visible glyphs.
+Fixed-height controls (buttons, badges, tags, inputs, select triggers, tabs) look slightly high because browsers centre the em box, not the visible letters.
 
-### Apply to these components
+**What the code does today:** about 24 component CSS files declare `text-box-trim: both; text-box-edge: cap alphabetic;` plus an `@supports not (text-box-trim: both) { … translateY(0.05em) … }` block. `both` is **not a valid value** (the valid form is `text-box: trim-both cap alphabetic`), so no browser applies the trim, the `@supports not` test is always true, and the only thing that runs everywhere is the 0.05em downward nudge. Measured: text is already within 0.4px of centre (0.9px on the small Input). Valid trim would also need a label span on flex roots (Button, Badge) and would shrink table rows.
 
-| Component | Selector | Why |
-|-----------|----------|-----|
-| Button | `.ds-button` | Fixed-height, flex-centered label |
-| Badge | `.ds-badge` | Fixed-height pill |
-| Input | `.ds-input-field` | Fixed-height field |
-| Select | `.ds-select-trigger` | Fixed-height trigger |
-| QuantitySelector | `.ds-quantity-selector__value` | Fixed-height number |
+**Status:** open — the owner decides badge height, then one pass switches every file to valid syntax and re-baselines visuals. Tracked in `12-audit-2026-09-25.md` → "Open after five rounds" item 1; full analysis in `07-lessons-learned.md#text-box-trim-invalid`.
 
-### Do NOT apply to
-
-Accordion, Card, Checkbox label, Typography, Modal, Breadcrumb — these have flowing/multi-line content.
-
-### Implementation
-
-```css
-text-box-trim: both;
-text-box-edge: cap alphabetic;
-```
-
-### Fallback (Firefox)
-
-```css
-@supports not (text-box-trim: both) {
-  .ds-button { transform: translateY(0.05em); }
-  /* If component uses transform (e.g. :active scale), combine: */
-  .ds-button:active:not(:disabled) { transform: translateY(0.05em) scale(0.98); }
-}
-```
-
-`0.05em` is tuned for Ancizar Serif. If the font changes, re-inspect and adjust.
-
-Browser support: Chrome 133+, Safari 18.2+, Firefox not yet.
+**Until then:** don't treat the property as working. A new fixed-height component copies Button's existing block unchanged, so the fix pass can find every instance with `grep -rl text-box-trim packages/components/src`. Never apply any of it to flowing text (Accordion, Card body, Typography, Modal, Breadcrumb).
 
 ---
 
@@ -274,7 +301,7 @@ Browser support: Chrome 133+, Safari 18.2+, Firefox not yet.
 Applies to: Accordion items, cart line items, and any vertical list with dividers.
 
 ```css
-.ds-{component}__item { border-bottom: 1px solid var(--color-border); }
+.ds-{component}__item { border-bottom: var(--border-width-sm) solid var(--color-border); }
 .ds-{component}__item:last-child { border-bottom: none; }
 ```
 
@@ -286,7 +313,7 @@ The `bordered` accordion variant wraps in a panel with its own border + radius �
 
 ## Optimal Reading Width (65ch)
 
-All body/paragraph text: `max-width: 65ch`. Typographic sweet spot (Bringhurst 45–75 range).
+All body/paragraph text: `max-width: var(--measure-reading)` (65ch). Typographic sweet spot (Bringhurst 45–75 range). `.ds-text` uses `min(100%, var(--measure-reading))` so a long word can't push a narrow column sideways.
 
 **Applied to:** `.ds-text`, `.ds-feature-block__desc`, `.ds-cookie-consent__description`, `.ds-readable-width` utility.
 
@@ -301,17 +328,20 @@ All body/paragraph text: `max-width: 65ch`. Typographic sweet spot (Bringhurst 4
 ## Focus Management
 
 ```css
-/* ✅ Remove outline, provide ring */
+/* ✅ Replace the default outline with the token ring + a transparent outline */
 .ds-button { outline: none; }
 .ds-button:focus-visible {
-  box-shadow: 0 0 0 2px var(--color-background), 0 0 0 4px var(--color-focus-ring);
+  box-shadow: var(--focus-ring);
+  /* paints nothing normally; Windows High Contrast drops box-shadow and shows this */
+  outline: var(--border-width-lg) solid transparent;
+  outline-offset: var(--border-width-lg);
 }
 
 /* ❌ Never — keyboard users lose focus visibility */
 .ds-button:focus { outline: none; }
 ```
 
-Use `:focus-visible` not `:focus`. Keyboard users see the ring, mouse users don't.
+Use `:focus-visible` not `:focus`. Keyboard users see the ring, mouse users don't. Clipped or overlapped elements, Radix list highlights and sticky headers have their own rules — see `14-accessibility.md` → Focus.
 
 ### Focus ring tokens
 
@@ -322,7 +352,7 @@ Use `:focus-visible` not `:focus`. Keyboard users see the ring, mouse users don'
 .ds-input-field[aria-invalid="true"]:focus { box-shadow: var(--focus-ring-error); }
 ```
 
-Never write the `color-mix()` expression directly — always use the composite token.
+Never write the ring's shadow expression directly — always use the composite token.
 
 Global fallback in `tokens.css`: `*:focus-visible { outline: 2px solid var(--color-focus-ring); outline-offset: 2px; }`
 
@@ -331,9 +361,9 @@ Global fallback in `tokens.css`: `*:focus-visible { outline: 2px solid var(--col
 ## Accessibility Requirements by Component Type
 
 ### Button
-- `type="button"` (prevents form submission)
-- `aria-disabled={true}` for JS-disabled (stays focusable for screen readers)
-- `aria-busy={true}` + `aria-label` for loading state
+- `type="button"` by default (pass `type="submit"` explicitly for submit buttons)
+- `disabled` → native `disabled`; `loading` → `aria-disabled` + `aria-busy`, stays focusable, activation swallowed
+- `iconOnly` needs `aria-label` (dev warning otherwise)
 - Spinner gets `aria-hidden="true"`
 
 ### Input
@@ -342,9 +372,10 @@ Global fallback in `tokens.css`: `*:focus-visible { outline: 2px solid var(--col
 - Hint: `aria-describedby={hintId}` (no `role="alert"` — not announced immediately)
 
 ### Typography
-- `Heading` renders correct semantic element (`h1`–`h4`)
-- **Semantic level ≠ visual size.** `as` controls HTML element, `size` controls visual scale. They're independent. `<Heading as="h1" size="2xl">` is correct for an h1 in a narrow column.
-- Heading supports `weight` prop (normal, medium, semibold, bold) — default is semibold
+- `Heading` renders `h1`–`h4` via `as` (default `h2`). There is **no `level` prop** — an unknown prop becomes an HTML attribute and you silently get `<h2>`.
+- **Semantic level ≠ visual size.** `as` controls the element, `size` (`xl` | `2xl` | `3xl` | `4xl`) the visual scale; `display` swaps to the display scale. `<Heading as="h1" size="2xl">` is correct for an h1 in a narrow column. There is no size below `xl` yet (open item in `12`).
+- Heading supports `weight` (normal, medium, semibold, bold; default semibold) and `muted`.
+- `Text`: `as` (`p` default, `span`, `div`, `label`, `strong`, `em`), `size` (`xs`–`xl`), `weight`, `muted`, `truncate`/`lineClamp`.
 
 ### Typography token mapping
 
@@ -354,24 +385,24 @@ Global fallback in `tokens.css`: `*:focus-visible { outline: 2px solid var(--col
 | Heading h2 (3xl) | 42px | semibold | tight | normal |
 | Heading h3 (2xl) | 33px | semibold | tight | normal |
 | Heading h4 (xl) | 26px | semibold | tight | normal |
-| Text lg | 20px | normal | snug (1.375) | normal |
-| Text base | 16px | normal | snug (1.375) | normal |
+| Text lg | 20px | normal | snug (1.382) | normal |
+| Text base | 16px | normal | snug (1.382) | normal |
 | Text sm | 14px | normal | normal (1.5) | normal |
 | Caption | 12px | normal | normal (1.5) | normal |
 | Code | 0.9em | normal | inherited | normal |
 
 ### Modal (Radix Dialog)
-- Focus trapped inside. Returns to trigger on close.
+- Focus trapped inside. Returns to the opener on close (via `dialog-opener.ts`).
 - `role="dialog"`, `aria-labelledby`, `aria-describedby`
 - `Escape` closes
 
 ### Select (Radix Select)
-- `aria-expanded`, `aria-haspopup="listbox"`
-- Arrow keys navigate, Enter/Space select, Escape closes
+- `aria-expanded`, `aria-haspopup="listbox"`; named by its label through `aria-labelledby` (or `aria-label` when there's no visible label)
+- Arrow keys navigate, Enter/Space select, Escape closes; highlighted row uses `[data-highlighted]:not(:hover)`
 
 ### Universal
 - All icons: `aria-hidden="true"` (decorative) or `aria-label`
-- Disabled: `opacity: var(--opacity-medium)`, not color alone
+- Disabled: `opacity: var(--opacity-medium)` on the control only (see Rule 9)
 - Color is never the only state indicator — also use icons, text, or borders
 
 ---
@@ -386,6 +417,8 @@ Minimum test coverage — no exceptions:
 4. Disabled state behavior
 5. User interaction (click/keyboard)
 6. `axe` no accessibility violations
+7. Every bug fixed gets a regression test that fails without the fix
+8. Dev warnings: assert with a `console.warn` spy, and call `resetDevWarnings()` between tests
 
 ```tsx
 it('has no accessibility violations', async () => {
@@ -399,133 +432,36 @@ it('has no accessibility violations', async () => {
 ## Storybook Story Conventions
 
 - `tags: ['autodocs']` on every meta object
-- One story per meaningful state
+- One story per meaningful state, in the order you want to review them (the workbench reads source order)
 - Use `render` for complex layouts (multiple components side by side)
-- Inline styles in stories use token references: `gap: 'var(--spacing-3)'` not `gap: '12px'`
-- Container widths for constraining stories are acceptable as inline styles (test harness, not patterns)
+- Inline styles in stories are layout only and use token references: `gap: 'var(--spacing-3)'`, `maxWidth: 'var(--size-content-sm)'` — not `'12px'`/`'640px'` (about 34 older wrappers still use px — open cleanup in `12`)
+- Stories must type-check: `pnpm --filter @ds/workbench typecheck` compiles every `*.stories.tsx`
 
 ---
 
-## Demo & Gallery Standards
+## Workbench Standards (replaces the docs-site gallery rules — 2026-09-25)
 
-- **Use design system components.** If `PriceDisplay` exists, use it — don't reimplement inline.
-- **Use `<Text>` and `<Heading>`**, never raw `<p>` or `<h2>`.
-- **Repeated patterns → `demo-utilities.css`.** 3+ occurrences = extract to shared class.
-- **Every Storybook story must have a live preview** in the docs page. A heading + code snippet without `<Gallery client:load />` is a gap.
+The Astro docs site is gone. `apps/workbench` renders every story directly, so **stories are the only specimens** — there are no gallery files or doc pages to keep in parity.
 
-### Demo utility classes (in `apps/docs/src/styles/demo-utilities.css`)
+- **One story per meaningful state, in reading order.** The workbench lists states in file order: default first, then variants, sizes, states (disabled, loading, error), then edge cases.
+- **Include the edge cases you'd want to eyeball** — long labels, empty, many items. The workbench's *Long text* and *RTL* modes stress every story automatically; don't write a story just to double a label.
+- **Stories that open overlays on mount** (a banner, a toast) are shown one at a time — add the component id to `SOLO` in `apps/workbench/src/lib/catalog.ts`.
+- **Give the meta a one-line description** (`parameters.docs.description.component`); the workbench shows it under the title.
+- **Non-story sheets** (foundations, line-ups, store pages) live in `apps/workbench/src/specimens/`, use `<Heading>`/`<Text>`, and never restyle components.
 
-| Class | Purpose |
-|-------|---------|
-| `.ds-unstyled-link` | Removes decoration for card-wrapping links |
-| `.ds-demo-cover-image` | Full-width, 5:4 ratio, cover-fit, rounded |
-| `.ds-demo-slide-image` | Full-width, block, rounded (carousel slides) |
-| `.ds-demo-prose` | Max-width reading width for text demos |
-| `.ds-demo-section-label` | Font sm, weight medium, bottom margin |
-| `.ds-results-header` | Responsive results header (flex col → row at md) |
-| `.ds-gallery-card` | Fixed 200px width for card demos |
-| `.ds-gallery-card--wide` | Fixed 220px for product card demos |
-| `.ds-gallery-input` | Max-width 360px for input demos |
-| `.ds-gallery-select` | Fixed 220px for select demos |
-| `.ds-gallery-full` | Width 100% for accordion/full-width demos |
-| `.ds-gallery-label` | Size label (xs, muted) for variant labels |
-| `.ds-viewport-indicator` | Fixed-position breakpoint indicator pill |
+### Review checklist (in the workbench)
+
+Phone first, then Desktop. Light, then Dark (or *Both*). Toggle *Long text* and *RTL*. Tab through with the keyboard. Run *Check accessibility*. Mark *Looks good* or *Needs work* with a note.
+
+### Foundation sheets
+
+The workbench's Foundations group (Colors with live contrast in the frame's theme, Type scale, Space/radius/shadow, Motion) and Consistency line-ups (control sizes, status colors, form states) show tokens visually. When a token category is added, add it to the matching sheet in `apps/workbench/src/specimens/`.
 
 ---
 
-## Doc Page Blueprint
+## Component List
 
-Every component docs page follows this structure:
-
-### Files to create
-
-1. **Gallery:** `apps/docs/src/components/{Name}Gallery.tsx` — live examples in `<Preview>`
-2. **Page:** `apps/docs/src/pages/components/{name}.astro` — imports gallery with `client:load`
-3. **Sidebar:** add link in `apps/docs/src/layouts/BaseLayout.astro` (alphabetical)
-
-### Page sections in order
-
-```
-h1 → Component Name
-p  → One-line description
-h2 → Installation (import snippet)
-h2 → Default (live example + code)
-h2 → Variants/Sizes (live examples + code)
-h2 → Props (table: Prop, Type, Default, Description)
-h2 → Accessibility (ARIA/keyboard details)
-```
-
-### Parity check
-
-Before marking done: open Storybook (`:6006`) and the docs page (`:4321`) side by side. **Every feature in Storybook must have a live preview in docs.** A code-only section is a gap.
-
-### Foundation token pages
-
-Must include:
-1. **Visual previews for every token category** — not just value tables
-2. **Semantic mapping tables** — showing which tokens each component variant uses
-
-**Rule:** If a developer has to read component CSS to find what tokens a component uses, the docs are incomplete.
-
----
-
-## Component Catalog
-
-### Tier 1 — Primitives (single element, no state)
-
-| Component | Element | Key Pattern |
-|-----------|---------|-------------|
-| Badge | `<span>` | 6 variants, 2 sizes. Solid primitive colors for contrast (not `color-mix`). |
-| ColorSwatch | `<div>` | Docs utility only |
-| Icon | `<svg>` | Library-agnostic SVG wrapper. 3 sizes (sm/md/lg), `currentColor` inheritance, `decorative`/`label` a11y props. |
-| Divider | `<hr>` / `<div>` | Horizontal or vertical (`role="separator"`), 2 variants (default, subtle), 4 spacing options |
-| PriceDisplay | `<div>` | `price` + optional `comparePrice` (strikethrough), `size` prop |
-| Skeleton | `<div>` | Loading placeholder. Configurable width/height, circle variant, pulse animation with `prefers-reduced-motion`. |
-| Typography | `<h1>`–`<h4>`, `<p>` | `asChild` for polymorphism. Semantic level ≠ visual size. |
-| StockIndicator | `<p>` | Status-based color + pulse, `prefers-reduced-motion` |
-| ProgressBar | `<progress>` | Native element, custom-styled. 2 sizes (sm/md), success variant at 100%. `valueText` for screen reader context. Composes Text. |
-
-### Tier 2 — Interactive (has state or events)
-
-| Component | Element | Key Pattern |
-|-----------|---------|-------------|
-| Button | `<button>` | `asChild` + Slot, loading state, leading/trailing icons |
-| Input | wrapper | Compound: label + field + error, `useId()` for a11y |
-| Checkbox | Radix | `checked`/`onCheckedChange`, indeterminate |
-| ColorPicker | `<div>` group | `options` array, controlled value, selection ring |
-| Select | Radix | Compound API, portal (needs explicit `font-family`) |
-| QuantitySelector | `<div>` group | Controlled stepper, `role="group"`, min/max |
-| StarRating | `<div role="img">` | SVG clipPath half-fill, clamped 0–5 |
-| Pagination | `<nav>` | Two modes: SPA (buttons) / SSR (anchor tags). Truncation with ellipsis, responsive desktop/mobile layouts |
-| AddToCartButton | `<button>` | Composed: Button + Toast integration. Loading state, disabled when out of stock. |
-| VariantSelector | `<div role="radiogroup">` | Option group (size, color, material). Pill-style toggles, disabled/out-of-stock variants. |
-
-### Tier 3 — Compound (multiple parts)
-
-| Component | Parts | Key Pattern |
-|-----------|-------|-------------|
-| Accordion | Item, Trigger, Content | Radix, single/multiple, inner-only dividers, `bordered` variant |
-| Tabs | TabsList, TabsTrigger, TabsContent | Keyboard nav (arrow keys), `aria-selected`, responsive |
-| Modal | Trigger, Content, Header, Body, Footer, Close | Radix Dialog, focus trap, portal (needs explicit `font-family`) |
-| ImageGallery | Main + thumbnails | `thumbnailPosition`, `aspectRatio`, keyboard nav |
-| Breadcrumb | Nav > List > Items | CSS-based responsive collapse (not JS) |
-
-### Tier 4 — Composed (combine other components)
-
-| Component | Composition | Key Pattern |
-|-----------|-------------|-------------|
-| Card | Layout wrapper | Semantic slots (image, header, body, footer), 3 variants |
-| ProductCard | Card + Badge + image | `renderPrice` prop, `badge` prop, `hoverImage`, `fluid` variant |
-| Carousel + CarouselSlide | Scroll container | `scroll-snap-type`, responsive `flex-basis` sizes |
-| FeatureBlock | Image + text grid | `reverse` prop, CSS `order` swap at tablet+ |
-| CookieConsent | Accordion + Button | `position: fixed`, controlled/uncontrolled, i18n, `bordered` accordion |
-| Alert | Icon + Text + Button | 4 variants (info, success, warning, destructive), dismissible, split ARIA roles (alert vs status by urgency), solid semantic backgrounds |
-| Toast | Icon + Text + Button | Provider + `useToast()` hook, portal, auto-dismiss with hover-pause, 4 variants, stacking |
-| CartLineItem | QuantitySelector + PriceDisplay + Button + Badge + Text | Prices in cents, internal `formatPrice`, responsive row↔stack, inner-only dividers |
-| CartDrawer | Drawer + CartLineItem + Button + Heading + Text | Pattern: right-slide cart panel, sticky footer (subtotal + checkout), empty state, `children` slot for footer content, `aria-live` item count |
-| CollectionFilters | Accordion + Checkbox + Button + Badge + Input + Drawer + Text | Faceted navigation, desktop sidebar/mobile drawer, active filter pills, `aria-live` results count |
-| PredictiveSearch | Input + Skeleton + custom combobox | WAI-ARIA combobox, `onSearch` + `results`/`loading` props, debounced, `aria-activedescendant` keyboard nav |
-| EmptyState | Heading + Text + Button | Pattern: centered flex column, icon slot, primary/secondary actions (asChild links), compact variant for constrained contexts |
+The current list, grouped the way the workbench shows it, is in `01-planning.md` → "Components". Each component's props are documented in JSDoc in its `.tsx`, and its stories show every state. (The older tiered catalog here listed 30 of today's 59 folders with stale details and was removed on 2026-09-26.)
 
 ---
 
@@ -559,20 +495,20 @@ Each category has `learnMoreHref` for per-category privacy policy links.
 
 ---
 
-## Example Page Conventions
+## Store Page Conventions (workbench)
 
-All example pages follow these rules:
+The eight store pages in `apps/workbench/src/specimens/pages/` follow these rules:
 
-- **BEM with `ds-` prefix:** `.ds-homepage__hero`, `.ds-collection__grid`
+- **BEM classes:** today `.ds-homepage__hero`, `.ds-collection__grid` (renaming demo classes to a `wb-` prefix, so they can't be mistaken for library classes, is an open item in `12`)
 - **Layout grid system:** `.ds-page-container`, `.ds-layout`, `.ds-section` — see `09-layout-grid.md`
 - **Section spacing:** `--spacing-16` (64px) between major sections via `.ds-section`
 - **Component internals:** Standard 4px grid (`--spacing-1` through `--spacing-8`)
 - **Typography:** Always `<Heading>` and `<Text>`, never raw tags
-- **Icons:** Inline SVG, no icon library
+- **Icons:** the internal registry `packages/components/src/icon/icons.tsx` (Lucide-equivalent paths) — no icon library
 - **Link-buttons:** `<Button asChild><a href="...">Label</a></Button>`, not `onClick` navigation
-- **Prices in cents:** 4800 = $48.00. `formatPrice()` from shared data layer.
+- **Prices in cents:** 4800 = $48.00. Pass cents to components (they format internally). The demo data's `formatPrice()` (en-US only) is for page copy, not components.
 - **Placeholders:** SVG data URIs via `makePlaceholder()` / `makeLifestylePlaceholder()` — earthy tones matching palette
-- **Responsive breakpoints:** 640px (sm), 768px (md), 1024px (lg)
+- **Responsive breakpoints:** 640px (sm), 768px (md), 1024px (lg), 1280px (xl)
 
 ### Page-level CSS rules
 
@@ -582,26 +518,21 @@ All example pages follow these rules:
 
 ### Shared data layer
 
-`apps/docs/src/data/products.ts`:
+`apps/workbench/src/specimens/data/products.ts` (and `placeholder.ts` for `makePlaceholder()`):
 - `Product` interface with `id`, `name`, `price` (cents), `compareAtPrice`, `image`, `category`, `badge`, `description`
-- `PRODUCTS` — 12 mock products with earthy SVG placeholders
-- `formatPrice(cents, currency)` — `Intl.NumberFormat` formatter
+- `PRODUCTS` — mock products with earthy SVG placeholders
+- `formatPrice(cents, currency)` — demo-only `Intl.NumberFormat` formatter
 
 ---
 
 ## Site-Level Layout Components
 
-These live in `apps/docs/src/layouts/` (not `@ds/components`):
+Store pages in the workbench are wrapped by `PageChrome` (`apps/workbench/src/specimens/pages/PageChrome.tsx`): the real `Header` (sticky) + `main.ds-page-container` + `Footer`. Links inside use in-frame routes (`#/page/examples/cart`) so clicking through the store switches every frame.
 
-| Component | File | Used By |
-|-----------|------|---------|
-| FullWidthLayout | `FullWidthLayout.astro` | All example pages (Homepage, Collection, PDP, Cart) |
-| BaseLayout | `BaseLayout.astro` | Docs/component pages, sidebar navigation |
+### Header
+Logo + nav (desktop) / Drawer menu (mobile) + theme toggle (`showThemeToggle`) + cart link carrying `data-motion-cart-target`. `sticky` publishes `--sticky-header-height` and `scroll-padding-top` so focus never hides under it. Ships the skip link.
 
-### Header (in FullWidthLayout)
-Logo + nav (hidden mobile, visible 768px+) + dark mode toggle + cart icon (`<a>`, not `<button>`).
-
-### Footer (in FullWidthLayout)
-Four-column grid (brand, shop, company, support) + bottom bar (copyright, legal links). Single column mobile, `2fr 1fr 1fr 1fr` at 768px+.
+### Footer
+Brand block + link columns + bottom bar (copyright, legal links). One column on phones, `2fr` + three columns from 768px, the 12-column grid from 1024px (5–6 columns put the brand on its own row). Headings and text use `<Heading>`/`<Text>`.
 
 Dark mode: logo `filter: invert(1)`, all colors via CSS custom properties.

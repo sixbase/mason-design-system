@@ -5,9 +5,6 @@ import './Badge.css';
 export type BadgeVariant = 'default' | 'secondary' | 'success' | 'warning' | 'destructive' | 'outline';
 export type BadgeSize = 'sm' | 'md';
 
-/** Variants that convey status and should receive role="status" by default. */
-const STATUS_VARIANTS = new Set<BadgeVariant>(['success', 'warning', 'destructive']);
-
 export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   /** Visual style variant */
   variant?: BadgeVariant;
@@ -35,8 +32,13 @@ export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
  * Common uses: "New", "Sale", "Out of stock", "Free shipping", order status.
  *
  * Accessibility:
- * - Status variants (success, warning, destructive) auto-apply role="status"
- * - Use `count` for notification badges (auto aria-label)
+ * - A badge is plain text by default, whatever its variant. A live region
+ *   (`role="status"`) is announced whenever its text changes, so making
+ *   every "Sale" / "Out of stock" badge one meant a filtered grid re-read
+ *   its badges aloud. Pass `role="status"` yourself only on a badge whose
+ *   text changes while the page is open and should be announced.
+ * - Use `count` for notification badges (role="status" + aria-label, since
+ *   a count is live by nature and a plain span cannot carry a label)
  * - Focus ring provided for interactive usage (links, buttons, dismissible)
  *
  * @example
@@ -59,10 +61,8 @@ export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(function Badge(
     .filter(Boolean)
     .join(' ');
 
-  // Determine ARIA role: explicit prop takes precedence
-  const resolvedRole =
-    role ??
-    (count != null || STATUS_VARIANTS.has(variant) ? 'status' : undefined);
+  // Explicit role wins. Only a count badge is a live region by default.
+  const resolvedRole = role ?? (count != null ? 'status' : undefined);
 
   // Notification count badge: "3 notifications"
   const ariaLabel =

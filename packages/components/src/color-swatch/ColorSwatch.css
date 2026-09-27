@@ -8,13 +8,28 @@
 .ds-color-swatch__sample {
   height: var(--spacing-12);
   border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
+  border: var(--border-width-sm) solid var(--color-border);
+  /* The colour IS the content: forced-colors mode would otherwise repaint
+     every sample to the canvas colour, leaving a page of blank boxes. */
+  forced-color-adjust: none;
+}
+
+/* Opting out of forced colors also kept the faint theme border, so a white
+   sample on a High Contrast White canvas had no edge. */
+@media (forced-colors: active) {
+  .ds-color-swatch__sample {
+    border-color: CanvasText;
+  }
 }
 
 .ds-color-swatch__info {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-phi-1);
+  /* Token names are long unbroken strings (--color-destructive-foreground)
+     in a monospace face — wrap them inside narrow grid cells. */
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .ds-color-swatch__name {
@@ -28,4 +43,15 @@
   font-family: var(--font-family-code);
   font-size: var(--font-size-xs);
   color: var(--color-foreground-secondary);
+}
+
+/* ─── Print ─────────────────────────────────────────────── */
+/* The sample IS its fill: a page of blank boxes on paper. Browsers drop backgrounds when printing by default ("economy"), so
+   the state vanished on paper; exact keeps these fills. (-webkit- for
+   Safari < 15.4 and Chrome < 136, which only read the prefixed form.) */
+@media print {
+  .ds-color-swatch__sample {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }

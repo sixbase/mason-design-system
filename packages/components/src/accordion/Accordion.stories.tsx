@@ -6,14 +6,23 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from './Accordion';
+import { Text } from '../typography/Typography';
 
 const meta: Meta<typeof Accordion> = {
   title: 'Components/Accordion',
   component: Accordion,
   tags: ['autodocs'],
+  parameters: {
+    docs: {
+      description: {
+        component: 'Questions and details that open one at a time — shipping, returns, care. Only the headings show until you open one.',
+      },
+    },
+  },
   argTypes: {
     size: { control: 'select', options: ['sm', 'md', 'lg'] },
-    flush: { control: 'boolean' },
+    bordered: { control: 'boolean' },
+    flush: { table: { disable: true } },
   },
 };
 export default meta;
@@ -49,36 +58,8 @@ export const Default: Story = {
   ),
 };
 
-export const DisabledItem: Story = {
-  args: {
-    type: 'single',
-    collapsible: true,
-  },
-  render: (args) => (
-    <Accordion {...args}>
-      <AccordionItem value="shipping">
-        <AccordionTrigger>Shipping & Delivery</AccordionTrigger>
-        <AccordionContent>
-          Free standard shipping on orders over $50.
-        </AccordionContent>
-      </AccordionItem>
-      <AccordionItem value="preorders" disabled>
-        <AccordionTrigger>Pre-orders (coming soon)</AccordionTrigger>
-        <AccordionContent>
-          Pre-order details will be published closer to launch.
-        </AccordionContent>
-      </AccordionItem>
-      <AccordionItem value="returns">
-        <AccordionTrigger>Returns & Exchanges</AccordionTrigger>
-        <AccordionContent>
-          We accept returns within 30 days of purchase.
-        </AccordionContent>
-      </AccordionItem>
-    </Accordion>
-  ),
-};
-
 export const Multiple: Story = {
+  name: 'Several open at once',
   args: {
     type: 'multiple',
     defaultValue: ['features'],
@@ -86,61 +67,41 @@ export const Multiple: Story = {
   render: (args) => (
     <Accordion {...args}>
       <AccordionItem value="features">
-        <AccordionTrigger>Features</AccordionTrigger>
-        <AccordionContent>Built-in keyboard navigation, screen reader support, and animation.</AccordionContent>
+        <AccordionTrigger>Materials</AccordionTrigger>
+        <AccordionContent>12 oz organic cotton canvas, vegetable-tanned leather handles, solid brass rivets.</AccordionContent>
       </AccordionItem>
       <AccordionItem value="specs">
-        <AccordionTrigger>Specifications</AccordionTrigger>
-        <AccordionContent>Supports single and multiple expand modes with customizable sizes.</AccordionContent>
+        <AccordionTrigger>Care</AccordionTrigger>
+        <AccordionContent>Spot clean with a damp cloth. Condition the handles twice a year. Do not machine wash.</AccordionContent>
       </AccordionItem>
     </Accordion>
   ),
 };
 
-export const Sizes: Story = {
-  render: () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      {(['sm', 'md', 'lg'] as const).map((size) => (
-        <div key={size}>
-          <p style={{ marginBottom: 'var(--spacing-2)', fontWeight: 'var(--font-weight-semibold)' }}>Size: {size}</p>
-          <Accordion type="single" collapsible size={size}>
-            <AccordionItem value="item">
-              <AccordionTrigger>Accordion trigger ({size})</AccordionTrigger>
-              <AccordionContent>Content for the {size} size variant.</AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </div>
-      ))}
-    </div>
-  ),
-};
-
-export const Flush: Story = {
+/** `bordered` puts the accordion in its own rounded panel (e.g. inside a card or sidebar). */
+export const Bordered: Story = {
   args: {
     type: 'single',
     collapsible: true,
-    flush: true,
+    bordered: true,
   },
   render: (args) => (
-    <div style={{ border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '0 var(--spacing-4)' }}>
-      <Accordion {...args}>
-        <AccordionItem value="a">
-          <AccordionTrigger>First item (no top border)</AccordionTrigger>
-          <AccordionContent>Content A</AccordionContent>
-        </AccordionItem>
-        <AccordionItem value="b">
-          <AccordionTrigger>Last item (no bottom border)</AccordionTrigger>
-          <AccordionContent>Content B</AccordionContent>
-        </AccordionItem>
-      </Accordion>
-    </div>
+    <Accordion {...args}>
+      <AccordionItem value="shipping">
+        <AccordionTrigger>Shipping & Delivery</AccordionTrigger>
+        <AccordionContent>Free standard shipping on orders over $50.</AccordionContent>
+      </AccordionItem>
+      <AccordionItem value="returns">
+        <AccordionTrigger>Returns & Exchanges</AccordionTrigger>
+        <AccordionContent>Returns are free within 30 days of delivery.</AccordionContent>
+      </AccordionItem>
+    </Accordion>
   ),
 };
 
-// ─── Checkbox variant ───────────────────────────────────
-
 export const WithCheckbox: Story = {
-  render: () => {
+  name: 'With checkboxes (cookie preferences)',
+  render: function WithCheckboxStory() {
     const [checked, setChecked] = useState<Record<string, boolean>>({
       essential: true,
       functional: false,
@@ -201,4 +162,59 @@ export const WithCheckbox: Story = {
       </Accordion>
     );
   },
+};
+
+export const Sizes: Story = {
+  render: () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-8)' }}>
+      {([
+        ['sm', 'Small'],
+        ['md', 'Medium (default)'],
+        ['lg', 'Large'],
+      ] as const).map(([size, name]) => (
+        <div key={size}>
+          <Text size="sm" muted style={{ marginBottom: 'var(--spacing-2)' }}>{name}</Text>
+          <Accordion type="single" collapsible size={size}>
+            <AccordionItem value="shipping">
+              <AccordionTrigger>Shipping & Delivery</AccordionTrigger>
+              <AccordionContent>Free standard shipping on orders over $50.</AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="returns">
+              <AccordionTrigger>Returns & Exchanges</AccordionTrigger>
+              <AccordionContent>Returns are free within 30 days of delivery.</AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+      ))}
+    </div>
+  ),
+};
+
+export const DisabledItem: Story = {
+  args: {
+    type: 'single',
+    collapsible: true,
+  },
+  render: (args) => (
+    <Accordion {...args}>
+      <AccordionItem value="shipping">
+        <AccordionTrigger>Shipping & Delivery</AccordionTrigger>
+        <AccordionContent>
+          Free standard shipping on orders over $50.
+        </AccordionContent>
+      </AccordionItem>
+      <AccordionItem value="preorders" disabled>
+        <AccordionTrigger>Pre-orders (coming soon)</AccordionTrigger>
+        <AccordionContent>
+          Pre-order details will be published closer to launch.
+        </AccordionContent>
+      </AccordionItem>
+      <AccordionItem value="returns">
+        <AccordionTrigger>Returns & Exchanges</AccordionTrigger>
+        <AccordionContent>
+          We accept returns within 30 days of purchase.
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+  ),
 };

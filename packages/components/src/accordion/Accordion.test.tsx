@@ -136,6 +136,23 @@ describe('Accordion', () => {
       expect(screen.getByText('Section A').closest('button')).toBeDisabled();
     });
 
+    // The item is a role-less div: aria-disabled there is ignored by
+    // assistive tech. The disabled trigger button carries the state.
+    it('puts the disabled state on the trigger, not as aria-disabled on the role-less item', () => {
+      const { container } = render(
+        <Accordion type="single" collapsible>
+          <AccordionItem value="a" disabled>
+            <AccordionTrigger>Section A</AccordionTrigger>
+            <AccordionContent>Content A</AccordionContent>
+          </AccordionItem>
+        </Accordion>,
+      );
+      const item = container.querySelector('.ds-accordion__item');
+      expect(item).not.toHaveAttribute('role');
+      expect(item).not.toHaveAttribute('aria-disabled');
+      expect(screen.getByRole('button', { name: 'Section A' })).toBeDisabled();
+    });
+
     it('does not expand when a disabled trigger is clicked', async () => {
       const user = userEvent.setup();
       const { container } = render(
@@ -368,5 +385,122 @@ describe('Accordion', () => {
       const results = await axe(container);
       expect(results).toHaveNoViolations();
     });
+  });
+
+  // ── Regressions (QA break pass) ─────────────────────────
+
+  describe('heading level', () => {
+    it('renders item headers as h3 by default', () => {
+      render(
+        <Accordion type="single" collapsible>
+          <AccordionItem value="a">
+            <AccordionTrigger>Shipping</AccordionTrigger>
+            <AccordionContent>Ships in 2 days.</AccordionContent>
+          </AccordionItem>
+        </Accordion>,
+      );
+      expect(screen.getByRole('heading', { level: 3, name: 'Shipping' })).toHaveClass(
+        'ds-accordion__header',
+      );
+    });
+
+    it('renders headers at the level set on the root (checkbox variant too)', () => {
+      render(
+        <Accordion type="multiple" headingLevel={2}>
+          <AccordionItem value="a">
+            <AccordionTrigger>Shipping</AccordionTrigger>
+            <AccordionContent>Ships in 2 days.</AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="b">
+            <AccordionTrigger checked={false}>Marketing</AccordionTrigger>
+            <AccordionContent>Optional.</AccordionContent>
+          </AccordionItem>
+        </Accordion>,
+      );
+      expect(screen.getByRole('heading', { level: 2, name: 'Shipping' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 2, name: 'Marketing' })).toBeInTheDocument();
+    });
+
+    // The checkbox used to sit inside the heading, so the heading's name
+    // was "Functional Cookies Functional Cookies".
+    it('reads the checkbox variant heading name once, with the checkbox beside it', () => {
+      render(
+        <Accordion type="multiple">
+          <AccordionItem value="functional">
+            <AccordionTrigger checked={false}>Functional Cookies</AccordionTrigger>
+            <AccordionContent>Remembers your preferences.</AccordionContent>
+          </AccordionItem>
+        </Accordion>,
+      );
+      const heading = screen.getByRole('heading', { level: 3, name: 'Functional Cookies' });
+      expect(within(heading).getByRole('button', { name: 'Functional Cookies' })).toBeInTheDocument();
+      expect(within(heading).queryByRole('checkbox')).toBeNull();
+      expect(screen.getByRole('checkbox', { name: 'Functional Cookies' })).toBeInTheDocument();
+    });
+
+    it('keeps each nested accordion at its own level', () => {
+      render(
+        <Accordion type="single" defaultValue="outer" headingLevel={2}>
+          <AccordionItem value="outer">
+            <AccordionTrigger>Outer</AccordionTrigger>
+            <AccordionContent>
+              <Accordion type="single" defaultValue="inner" headingLevel={3}>
+                <AccordionItem value="inner">
+                  <AccordionTrigger>Inner</AccordionTrigger>
+                  <AccordionContent>Inner content</AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>,
+      );
+      expect(screen.getByRole('heading', { level: 2, name: 'Outer' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 3, name: 'Inner' })).toBeInTheDocument();
+    });
+  });
+
+  it('applies the Trigger/Content size prop as a scoped modifier class', () => {
+    // The prop was typed and documented but did nothing.
+    const { container } = render(
+      <Accordion type="single" defaultValue="a">
+        <AccordionItem value="a">
+          <AccordionTrigger size="sm">Care</AccordionTrigger>
+          <AccordionContent size="sm">Hand wash only.</AccordionContent>
+        </AccordionItem>
+      </Accordion>,
+    );
+    expect(screen.getByRole('button', { name: 'Care' })).toHaveClass('ds-accordion__trigger--sm');
+    expect(container.querySelector('.ds-accordion__content')).toHaveClass(
+      'ds-accordion__content--sm',
+    );
+  });
+
+  // Regression: the content fade played on page load too, so panels open by
+  // default (the first filter groups, a PDP details panel) were invisible
+  // for a beat and then faded in. Only a panel opened later fades.
+  it('fades in only panels opened after the first render', async () => {
+    const user = userEvent.setup();
+    render(
+      <Accordion type="multiple" defaultValue={['a']}>
+        <AccordionItem value="a">
+          <AccordionTrigger>Section A</AccordionTrigger>
+          <AccordionContent>Content A</AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="b">
+          <AccordionTrigger>Section B</AccordionTrigger>
+          <AccordionContent>Content B</AccordionContent>
+        </AccordionItem>
+      </Accordion>,
+    );
+    expect(screen.getByText('Content A')).toHaveClass('ds-accordion__content-inner');
+    expect(screen.getByText('Content A')).not.toHaveClass('ds-accordion__content-inner--enter');
+
+    await user.click(screen.getByRole('button', { name: 'Section B' }));
+    expect(screen.getByText('Content B')).toHaveClass('ds-accordion__content-inner--enter');
+
+    // Closing and reopening a panel that started open fades it too.
+    await user.click(screen.getByRole('button', { name: 'Section A' }));
+    await user.click(screen.getByRole('button', { name: 'Section A' }));
+    expect(screen.getByText('Content A')).toHaveClass('ds-accordion__content-inner--enter');
   });
 });

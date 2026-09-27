@@ -11,6 +11,19 @@ describe('FeatureBlock', () => {
     expect(screen.getByRole('heading', { level: 2, name: 'Cast for a lifetime' })).toBeInTheDocument();
   });
 
+  // Fixed at h2, a block placed under a section's own h2 flattened the outline.
+  it('renders the title at headingLevel', () => {
+    render(
+      <FeatureBlock
+        title="Cast for a lifetime"
+        description="Every skillet is poured in Ohio."
+        image={image}
+        headingLevel="h3"
+      />,
+    );
+    expect(screen.getByRole('heading', { level: 3, name: 'Cast for a lifetime' })).toBeInTheDocument();
+  });
+
   it('renders the description', () => {
     render(<FeatureBlock title="Title" description="Every skillet is poured in Ohio." image={image} />);
     expect(screen.getByText('Every skillet is poured in Ohio.')).toBeInTheDocument();

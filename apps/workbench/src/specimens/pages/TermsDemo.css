@@ -1,0 +1,97 @@
+/* ─── Legal Content Container ────────────────────────────── */
+/* Prose-style wrapper that maps token-driven typography to
+   native HTML elements. Reusable for Terms, Privacy, About,
+   FAQ, and any CMS rich-text output. */
+
+.ds-legal-content {
+  max-width: var(--size-content-md);
+  margin: 0;
+  padding: 0 0 var(--spacing-phi-34);
+}
+
+/* ─── Header ────────────────────────────────────────────── */
+
+.ds-legal-content__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-phi-21);
+}
+
+/* ─── Sections ──────────────────────────────────────────── */
+
+.ds-legal-content section {
+  margin-bottom: var(--spacing-phi-13);
+}
+
+.ds-legal-content section:last-child {
+  margin-bottom: 0;
+}
+
+/* ─── Headings ──────────────────────────────────────────── */
+
+/* h2 section titles — spacing to following body text.
+   Structural: the first child of every section is its heading. */
+.ds-legal-content section > :first-child {
+  margin-bottom: var(--spacing-4);
+}
+
+/* h3 subsection titles — native h3 styled via prose class */
+.ds-legal-content__h3,
+.ds-legal-content h3 {
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  color: var(--color-foreground);
+  margin-top: var(--spacing-6);
+  margin-bottom: var(--spacing-3);
+}
+
+/* ─── Body Text ─────────────────────────────────────────── */
+
+/* body paragraphs — <Text> renders a native <p>; style the
+   element like the h3/ul/a prose rules below, never the
+   component's .ds-text class */
+.ds-legal-content p {
+  line-height: var(--line-height-relaxed);
+  margin-bottom: var(--spacing-4);
+}
+
+.ds-legal-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* ─── Links ─────────────────────────────────────────────── */
+
+.ds-legal-content a {
+  color: var(--color-foreground);
+  text-decoration: underline;
+  text-decoration-color: var(--color-border-strong);
+  text-underline-offset: var(--spacing-phi-1);
+  transition: var(--transition-fast);
+}
+
+.ds-legal-content a:hover {
+  text-decoration-color: var(--color-foreground);
+}
+
+/* ─── Lists ─────────────────────────────────────────────── */
+
+.ds-legal-content ul,
+.ds-legal-content ol {
+  padding-left: var(--spacing-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-4);
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-relaxed);
+  color: var(--color-foreground);
+}
+
+.ds-legal-content ul:last-child,
+.ds-legal-content ol:last-child {
+  margin-bottom: 0;
+}

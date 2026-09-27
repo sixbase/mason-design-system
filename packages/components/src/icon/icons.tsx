@@ -8,14 +8,17 @@ export interface IconSvgProps extends SVGAttributes<SVGElement> {
   size?: IconSize;
   /** Accessible label — required when decorative={false} */
   label?: string;
-  /** When true (default), icon is hidden from assistive tech */
+  /**
+   * When true, icon is hidden from assistive tech. Defaults to true
+   * unless `label` is passed — a label implies a meaningful icon.
+   */
   decorative?: boolean;
 }
 
 function createIcon(displayName: string, children: ReactNode) {
   const Component = forwardRef<SVGSVGElement, IconSvgProps>(
     function IconComponent(
-      { size = 'md', label, decorative = true, className, ...props },
+      { size = 'md', label, decorative = label === undefined, className, ...props },
       ref,
     ) {
       const classes = ['ds-icon', `ds-icon--${size}`, className]

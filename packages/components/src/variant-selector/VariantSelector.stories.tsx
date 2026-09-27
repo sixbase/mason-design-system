@@ -12,7 +12,7 @@ const meta: Meta<typeof VariantSelector> = {
     docs: {
       description: {
         component:
-          'Unified variant picker for Shopify product option types. Orchestrates color swatches and button groups for size, material, and style options.',
+          'Picks a product’s options — colour swatches and size or material buttons — on the product page.',
       },
     },
   },
@@ -94,9 +94,12 @@ function InteractiveVariantSelector({
 
 // ─── Stories ────────────────────────────────────────────────
 
+/** A product-page column: full width on phones, form width on desktop. */
+const column = { width: '100%', maxWidth: 'var(--size-modal-sm)' };
+
 export const Default: Story = {
   render: () => (
-    <div style={{ width: '320px' }}>
+    <div style={column}>
       <InteractiveVariantSelector
         options={[colorOption, sizeOption]}
         initialValues={{ Color: 'carbon-black', Size: 'm' }}
@@ -107,7 +110,7 @@ export const Default: Story = {
 
 export const Small: Story = {
   render: () => (
-    <div style={{ width: '280px' }}>
+    <div style={column}>
       <InteractiveVariantSelector
         options={[colorOption, sizeOption]}
         initialValues={{ Color: 'navy-blue', Size: 'l' }}
@@ -119,7 +122,7 @@ export const Small: Story = {
 
 export const MultipleOptionGroups: Story = {
   render: () => (
-    <div style={{ width: '320px' }}>
+    <div style={column}>
       <InteractiveVariantSelector
         options={[colorOption, sizeOption, materialOption]}
         initialValues={{ Color: 'bone-white', Size: 's', Material: 'linen' }}
@@ -128,7 +131,9 @@ export const MultipleOptionGroups: Story = {
   ),
 };
 
+/** Out-of-stock sizes stay choosable (shown crossed through) so shoppers can still see them. */
 export const WithUnavailableOptions: Story = {
+  name: 'Some sizes out of stock',
   render: () => {
     const sizeWithStock: VariantOption = {
       name: 'Size',
@@ -144,7 +149,7 @@ export const WithUnavailableOptions: Story = {
     };
 
     return (
-      <div style={{ width: '320px' }}>
+      <div style={column}>
         <InteractiveVariantSelector
           options={[colorOption, sizeWithStock]}
           initialValues={{ Color: 'carbon-black', Size: 'm' }}
@@ -155,6 +160,7 @@ export const WithUnavailableOptions: Story = {
 };
 
 export const WithUnavailableColors: Story = {
+  name: 'Some colours out of stock',
   render: () => {
     const colorWithStock: VariantOption = {
       name: 'Color',
@@ -168,7 +174,7 @@ export const WithUnavailableColors: Story = {
     };
 
     return (
-      <div style={{ width: '320px' }}>
+      <div style={column}>
         <InteractiveVariantSelector
           options={[colorWithStock]}
           initialValues={{ Color: 'carbon-black' }}
@@ -178,7 +184,9 @@ export const WithUnavailableColors: Story = {
   },
 };
 
+/** Disabled options can't be chosen at all — for combinations that don't exist. */
 export const WithDisabledOptions: Story = {
+  name: 'An option that doesn’t exist',
   render: () => {
     const sizeWithDisabled: VariantOption = {
       name: 'Size',
@@ -192,7 +200,7 @@ export const WithDisabledOptions: Story = {
     };
 
     return (
-      <div style={{ width: '320px' }}>
+      <div style={column}>
         <InteractiveVariantSelector
           options={[sizeWithDisabled]}
           initialValues={{ Size: 'm' }}
@@ -203,8 +211,9 @@ export const WithDisabledOptions: Story = {
 };
 
 export const ButtonOnlyOptions: Story = {
+  name: 'Buttons only (no colours)',
   render: () => (
-    <div style={{ width: '320px' }}>
+    <div style={column}>
       <InteractiveVariantSelector
         options={[sizeOption, materialOption]}
         initialValues={{ Size: 'l', Material: 'cotton' }}
@@ -226,7 +235,7 @@ export const LongLabels: Story = {
     };
 
     return (
-      <div style={{ width: '320px' }}>
+      <div style={column}>
         <InteractiveVariantSelector
           options={[materialLong]}
           initialValues={{ Material: 'leather' }}
@@ -237,6 +246,7 @@ export const LongLabels: Story = {
 };
 
 export const SingleValue: Story = {
+  name: 'Only one choice',
   render: () => {
     const singleOption: VariantOption = {
       name: 'Style',
@@ -245,7 +255,7 @@ export const SingleValue: Story = {
     };
 
     return (
-      <div style={{ width: '320px' }}>
+      <div style={column}>
         <InteractiveVariantSelector
           options={[singleOption]}
           initialValues={{ Style: 'classic' }}

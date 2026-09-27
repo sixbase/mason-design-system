@@ -1,11 +1,20 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { Icon } from '../icon/Icon';
+import { Heading } from '../typography/Typography';
 import { EmptyState } from './EmptyState';
 
 const meta: Meta<typeof EmptyState> = {
   title: 'Components/EmptyState',
   component: EmptyState,
   tags: ['autodocs'],
+  parameters: {
+    docs: {
+      description: {
+        component:
+          'What shows when there’s nothing there yet — an empty cart, no search results, no orders.',
+      },
+    },
+  },
   argTypes: {
     compact: { control: 'boolean' },
   },
@@ -58,6 +67,7 @@ export const Default: Story = {
 };
 
 export const EmptyCart: Story = {
+  name: 'With a second action',
   args: {
     icon: <ShoppingBagIcon />,
     heading: 'Your bag is empty',
@@ -119,11 +129,31 @@ export const Compact: Story = {
   },
   decorators: [
     (Story) => (
-      <div style={{ maxWidth: '400px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}>
+      <div style={{ maxWidth: 'var(--size-modal-sm)', border: 'var(--border-width-sm) solid var(--color-border)', borderRadius: 'var(--radius-md)' }}>
         <Story />
       </div>
     ),
   ],
+};
+
+/**
+ * Under a section's own h2, drop the empty state's heading one level with
+ * `headingLevel="h3"` — same size on screen, correct page outline.
+ */
+export const InsideSection: Story = {
+  name: 'Inside a section (heading one level down)',
+  render: () => (
+    <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-6)' }}>
+      <Heading as="h2" size="xl">Your orders</Heading>
+      <EmptyState
+        headingLevel="h3"
+        icon={<PackageIcon />}
+        heading="No orders yet"
+        description="When you place an order, it’ll appear here."
+        action={{ label: 'Start shopping', href: '/' }}
+      />
+    </section>
+  ),
 };
 
 export const AllVariations: Story = {

@@ -1,6 +1,8 @@
 # 08 — Page Templates
 
 > Token-driven page compositions for core e-commerce views. These are design system specifications — not Shopify templates — but structured to map cleanly to Shopify sections/blocks during theming.
+>
+> The running versions are the workbench store pages in `apps/workbench/src/specimens/pages/` (`CollectionDemo.tsx`, `SearchDemo.tsx`, …). Where this spec and a demo disagree, the demo shows what is built; flag the difference. Open decisions are tracked in `12-audit-2026-09-25.md` → "Open after five rounds".
 
 ---
 
@@ -11,9 +13,9 @@
 3. **Components own their styles.** Page CSS handles layout composition (grid placement, section spacing, content order) — never component appearance. If a component doesn't look right on a page, fix the component.
 4. **Layout grid system.** All pages use `.ds-page-container` (1200px), `.ds-layout` (12-column), and `.ds-section` (64px rhythm). See `09-layout-grid.md`.
 5. **Responsive breakpoints.** `sm` (640px), `md` (768px), `lg` (1024px), `xl` (1280px).
-6. **Page shell.** Every page renders inside `FullWidthLayout`: Header → `<main class="ds-page-container">` → Footer.
+6. **Page shell.** Every page renders inside `PageChrome` (`apps/workbench/src/specimens/pages/PageChrome.tsx`): Header → `<main class="ds-page-container">` → Footer.
 7. **Always use `<Heading>` and `<Text>`.** Never raw HTML tags — except inside `.ds-legal-content` where Shopify rich text HTML is styled via CSS class.
-8. **Prices in cents.** 4800 = $48.00. Use `formatPrice()` from shared data layer.
+8. **Prices in cents.** 4800 = $48.00. Components take cents and format internally; the demo data's `formatPrice()` is only for page copy.
 
 ---
 
@@ -46,14 +48,14 @@ The canonical grid-based product browsing page. Implementation: `CollectionDemo.
 │ │ Heading (h1) + count      │ Sort (Select)   │ │
 │ └───────────────────────────┴─────────────────┘ │
 ├─────────────────────────────────────────────────┤
-│ Filter Bar (future — see token gap report)      │
+│ Filters (CollectionFilters: sidebar / drawer)   │
 ├─────────────────────────────────────────────────┤
 │ Product Grid (2→3→4 cols responsive)            │
 │ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐               │
 │ │Card │ │Card │ │Card │ │Card │               │
 │ └─────┘ └─────┘ └─────┘ └─────┘               │
 ├─────────────────────────────────────────────────┤
-│ Pagination (gap — component needed)             │
+│ Pagination                                      │
 ├─────────────────────────────────────────────────┤
 │ Footer                                          │
 └─────────────────────────────────────────────────┘
@@ -64,7 +66,7 @@ The canonical grid-based product browsing page. Implementation: `CollectionDemo.
 | Region | Component(s) | Props/Notes |
 |--------|-------------|-------------|
 | Navigation | `Breadcrumb` | Home → Collections → {Collection Name} |
-| Page title | `Heading` level 1, size `2xl` | Collection name |
+| Page title | `Heading as="h1"`, size `2xl` | Collection name |
 | Product count | `Text` size `sm`, `muted` | "24 products" |
 | Sort | `Select` + `SelectItem` size `sm` | Newest, Price Low→High, Price High→Low, Best Selling |
 | Product cards | `ProductCard` wrapped in `<a>` | Ghost+interactive variant, `fluid` in grid context |
@@ -86,7 +88,7 @@ Two gap tiers only (mobile/tablet + desktop). Same token for row-gap and column-
 
 **Empty:** Centered empty state — `Heading` h2 lg + `Text` sm muted + `Button` secondary md. Padding `--spacing-16` (64px). Gap `--spacing-4`.
 
-**Loading:** Skeleton placeholders (component gap — see Token Gap Report).
+**Loading:** `Skeleton` placeholders in the grid.
 
 ### Shopify Integration
 
@@ -125,7 +127,7 @@ Implementation: `SearchDemo.tsx` / `SearchDemo.css`.
 - `search.liquid` template
 - Query: `search.terms`
 - Results: `search.results` (filterable by type: product, article, page)
-- Predictive search: `/search/suggest.json` API (needs dropdown/popover — gap)
+- Predictive search: `/search/suggest.json` API feeding the `PredictiveSearch` component
 
 ---
 
@@ -138,7 +140,7 @@ Implementation: `AccountDemo.tsx` / `AccountDemo.css`.
 ### Shared Container
 
 - Centered flex column
-- `Card` variant `outlined`, max-width `--size-modal-sm` (400px)
+- `Card` variant `outlined` (variants: `elevated` default, `outlined`, `ghost`), max-width `--size-modal-sm` (400px)
 - Card padding: `--spacing-8` (32px)
 - Page padding: `--spacing-16` (64px) top/bottom
 
@@ -161,7 +163,7 @@ Forgot Password success: replaces form with "Check your email" + "Back to sign i
 - `customers/login.liquid`, `customers/register.liquid`, `customers/reset_password.liquid`
 - Field names: `customer[email]`, `customer[password]`, `customer[first_name]`, `customer[last_name]`
 - Errors: `form.errors` → `Input` `error` props
-- **[PENDING DECISION]** Classic (password) vs. new (passwordless) accounts
+- **Open:** Classic (password) vs. new (passwordless) accounts — PT-5 below, tracked in `12`
 
 ---
 
@@ -181,16 +183,18 @@ Implementation: `TermsDemo.tsx` / `TermsDemo.css`.
 
 | Element | Component | Size | Weight | Line Height |
 |---------|-----------|------|--------|-------------|
-| Page title | `Heading` h1 | `2xl` (33px) | bold | tight |
+| Page title | `Heading` h1 | `2xl` (33px) | semibold (default) | tight |
 | Last updated | `Text` | sm (14px) | normal | normal |
-| Section title | `Heading` h2 | lg (20px) | semibold | tight |
-| Subsection title | `Heading` h3 | base (16px) | semibold | tight |
+| Section title | `Heading` h2 | `xl` (26px) — the smallest Heading size | semibold | tight |
+| Subsection title | `Heading` h3 | `xl`, restyled smaller by `.ds-legal-content__h3` in `TermsDemo.css` | semibold | tight |
+
+Heading has no size below `xl`, so the demo restyles its h3s — a page-level override the rules forbid. Adding a small Heading size is an open item in `12`.
 | Body text | `Text` | base (16px) | normal | relaxed (φ) |
 | Links | `<a>` | inherits | inherits | inherits |
 
 ### `.ds-legal-content` — Prose Styling Class
 
-Styles native HTML elements from CMS/rich text output. Reusable across Terms, Privacy, About, FAQ.
+Styles native HTML elements from CMS/rich text output. Reusable across Terms, Privacy, About, FAQ. **Where it lives today:** only in the workbench demo (`apps/workbench/src/specimens/pages/TermsDemo.css`), not in `@ds/components` — so a consumer can't use it yet. Moving it into the library is part of the open Heading-size item in `12`.
 
 ```css
 .ds-legal-content a { 
@@ -272,14 +276,14 @@ Components, features, and tokens identified as missing during page template desi
 
 | # | Token | Context | Recommendation |
 |---|-------|---------|---------------|
-| 6 | `.ds-prose` / `.ds-legal-content` | Terms, Privacy, About, FAQ | ✅ **Resolved** — `.ds-legal-content` implemented |
+| 6 | `.ds-prose` / `.ds-legal-content` | Terms, Privacy, About, FAQ | ⚠️ **Partly** — `.ds-legal-content` exists in the workbench's Terms demo only, not in the library |
 
 ### Pending Decisions
 
 | ID | Decision | Options | Status |
 |----|----------|---------|--------|
-| PT-1 | Sale badge variant | `destructive` (reuse) vs. new `sale` variant | **[PENDING]** — recommend `destructive` |
+| PT-1 | Sale badge variant | `destructive` (reuse) vs. new `sale` variant | ✅ **Resolved** — `destructive` reused (`SaleDemo` renders `<Badge variant="destructive">Sale</Badge>`) |
 | PT-2 | Filter bar component | Composition pattern vs. dedicated `FilterBar` | ✅ **Resolved** — `CollectionFilters` component built. Accordion + Checkbox + Drawer composition pattern. Desktop sidebar, mobile drawer. |
 | PT-3 | Search autocomplete | Defer vs. dropdown/popover | ✅ **Resolved** — `PredictiveSearch` component built. Custom WAI-ARIA combobox, consumer-controlled data fetching via `onSearch` + `results`/`loading` props. |
 | PT-4 | Skeleton priority | Build now vs. defer to Shopify | ✅ **Resolved** — Skeleton component built. Pulse animation with `prefers-reduced-motion`. |
-| PT-5 | Customer account type | Classic (password) vs. new (passwordless) | **[PENDING]** |
+| PT-5 | Customer account type | Classic (password) vs. new (passwordless) | **Open** — tracked in `12-audit-2026-09-25.md` → "Open after five rounds" |

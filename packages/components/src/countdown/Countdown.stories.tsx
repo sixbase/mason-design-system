@@ -9,6 +9,14 @@ const meta: Meta<typeof Countdown> = {
   title: 'Components/Countdown',
   component: Countdown,
   tags: ['autodocs'],
+  parameters: {
+    docs: {
+      description: {
+        component:
+          'A live timer counting down to a moment — the end of a sale or a product launch.',
+      },
+    },
+  },
   argTypes: {
     size: { control: 'select', options: ['sm', 'md'] },
     hideZeroUnits: { control: 'boolean' },
@@ -31,6 +39,15 @@ export const Small: Story = {
     target: new Date(Date.now() + 2 * DAY + 3 * HOUR + 24 * MINUTE),
     size: 'sm',
   },
+};
+
+export const AllSizes: Story = {
+  render: () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-6)' }}>
+      <Countdown target={new Date(Date.now() + 2 * DAY + 3 * HOUR)} size="md" />
+      <Countdown target={new Date(Date.now() + 2 * DAY + 3 * HOUR)} size="sm" />
+    </div>
+  ),
 };
 
 export const CustomLabels: Story = {
@@ -58,13 +75,4 @@ export const Completed: Story = {
   args: {
     target: new Date(Date.now() - HOUR),
   },
-};
-
-export const AllSizes: Story = {
-  render: () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-6)' }}>
-      <Countdown target={new Date(Date.now() + 2 * DAY + 3 * HOUR)} size="md" />
-      <Countdown target={new Date(Date.now() + 2 * DAY + 3 * HOUR)} size="sm" />
-    </div>
-  ),
 };

@@ -14,7 +14,12 @@
 /* ─── Scroll Wrapper ──────────────────────────────────────── */
 
 .ds-table-wrapper {
+  /* The `maxHeight` prop sets this inline (none = unbounded). Declared
+     here too so a nested table never inherits its parent's bound. */
+  --table-max-height: none;
+
   width: 100%;
+  max-height: var(--table-max-height);
   overflow-x: auto;
 
   /* CSS-only scroll shadow indicators */
@@ -32,10 +37,20 @@
 }
 
 .ds-table-wrapper:focus-visible {
-  outline: none;
+  /* Transparent outline: invisible normally, repainted in a system
+     color under forced-colors mode where box-shadow is dropped. */
+  outline: var(--border-width-lg) solid transparent;
+  outline-offset: var(--border-width-lg);
   box-shadow: var(--focus-ring);
   border-radius: var(--radius-sm);
 }
+
+/* ─── Sticky header scroll area ───────────────────────────── */
+/* overflow-x: auto forces overflow-y to auto, so the wrapper is
+   always the header's scroll container — a sticky header can only
+   stick inside a height-bounded wrapper (`maxHeight`, above), never
+   to the page. The bound used to live on a sticky-only rule, so
+   `maxHeight` without `stickyHeader` was silently ignored. */
 
 /* ─── Base Table ──────────────────────────────────────────── */
 
@@ -52,6 +67,16 @@
   color: var(--color-foreground);
 }
 
+/* No floor where it only hurts. A two-column key/value table (the
+   typical spec table) always fits a phone: with the floor it scrolled
+   sideways at 375px and clipped values mid-phrase. An empty table has
+   nothing to crush: with the floor its centered message sat half off
+   screen. Nowrap headers still widen the table when they need to. */
+.ds-table:not(:has(tr > :nth-child(3))),
+.ds-table:has(.ds-table__row--empty) {
+  --table-min-width: 0;
+}
+
 /* ─── Header ──────────────────────────────────────────────── */
 
 .ds-table__header {
@@ -62,9 +87,11 @@
 
 .ds-table__head {
   font-weight: var(--table-header-weight);
-  text-align: left;
+  /* start, not left: in RTL the headers sat on the opposite side of their
+     (start-aligned) cell values. */
+  text-align: start;
   white-space: nowrap;
-  border-bottom: 1px solid var(--table-border-color);
+  border-bottom: var(--border-width-sm) solid var(--table-border-color);
   text-box-trim: both;
   text-box-edge: cap alphabetic;
 }
@@ -75,7 +102,7 @@
 
 .ds-table__sort-icon {
   display: inline-block;
-  margin-left: var(--spacing-1);
+  margin-inline-start: var(--spacing-1);
   font-size: var(--font-size-xs);
 }
 
@@ -102,7 +129,8 @@
 }
 
 .ds-table__sort-button:focus-visible {
-  outline: none;
+  outline: var(--border-width-lg) solid transparent;
+  outline-offset: var(--border-width-lg);
   box-shadow: var(--focus-ring);
 }
 
@@ -128,7 +156,7 @@
 /* ─── Body Row ────────────────────────────────────────────── */
 
 .ds-table__row {
-  border-bottom: 1px solid var(--table-border-color);
+  border-bottom: var(--border-width-sm) solid var(--table-border-color);
   transition: background-color var(--transition-fast);
 }
 
@@ -136,8 +164,13 @@
   border-bottom: none;
 }
 
-.ds-table__body .ds-table__row:hover {
-  background-color: var(--color-background-subtle);
+/* Row highlight only where a real pointer hovers: touch screens (iOS
+   Safari) keep :hover after a tap, so a tapped row stayed shaded like a
+   selected row. */
+@media (hover: hover) {
+  .ds-table__body .ds-table__row:hover {
+    background-color: var(--color-background-subtle);
+  }
 }
 
 /* ─── Cell ────────────────────────────────────────────────── */
@@ -159,14 +192,16 @@
   background-color: var(--table-stripe-bg);
 }
 
-.ds-table--striped .ds-table__body .ds-table__row:hover {
-  background-color: var(--color-background-subtle);
+@media (hover: hover) {
+  .ds-table--striped .ds-table__body .ds-table__row:hover {
+    background-color: var(--color-background-subtle);
+  }
 }
 
 /* ─── Variant: Default (row borders) ─────────────────────── */
 
 .ds-table--default .ds-table__body .ds-table__row {
-  border-bottom: 1px solid var(--table-border-color);
+  border-bottom: var(--border-width-sm) solid var(--table-border-color);
 }
 
 /* ─── Size: sm ────────────────────────────────────────────── */
@@ -235,7 +270,7 @@
 
   .ds-table--stack .ds-table__body .ds-table__row {
     display: block;
-    border: 1px solid var(--table-border-color);
+    border: var(--border-width-sm) solid var(--table-border-color);
     border-radius: var(--radius-md);
     padding: var(--spacing-2) 0;
     margin-bottom: var(--spacing-3);
@@ -243,7 +278,7 @@
 
   .ds-table--stack .ds-table__body .ds-table__row:last-child {
     margin-bottom: 0;
-    border-bottom: 1px solid var(--table-border-color);
+    border-bottom: var(--border-width-sm) solid var(--table-border-color);
   }
 
   .ds-table--stack .ds-table__cell {
@@ -260,9 +295,28 @@
   }
 
   .ds-table--stack .ds-table__cell[data-label]::before {
-    content: attr(data-label);
+    content: attr(data-label); /* fallback: engines without alt text */
+    /* Visual-only label: the (visually hidden) header row still names each
+       cell, so the generated text made screen readers say the header
+       twice ("Chest (cm), Chest (cm) 82"). Empty alt text drops it from
+       the accessibility tree. */
+    content: attr(data-label) / '';
     font-weight: var(--table-header-weight);
     color: var(--color-foreground-secondary);
+  }
+
+  /* Value column: shrinks with the card and wraps long unbroken
+     values (SKUs, emails, URLs) instead of overflowing it. */
+  .ds-table--stack .ds-table__cell-value {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  /* Row headers (Table.Head scope="row") become the card's title
+     row — full width and wrapping, not a nowrap column header. */
+  .ds-table--stack .ds-table__body .ds-table__head {
+    display: block;
+    white-space: normal;
   }
 }
 

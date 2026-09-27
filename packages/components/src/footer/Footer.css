@@ -1,6 +1,6 @@
 .ds-footer {
   font-family: var(--font-family-body);
-  border-top: 1px solid var(--color-border);
+  border-top: var(--border-width-sm) solid var(--color-border);
   margin-top: var(--spacing-16);
 }
 
@@ -30,15 +30,56 @@
 
 .ds-footer__grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--spacing-8);
 }
 
 /* @breakpoint-md = 768px */
 @media (min-width: 768px) {
   .ds-footer__grid {
-    grid-template-columns: 2fr 1fr 1fr 1fr;
+    grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr));
     gap: var(--spacing-8);
+  }
+
+  /* Four or more link columns don't fit beside the brand at tablet width
+     (they used to wrap in under it). Brand takes its own row; the columns
+     share the one below, four across. */
+  .ds-footer__grid:has(> .ds-footer__column:nth-child(5)) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .ds-footer__grid:has(> .ds-footer__column:nth-child(5)) > .ds-footer__brand {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Desktop: the page's own 12-column grid and 24px gutter, so the footer
+   columns line up with the sections above instead of sitting on a private
+   2fr/1fr grid with 32px gaps. Brand spans 6, each link column 2 (up to
+   three columns); four columns → brand 4; five or six → brand on its own
+   row with the columns two-wide beneath it. */
+/* @breakpoint-lg = 1024px */
+@media (min-width: 1024px) {
+  .ds-footer__grid,
+  .ds-footer__grid:has(> .ds-footer__column:nth-child(5)) {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--spacing-6);
+  }
+
+  .ds-footer__brand {
+    grid-column: span 6;
+  }
+
+  .ds-footer__column {
+    grid-column: span 2;
+  }
+
+  .ds-footer__grid:has(> .ds-footer__column:nth-child(5)) > .ds-footer__brand {
+    grid-column: span 4;
+  }
+
+  .ds-footer__grid:has(> .ds-footer__column:nth-child(6)) > .ds-footer__brand {
+    grid-column: 1 / -1;
   }
 }
 
@@ -55,8 +96,12 @@
   color: var(--color-foreground);
 }
 
-.dark .ds-footer__logo-img {
-  filter: invert(1);
+/* Dark mode inverts the <img> logo — on screen only: print always uses the
+   light tokens (tokens.css), so an inverted logo printed white on white. */
+@media screen {
+  :is(.dark, [data-theme="dark"]) .ds-footer__logo-img {
+    filter: invert(1);
+  }
 }
 
 .ds-footer .ds-footer__tagline {
@@ -92,8 +137,25 @@
   transition: color var(--transition-fast);
 }
 
-.ds-footer__links a:hover {
-  color: var(--color-foreground);
+@media (hover: hover) {
+  .ds-footer__links a:hover {
+    color: var(--color-foreground);
+  }
+}
+
+/* Touch: each link gets a full 44px row. The links stack only 28px apart,
+   so an invisible hit-area overlay would overlap its neighbours — the row
+   itself has to grow. Mouse and trackpad keep the compact list. */
+@media (pointer: coarse) {
+  .ds-footer__links {
+    gap: 0;
+  }
+
+  .ds-footer__links a {
+    display: flex;
+    align-items: center;
+    min-height: var(--size-hit-area);
+  }
 }
 
 .ds-footer__bottom {
@@ -102,7 +164,7 @@
   gap: var(--spacing-3);
   margin-top: var(--spacing-12);
   padding-top: var(--spacing-6);
-  border-top: 1px solid var(--color-border);
+  border-top: var(--border-width-sm) solid var(--color-border);
 }
 
 /* @breakpoint-md = 768px */
@@ -120,9 +182,13 @@
   margin: 0;
 }
 
+/* Wraps so a longer legal set (privacy, terms, refunds, shipping, contact)
+   doesn't overflow a 320px screen. */
 .ds-footer__legal {
   display: flex;
-  gap: var(--spacing-4);
+  flex-wrap: wrap;
+  column-gap: var(--spacing-4);
+  row-gap: var(--spacing-2);
 }
 
 .ds-footer__legal a {
@@ -132,8 +198,22 @@
   transition: color var(--transition-fast);
 }
 
-.ds-footer__legal a:hover {
-  color: var(--color-foreground);
+@media (hover: hover) {
+  .ds-footer__legal a:hover {
+    color: var(--color-foreground);
+  }
+}
+
+@media (pointer: coarse) {
+  .ds-footer__legal {
+    row-gap: 0;
+  }
+
+  .ds-footer__legal a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--size-hit-area);
+  }
 }
 
 /* ─── Reduced motion ─────────────────────────────────────── */

@@ -13,7 +13,7 @@ const meta: Meta<typeof CollectionFilters> = {
     docs: {
       description: {
         component:
-          'Faceted navigation for collection pages. Supports list filters (checkboxes), price range (min/max inputs), and boolean filters. Desktop: sidebar. Mobile: drawer.',
+          'The filter panel beside a product list — colour, size, price, availability. On phones it opens as a drawer.',
       },
     },
   },
@@ -89,7 +89,9 @@ function useFilterState(initialFilters: Filter[]) {
 
 // ─── Fixtures ──────────────────────────────────────────────
 
-const sampleFilters: Filter[] = [
+// A tuple, so sampleFilters[2] is a Filter (not Filter | undefined) under
+// noUncheckedIndexedAccess
+const sampleFilters: [Filter, Filter, Filter, Filter] = [
   {
     id: 'color',
     label: 'Color',
@@ -151,7 +153,7 @@ export const Default: Story = {
   render: function DefaultStory() {
     const state = useFilterState(sampleFilters);
     return (
-      <div style={{ maxWidth: '280px' }}>
+      <div style={{ maxWidth: 'calc(var(--spacing-phi-89) * 2)' }}>
         <CollectionFilters {...state} resultsCount={64} />
       </div>
     );
@@ -162,8 +164,21 @@ export const WithActiveFilters: Story = {
   render: function ActiveStory() {
     const state = useFilterState(filtersWithActive);
     return (
-      <div style={{ maxWidth: '280px' }}>
+      <div style={{ maxWidth: 'calc(var(--spacing-phi-89) * 2)' }}>
         <CollectionFilters {...state} resultsCount={12} />
+      </div>
+    );
+  },
+};
+
+/** `currency` + `locale` format the price range: the pill reads “20 € – 150 €”. */
+export const EuroPrices: Story = {
+  name: 'Prices in euros (Germany)',
+  render: function EuroStory() {
+    const state = useFilterState(filtersWithActive);
+    return (
+      <div style={{ maxWidth: 'calc(var(--spacing-phi-89) * 2)' }}>
+        <CollectionFilters {...state} resultsCount={12} currency="EUR" locale="de-DE" />
       </div>
     );
   },
@@ -173,10 +188,12 @@ export const WithHeader: Story = {
   render: function HeaderStory() {
     const state = useFilterState(sampleFilters);
     return (
-      <div style={{ maxWidth: '280px' }}>
+      <div style={{ maxWidth: 'calc(var(--spacing-phi-89) * 2)' }}>
         <CollectionFilters
           {...state}
-          header={<Heading level={3} size="sm">Filter by</Heading>}
+          // h2: the filter groups below are h3 (headingLevel default).
+          // `level`/`size="sm"` are not Heading props — they rendered <h2 level="3">.
+          header={<Heading as="h2" size="xl">Filter by</Heading>}
           resultsCount={64}
         />
       </div>
@@ -203,7 +220,7 @@ export const ManyValues: Story = {
 
     const state = useFilterState([manyColorFilter, sampleFilters[2]]);
     return (
-      <div style={{ maxWidth: '280px' }}>
+      <div style={{ maxWidth: 'calc(var(--spacing-phi-89) * 2)' }}>
         <CollectionFilters {...state} showMoreThreshold={5} resultsCount={96} />
       </div>
     );
@@ -226,7 +243,7 @@ export const ZeroCountValues: Story = {
     };
     const state = useFilterState([withZeros]);
     return (
-      <div style={{ maxWidth: '280px' }}>
+      <div style={{ maxWidth: 'calc(var(--spacing-phi-89) * 2)' }}>
         <CollectionFilters {...state} resultsCount={20} />
       </div>
     );
@@ -237,7 +254,7 @@ export const PriceRangeOnly: Story = {
   render: function PriceOnlyStory() {
     const state = useFilterState([sampleFilters[2]]);
     return (
-      <div style={{ maxWidth: '280px' }}>
+      <div style={{ maxWidth: 'calc(var(--spacing-phi-89) * 2)' }}>
         <CollectionFilters {...state} resultsCount={64} />
       </div>
     );
@@ -248,7 +265,7 @@ export const BooleanOnly: Story = {
   render: function BooleanOnlyStory() {
     const state = useFilterState([sampleFilters[3]]);
     return (
-      <div style={{ maxWidth: '280px' }}>
+      <div style={{ maxWidth: 'calc(var(--spacing-phi-89) * 2)' }}>
         <CollectionFilters {...state} resultsCount={48} />
       </div>
     );

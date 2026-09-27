@@ -2,7 +2,18 @@ import * as RadixSelect from '@radix-ui/react-select';
 import { forwardRef, useId } from 'react';
 import type { ComponentPropsWithoutRef } from 'react';
 import { Check, ChevronDown, ChevronUp } from '../icon';
+import { devWarning } from '../internal/dev-warning';
 import './Select.css';
+
+/** Gap between trigger and listbox: 4px = var(--spacing-1). */
+const SIDE_OFFSET = 4;
+
+/**
+ * Collision padding: 8px = var(--spacing-2). Popover, Tooltip and
+ * DropdownMenu use 16px (--spacing-4) — flagged in the API audit; kept at
+ * 8px here until the owner picks one value for every overlay.
+ */
+const COLLISION_PADDING = 8;
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -21,6 +32,16 @@ export interface SelectProps extends ComponentPropsWithoutRef<typeof RadixSelect
   size?: SelectSize;
   /** Stretch to fill container width */
   fullWidth?: boolean;
+  /**
+   * Accessible name when there is no visible `label` (e.g. a toolbar
+   * "Sort by" select). A combobox never takes its name from its content,
+   * so without one of these the trigger is unnamed.
+   */
+  'aria-label'?: string;
+  /** Id(s) of an existing visible label element, when `label` isn't used */
+  'aria-labelledby'?: string;
+  /** Extra description id(s), merged with the hint/error ids */
+  'aria-describedby'?: string;
 }
 
 /**
@@ -48,11 +69,30 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
     fullWidth = false,
     children,
     disabled,
+    'aria-label': ariaLabel,
+    'aria-labelledby': ariaLabelledBy,
+    'aria-describedby': ariaDescribedBy,
     ...rootProps
   },
   ref,
 ) {
-  const labelId = useId();
+  const baseId = useId();
+  const labelId = `${baseId}-label`;
+  const hintId = `${baseId}-hint`;
+  const errorId = `${baseId}-error`;
+
+  // Hint/error were rendered but never linked to the trigger, so screen
+  // readers didn't hear them on focus. Only reference ids that are rendered.
+  const showHint = Boolean(hint) && !error;
+  const describedBy =
+    [ariaDescribedBy, showHint && hintId, error && errorId].filter(Boolean).join(' ') || undefined;
+
+  if (!label && !ariaLabel && !ariaLabelledBy) {
+    devWarning(
+      'Select:name',
+      'Select: pass `label`, `aria-label`, or `aria-labelledby` — a combobox never takes its name from the selected value, so the trigger is otherwise unnamed.',
+    );
+  }
 
   const triggerClasses = [
     'ds-select-trigger',
@@ -76,9 +116,17 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
           ref={ref}
           className={triggerClasses}
           aria-invalid={error ? true : undefined}
-          aria-labelledby={label ? labelId : undefined}
+          aria-label={ariaLabel}
+          aria-labelledby={label ? labelId : ariaLabelledBy}
+          aria-describedby={describedBy}
         >
-          <RadixSelect.Value placeholder={placeholder} />
+          {/* Radix Select.Value drops `className` (and `style`) on purpose,
+              so .ds-select-value never applied: a long value or placeholder
+              (German, Japanese) pushed the chevron out of the trigger. The
+              wrapper span carries the truncation instead. */}
+          <span className="ds-select-value">
+            <RadixSelect.Value placeholder={placeholder} />
+          </span>
           <RadixSelect.Icon className="ds-select-icon" aria-hidden="true">
             <ChevronDown size="sm" />
           </RadixSelect.Icon>
@@ -88,8 +136,8 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
           <RadixSelect.Content
             className="ds-select-content"
             position="popper"
-            sideOffset={4}
-            collisionPadding={8}
+            sideOffset={SIDE_OFFSET}
+            collisionPadding={COLLISION_PADDING}
           >
             <RadixSelect.ScrollUpButton className="ds-select-scroll-btn">
               <ChevronUp size="sm" />
@@ -106,8 +154,16 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
         </RadixSelect.Portal>
       </RadixSelect.Root>
 
-      {hint && !error && <span className="ds-select-hint">{hint}</span>}
-      {error && <span className="ds-select-error" role="alert">{error}</span>}
+      {showHint && (
+        <span id={hintId} className="ds-select-hint">
+          {hint}
+        </span>
+      )}
+      {error && (
+        <span id={errorId} className="ds-select-error" role="alert">
+          {error}
+        </span>
+      )}
     </div>
   );
 });
@@ -139,6 +195,7 @@ SelectItem.displayName = 'SelectItem';
 // ─── SelectGroup ──────────────────────────────────────────
 
 export interface SelectGroupProps extends ComponentPropsWithoutRef<typeof RadixSelect.Group> {
+  /** Small uppercase heading above the group's items (names the group for screen readers) */
   label?: string;
 }
 

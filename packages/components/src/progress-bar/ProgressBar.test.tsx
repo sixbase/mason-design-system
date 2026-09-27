@@ -1,6 +1,9 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { render, screen } from '@testing-library/react';
 import { axe } from 'jest-axe';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { resetDevWarnings } from '../internal/dev-warning';
 import { ProgressBar } from './ProgressBar';
 
 describe('ProgressBar', () => {
@@ -42,6 +45,37 @@ describe('ProgressBar', () => {
   it('sets aria-label from label prop', () => {
     render(<ProgressBar value={50} label="Upload progress" />);
     expect(screen.getByRole('progressbar')).toHaveAttribute('aria-label', 'Upload progress');
+  });
+
+  // aria-label used to land on the wrapper div (ignored there), leaving
+  // the bar itself unnamed: "progress bar, 50%".
+  it('puts aria-label on the bar, not the wrapper', () => {
+    const { container } = render(<ProgressBar value={50} aria-label="Order progress" />);
+    expect(screen.getByRole('progressbar', { name: 'Order progress' })).toBeInTheDocument();
+    expect(container.firstChild).not.toHaveAttribute('aria-label');
+  });
+
+  it('supports aria-labelledby on the bar', () => {
+    render(
+      <>
+        <span id="pb-title">Checkout progress</span>
+        <ProgressBar value={33} aria-labelledby="pb-title" />
+      </>,
+    );
+    expect(screen.getByRole('progressbar', { name: 'Checkout progress' })).toBeInTheDocument();
+  });
+
+  it('hides the visible value text, which the bar already exposes', () => {
+    render(<ProgressBar value={45} label="Upload progress" showValue />);
+    expect(screen.getByText('45%')).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('warns in development when the bar has no name', () => {
+    resetDevWarnings();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    render(<ProgressBar value={50} />);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('ProgressBar has no accessible name'));
+    warn.mockRestore();
   });
 
   it('sets aria-valuetext from valueText prop', () => {
@@ -144,6 +178,26 @@ describe('ProgressBar', () => {
       expect(container.firstChild).not.toHaveClass('ds-progress-bar--success');
     });
 
+    // Regression: with motion switched off the global reset only shortened
+    // the sweep, parking a 38% fill at the start edge ("38% done"). It now
+    // gets the same centred, static fill as prefers-reduced-motion.
+    it('shows a static centred fill when the page switches motion off', () => {
+      const style = document.createElement('style');
+      style.textContent = readFileSync(resolve(__dirname, 'ProgressBar.css'), 'utf8');
+      document.head.appendChild(style);
+      document.documentElement.dataset.motion = 'off';
+      try {
+        const { container } = render(<ProgressBar indeterminate label="Loading" />);
+        const fill = getComputedStyle(container.querySelector('.ds-progress-bar__indeterminate-fill')!);
+        expect(fill.animationName || fill.animation).toBe('none');
+        expect(fill.left).toBe('50%');
+        expect(fill.transform).toBe('translateX(-50%)');
+      } finally {
+        delete document.documentElement.dataset.motion;
+        style.remove();
+      }
+    });
+
     it('has no accessibility violations (indeterminate)', async () => {
       const { container } = render(
         <div>
@@ -166,5 +220,20 @@ describe('ProgressBar', () => {
       </div>,
     );
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  /* ─── Regressions ─────────────────────────────────────────── */
+
+  it('never leaks NaN into aria-valuenow or the visible value', () => {
+    // Bug: an unparsed value (NaN) rendered aria-valuenow="NaN" and "NaN%"
+    render(<ProgressBar value={Number.NaN} label="Upload" showValue />);
+    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '0');
+    expect(screen.getByText('0%')).toBeInTheDocument();
+  });
+
+  it('treats a non-positive max as the default instead of dividing by zero', () => {
+    render(<ProgressBar value={0} max={0} label="Upload" showValue />);
+    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '0');
+    expect(screen.queryByText('NaN%')).not.toBeInTheDocument();
   });
 });

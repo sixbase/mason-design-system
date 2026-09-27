@@ -1,0 +1,272 @@
+/* ─── Shared specimen helpers ──────────────────────────────
+   Composition only — never restyles a component. */
+
+.ds-unstyled-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.ds-demo-cover-image {
+  width: 100%;
+  aspect-ratio: var(--aspect-landscape);
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  display: block;
+}
+
+/* Top padding only: the last section's own margin (the 64px section
+   rhythm) is the gap above the footer — bottom padding made it 88px. */
+.wb-page-main {
+  padding-top: var(--spacing-4);
+}
+
+@media (min-width: 768px) {
+  .wb-page-main {
+    padding-top: var(--spacing-6);
+  }
+}
+
+/* ─── Listing header: title + count left, sort right ─────── */
+.ds-results-header {
+  margin-bottom: var(--spacing-6);
+}
+
+.ds-results-header__row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+@media (min-width: 768px) {
+  .ds-results-header__row {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+}
+
+.ds-results-header__sort {
+  flex-shrink: 0;
+}
+
+/* ─── Foundation sheets ─────────────────────────────────── */
+.wb-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-10);
+  max-width: var(--size-container);
+  margin-inline: auto;
+}
+
+.wb-sheet__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.wb-sheet__note {
+  max-width: var(--measure-reading);
+}
+
+.wb-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.wb-row--baseline {
+  align-items: flex-end;
+}
+
+.wb-row__label {
+  flex: 0 0 calc(var(--spacing-24) + var(--spacing-4));
+  font-family: var(--font-family-code);
+  font-size: var(--font-size-tight-xs);
+  color: var(--color-foreground-secondary);
+}
+
+.wb-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, calc(var(--spacing-20) * 2)), 1fr));
+  gap: var(--spacing-4);
+}
+
+.wb-grid--wide {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, calc(var(--spacing-24) * 3)), 1fr));
+}
+
+.wb-swatch {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  min-width: 0;
+}
+
+.wb-swatch__chip {
+  height: var(--spacing-12);
+  border-radius: var(--radius-md);
+  border: var(--border-width-sm) solid var(--color-border);
+}
+
+.wb-swatch__meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-phi-1);
+  font-family: var(--font-family-code);
+  font-size: var(--font-size-tight-xs);
+  color: var(--color-foreground-secondary);
+  overflow-wrap: anywhere;
+}
+
+.wb-swatch__meta strong {
+  color: var(--color-foreground);
+  font-weight: var(--font-weight-medium);
+}
+
+.wb-ramp {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: var(--border-width-sm) solid var(--color-border);
+}
+
+.wb-ramp__step {
+  height: var(--spacing-10);
+}
+
+.wb-ramp-labels {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  font-family: var(--font-family-code);
+  font-size: var(--font-size-tight-2xs);
+  color: var(--color-foreground-secondary);
+  text-align: center;
+}
+
+.wb-type-row {
+  display: grid;
+  grid-template-columns: calc(var(--spacing-24) + var(--spacing-12)) minmax(0, 1fr);
+  align-items: baseline;
+  gap: var(--spacing-4);
+  padding-block: var(--spacing-2);
+  border-bottom: var(--border-width-sm) solid var(--color-border);
+}
+
+.wb-type-row > :last-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.wb-bar {
+  height: var(--spacing-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+}
+
+.wb-shape {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--spacing-20);
+  height: var(--spacing-16);
+  background: var(--color-background-surface);
+  border: var(--border-width-sm) solid var(--color-border-strong);
+  font-family: var(--font-family-code);
+  font-size: var(--font-size-tight-xs);
+  color: var(--color-foreground-secondary);
+}
+
+/* A dashed guide band exactly one control-height tall runs behind each
+   line-up row. Every control in the row should fill it edge to edge —
+   anything poking out, or falling short, is the wrong height. */
+.wb-lineup {
+  position: relative;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding-block: var(--spacing-3);
+}
+
+.wb-lineup::before {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  height: var(--wb-guide, var(--size-control-md));
+  transform: translateY(-50%);
+  border-block: var(--border-width-sm) dashed var(--color-info);
+  pointer-events: none;
+}
+
+.wb-lineup--sm { --wb-guide: var(--size-control-sm); }
+.wb-lineup--md { --wb-guide: var(--size-control-md); }
+.wb-lineup--lg { --wb-guide: var(--size-control-lg); }
+.wb-lineup--none::before { display: none; }
+
+.wb-lineup > * {
+  flex-shrink: 0;
+}
+
+/* Fields are full-width by design; give them a fixed slot in a line-up */
+.wb-lineup__field {
+  width: calc(var(--spacing-24) * 1.75);
+}
+
+/* Status line-up: label column + everything for that meaning beside it */
+.wb-status {
+  display: grid;
+  grid-template-columns: calc(var(--spacing-16) + var(--spacing-4)) minmax(0, 1fr);
+  gap: var(--spacing-3);
+  padding-block: var(--spacing-3);
+  border-bottom: var(--border-width-sm) solid var(--color-border);
+}
+
+.wb-status__value {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  min-width: 0;
+}
+
+.wb-type-px {
+  display: block;
+  color: var(--color-foreground-secondary);
+}
+
+.wb-shape--lg {
+  flex-direction: column;
+  gap: var(--spacing-1);
+  width: calc(var(--spacing-24) + var(--spacing-8));
+  height: calc(var(--spacing-24) + var(--spacing-8));
+}
+
+/* Shadows read against a surface, not the page tint */
+.wb-elevation-stage {
+  gap: var(--spacing-8);
+  padding: var(--spacing-8);
+  border-radius: var(--radius-lg);
+  background: var(--color-background-subtle);
+}
+
+.wb-elevation-stage .wb-shape {
+  border-color: transparent;
+}
+
+.wb-grid-demo,
+.wb-split-demo {
+  row-gap: var(--spacing-2);
+}
+
+.wb-grid-demo__col,
+.wb-split-demo__cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--spacing-10);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-info) 18%, var(--color-background));
+  font-family: var(--font-family-code);
+  font-size: var(--font-size-tight-xs);
+  color: var(--color-foreground-secondary);
+}

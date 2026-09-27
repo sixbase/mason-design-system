@@ -1,0 +1,27 @@
+{
+  "extends": "@ds/tsconfig/react.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "paths": {
+      "@ds/components": [
+        "../../packages/components/src/index.ts"
+      ],
+      "@ds/motion": [
+        "../../packages/motion/src/index.ts"
+      ],
+      "@ds/motion/react": [
+        "../../packages/motion/src/react.ts"
+      ]
+    },
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "target": "ES2022"
+  },
+  "include": [
+    "src"
+  ]
+}

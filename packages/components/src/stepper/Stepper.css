@@ -26,19 +26,38 @@
   min-width: 0;
 }
 
-/* Connector line — from this indicator's edge to the next step */
-.ds-stepper__step:not(:last-child)::after {
+/* Connector line — drawn as two halves that meet at the boundary between
+   steps: each step draws from its indicator to its own right edge (::after)
+   and from its own left edge to its indicator (::before). Every segment
+   stays inside its step's box, so steps never report horizontal overflow
+   (a single segment spanning into the next step overflowed every step). */
+.ds-stepper__step:not(:last-child)::after,
+.ds-stepper__step:not(:first-child)::before {
   content: '';
   position: absolute;
   top: calc(var(--stepper-indicator-size) / 2);
-  left: calc(50% + var(--stepper-indicator-size) / 2 + var(--stepper-connector-gap));
-  width: calc(100% - var(--stepper-indicator-size) - var(--stepper-connector-gap) * 2);
+  /* Negative results (steps narrower than indicator + gaps) clamp to 0. */
+  width: calc(50% - var(--stepper-indicator-size) / 2 - var(--stepper-connector-gap));
   border-top: var(--stepper-connector-width) solid var(--stepper-connector-color);
   transition: border-color var(--transition-normal);
 }
 
-/* Completed connector — filled to show progress */
-.ds-stepper__step--completed:not(:last-child)::after {
+/* Logical insets: in RTL the steps run right-to-left, and physical
+   right/left put each half on the wrong side — the line leaving Cart
+   stuck out past the first step and the progress fill sat one gap late. */
+.ds-stepper__step:not(:last-child)::after {
+  inset-inline-end: 0;
+}
+
+.ds-stepper__step:not(:first-child)::before {
+  inset-inline-start: 0;
+}
+
+/* Completed connector — filled to show progress. The segment leading out
+   of a completed step, and the segment arriving at the step after it
+   (which is then completed or active). */
+.ds-stepper__step--completed:not(:last-child)::after,
+.ds-stepper__step--completed + .ds-stepper__step::before {
   border-color: var(--color-primary);
 }
 
@@ -78,6 +97,8 @@
 }
 
 .ds-stepper__button:focus-visible {
+  outline: var(--border-width-lg) solid transparent; /* painted in forced-colors mode, where box-shadow rings vanish */
+  outline-offset: var(--border-width-lg);
   box-shadow: var(--focus-ring);
 }
 
@@ -89,10 +110,13 @@
   flex-shrink: 0;
   width: var(--stepper-indicator-size);
   height: var(--stepper-indicator-size);
-  border: var(--border-width-md) solid var(--color-border);
+  /* Upcoming is "not yet", not "disabled": the number is readable text
+     (secondary, 5.9:1 — muted was 2.5:1) and the ring is the strong border
+     so the circle doesn't dissolve into the page. */
+  border: var(--border-width-md) solid var(--color-border-strong);
   border-radius: var(--radius-full);
   background-color: var(--color-background-surface);
-  color: var(--color-foreground-muted);
+  color: var(--color-foreground-secondary);
   font-family: var(--font-family-numeric);
   font-variant-numeric: tabular-nums;
   font-size: var(--font-size-tight-sm);
@@ -117,13 +141,17 @@
 }
 
 /* Clickable completed steps — hover feedback */
-.ds-stepper__button:hover .ds-stepper__indicator {
-  background-color: var(--color-primary-hover);
-  border-color: var(--color-primary-hover);
+@media (hover: hover) {
+  .ds-stepper__button:hover .ds-stepper__indicator {
+    background-color: var(--color-primary-hover);
+    border-color: var(--color-primary-hover);
+  }
 }
 
-.ds-stepper__button:hover .ds-stepper__label {
-  color: var(--color-foreground);
+@media (hover: hover) {
+  .ds-stepper__button:hover .ds-stepper__label {
+    color: var(--color-foreground);
+  }
 }
 
 /* ─── Label ───────────────────────────────────────────────── */
@@ -160,17 +188,41 @@
 
 /* ─── Compact mobile pattern (< 640px) ────────────────────── */
 /* Hide labels except for the active step — dots and connectors
-   remain, keeping the row narrow on small checkout screens. */
+   remain, keeping the row narrow on small checkout screens.
+   Visually hidden, never display: none — the label is the step's only
+   accessible name (the indicator is aria-hidden). With display: none a
+   clickable completed step was announced as just "(completed)" and
+   upcoming steps as empty list items. */
 @media (max-width: 639px) {
   .ds-stepper__step:not(.ds-stepper__step--active) .ds-stepper__label {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border-width: 0;
   }
 }
 
 /* ─── Reduced motion ──────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .ds-stepper__indicator,
-  .ds-stepper__step:not(:last-child)::after {
+  .ds-stepper__step:not(:last-child)::after,
+  .ds-stepper__step:not(:first-child)::before {
     transition: none;
+  }
+}
+
+/* ─── Print ─────────────────────────────────────────────── */
+/* Completed steps are a filled circle with a white check: printed as empty circles. Browsers drop backgrounds when printing by default ("economy"), so
+   the state vanished on paper; exact keeps these fills. (-webkit- for
+   Safari < 15.4 and Chrome < 136, which only read the prefixed form.) */
+@media print {
+  .ds-stepper {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }

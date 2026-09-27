@@ -6,6 +6,14 @@ const meta: Meta<typeof Table> = {
   title: 'Components/Table',
   component: Table,
   tags: ['autodocs'],
+  parameters: {
+    docs: {
+      description: {
+        component:
+          'Rows and columns of data — order history, size charts, specifications.',
+      },
+    },
+  },
   argTypes: {
     variant: {
       control: 'select',
@@ -17,6 +25,9 @@ const meta: Meta<typeof Table> = {
     },
     stickyHeader: {
       control: 'boolean',
+    },
+    maxHeight: {
+      control: 'text',
     },
     responsive: {
       control: 'select',
@@ -45,8 +56,6 @@ const specData = [
   { property: 'Origin', value: 'Made in Portugal' },
   { property: 'Certification', value: 'GOTS Certified' },
 ];
-
-/* ─── Stories ─────────────────────────────────────────────── */
 
 export const Default: Story = {
   args: {
@@ -98,6 +107,7 @@ export const Striped: Story = {
 };
 
 export const SmallSize: Story = {
+  name: 'Small (tighter rows)',
   render: () => (
     <Table size="sm" aria-label="Compact specifications">
       <Table.Header>
@@ -119,6 +129,7 @@ export const SmallSize: Story = {
 };
 
 export const WithSortIndicator: Story = {
+  name: 'Shows the sort order',
   render: () => (
     <Table aria-label="Sortable size chart">
       <Table.Header>
@@ -143,90 +154,8 @@ export const WithSortIndicator: Story = {
   ),
 };
 
-export const EmptyState: Story = {
-  render: () => (
-    <Table aria-label="Empty table">
-      <Table.Header>
-        <Table.Row>
-          <Table.Head>Product</Table.Head>
-          <Table.Head>SKU</Table.Head>
-          <Table.Head>Stock</Table.Head>
-        </Table.Row>
-      </Table.Header>
-      <Table.Body>
-        <Table.Empty colSpan={3} message="No products match your filters" />
-      </Table.Body>
-    </Table>
-  ),
-};
-
-export const StickyHeader: Story = {
-  render: () => {
-    const manyRows = Array.from({ length: 20 }, (_, i) => ({
-      size: `Size ${i + 1}`,
-      chest: `${80 + i * 2}`,
-      waist: `${62 + i * 2}`,
-    }));
-    return (
-      <div style={{ maxHeight: '300px', overflow: 'auto' }}>
-        <Table stickyHeader aria-label="Long table with sticky header">
-          <Table.Header>
-            <Table.Row>
-              <Table.Head>Size</Table.Head>
-              <Table.Head>Chest (cm)</Table.Head>
-              <Table.Head>Waist (cm)</Table.Head>
-            </Table.Row>
-          </Table.Header>
-          <Table.Body>
-            {manyRows.map((row) => (
-              <Table.Row key={row.size}>
-                <Table.Cell>{row.size}</Table.Cell>
-                <Table.Cell>{row.chest}</Table.Cell>
-                <Table.Cell>{row.waist}</Table.Cell>
-              </Table.Row>
-            ))}
-          </Table.Body>
-        </Table>
-      </div>
-    );
-  },
-};
-
-export const ResponsiveStack: Story = {
-  parameters: {
-    viewport: { defaultViewport: 'mobile1' },
-    docs: {
-      description: {
-        story:
-          'With `responsive="stack"`, rows render as cards below the sm breakpoint (640px) and each cell shows its column header as a label. Markup stays a semantic table. Resize the viewport to see it.',
-      },
-    },
-  },
-  render: () => (
-    <Table responsive="stack" variant="striped" aria-label="Size chart (stacked on mobile)">
-      <Table.Header>
-        <Table.Row>
-          <Table.Head>Size</Table.Head>
-          <Table.Head>Chest (cm)</Table.Head>
-          <Table.Head>Waist (cm)</Table.Head>
-          <Table.Head>Hips (cm)</Table.Head>
-        </Table.Row>
-      </Table.Header>
-      <Table.Body>
-        {sizeChartData.map((row) => (
-          <Table.Row key={row.size}>
-            <Table.Cell>{row.size}</Table.Cell>
-            <Table.Cell>{row.chest}</Table.Cell>
-            <Table.Cell>{row.waist}</Table.Cell>
-            <Table.Cell>{row.hips}</Table.Cell>
-          </Table.Row>
-        ))}
-      </Table.Body>
-    </Table>
-  ),
-};
-
 export const SortableHeaders: Story = {
+  name: 'Click a header to sort',
   parameters: {
     docs: {
       description: {
@@ -292,10 +221,80 @@ export const SortableHeaders: Story = {
   },
 };
 
-export const WideTableScroll: Story = {
+export const StickyHeader: Story = {
+  name: 'Header stays put while scrolling',
+  render: () => {
+    const manyRows = Array.from({ length: 20 }, (_, i) => ({
+      size: `Size ${i + 1}`,
+      chest: `${80 + i * 2}`,
+      waist: `${62 + i * 2}`,
+    }));
+    // maxHeight bounds the table's own scroll area — an outer scrolling
+    // div can't work: the wrapper's overflow-x makes it the header's
+    // scroll container, so the header only sticks inside the wrapper.
+    return (
+      <Table stickyHeader maxHeight="var(--size-modal-sm)" aria-label="Long table with sticky header">
+        <Table.Header>
+          <Table.Row>
+            <Table.Head>Size</Table.Head>
+            <Table.Head>Chest (cm)</Table.Head>
+            <Table.Head>Waist (cm)</Table.Head>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>
+          {manyRows.map((row) => (
+            <Table.Row key={row.size}>
+              <Table.Cell>{row.size}</Table.Cell>
+              <Table.Cell>{row.chest}</Table.Cell>
+              <Table.Cell>{row.waist}</Table.Cell>
+            </Table.Row>
+          ))}
+        </Table.Body>
+      </Table>
+    );
+  },
+};
+
+export const ResponsiveStack: Story = {
+  name: 'Stacks into cards on phones',
+  parameters: {
+    viewport: { defaultViewport: 'mobile1' },
+    docs: {
+      description: {
+        story:
+          'With `responsive="stack"`, rows render as cards below the sm breakpoint (640px) and each cell shows its column header as a label. Markup stays a semantic table. Resize the viewport to see it.',
+      },
+    },
+  },
   render: () => (
-    <div style={{ maxWidth: '400px' }}>
-      <Table aria-label="Wide table demonstrating horizontal scroll">
+    <Table responsive="stack" variant="striped" aria-label="Size chart (stacked on mobile)">
+      <Table.Header>
+        <Table.Row>
+          <Table.Head>Size</Table.Head>
+          <Table.Head>Chest (cm)</Table.Head>
+          <Table.Head>Waist (cm)</Table.Head>
+          <Table.Head>Hips (cm)</Table.Head>
+        </Table.Row>
+      </Table.Header>
+      <Table.Body>
+        {sizeChartData.map((row) => (
+          <Table.Row key={row.size}>
+            <Table.Cell>{row.size}</Table.Cell>
+            <Table.Cell>{row.chest}</Table.Cell>
+            <Table.Cell>{row.waist}</Table.Cell>
+            <Table.Cell>{row.hips}</Table.Cell>
+          </Table.Row>
+        ))}
+      </Table.Body>
+    </Table>
+  ),
+};
+
+export const WideTableScroll: Story = {
+  name: 'Too wide: scrolls sideways',
+  render: () => (
+    <div style={{ maxWidth: 'var(--size-modal-sm)' }}>
+      <Table aria-label="Full size chart">
         <Table.Header>
           <Table.Row>
             <Table.Head>Size</Table.Head>
@@ -320,5 +319,22 @@ export const WideTableScroll: Story = {
         </Table.Body>
       </Table>
     </div>
+  ),
+};
+
+export const EmptyState: Story = {
+  render: () => (
+    <Table aria-label="Empty table">
+      <Table.Header>
+        <Table.Row>
+          <Table.Head>Product</Table.Head>
+          <Table.Head>SKU</Table.Head>
+          <Table.Head>Stock</Table.Head>
+        </Table.Row>
+      </Table.Header>
+      <Table.Body>
+        <Table.Empty colSpan={3} message="No products match your filters" />
+      </Table.Body>
+    </Table>
   ),
 };

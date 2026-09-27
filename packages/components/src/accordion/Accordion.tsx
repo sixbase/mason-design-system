@@ -1,6 +1,6 @@
 import * as AccordionPrimitive from '@radix-ui/react-accordion';
-import { forwardRef } from 'react';
-import type { ComponentPropsWithoutRef } from 'react';
+import { createContext, forwardRef, useContext, useEffect, useRef, useState } from 'react';
+import type { ComponentPropsWithoutRef, MutableRefObject, ReactNode } from 'react';
 import { Checkbox } from '../checkbox/Checkbox';
 import { ChevronDown } from '../icon';
 import './Accordion.css';
@@ -9,6 +9,9 @@ import './Accordion.css';
 
 export type AccordionSize = 'sm' | 'md' | 'lg';
 
+/** Heading level for item headers (h2–h6). */
+export type AccordionHeadingLevel = 2 | 3 | 4 | 5 | 6;
+
 export type AccordionProps = ComponentPropsWithoutRef<typeof AccordionPrimitive.Root> & {
   /** Size variant — controls padding and font size */
   size?: AccordionSize;
@@ -16,6 +19,12 @@ export type AccordionProps = ComponentPropsWithoutRef<typeof AccordionPrimitive.
   flush?: boolean;
   /** Wraps the accordion in a bordered, rounded panel container */
   bordered?: boolean;
+  /**
+   * Heading level each item's header renders at (default 3). Set it to
+   * fit the page outline — e.g. 2 when the accordion sits directly under
+   * the page `<h1>` — so headings never skip a level.
+   */
+  headingLevel?: AccordionHeadingLevel;
 };
 
 export interface AccordionItemProps
@@ -23,7 +32,8 @@ export interface AccordionItemProps
   /**
    * Disables this item: the trigger cannot be activated and the item
    * renders at reduced opacity. Radix marks the trigger `disabled` +
-   * `data-disabled`; we additionally expose `aria-disabled` on the item.
+   * `data-disabled`, which is what screen readers announce. (The item is
+   * a role-less div, so `aria-disabled` on it meant nothing — removed.)
    */
   disabled?: boolean;
 }
@@ -48,6 +58,17 @@ export interface AccordionContentProps
   size?: AccordionSize;
 }
 
+// Heading level flows from the root to every trigger. A nested accordion
+// provides its own value, so levels don't leak between them.
+const AccordionHeadingLevelContext = createContext<AccordionHeadingLevel>(3);
+
+// Whether the root has finished its first render. Content opened after that
+// fades in; content already open when the page renders does not — Radix
+// skips the height animation on mount, and the fade used to play anyway
+// (open-by-default panels such as the first filter groups were invisible,
+// then faded in, on every page load).
+const AccordionMountedContext = createContext<MutableRefObject<boolean>>({ current: true });
+
 // ─── Root ─────────────────────────────────────────────────
 
 /**
@@ -67,7 +88,14 @@ export interface AccordionContentProps
  * ```
  */
 export const Accordion = forwardRef<HTMLDivElement, AccordionProps>(
-  function Accordion({ size = 'md', flush, bordered, className, ...props }, ref) {
+  function Accordion(
+    { size = 'md', flush, bordered, headingLevel = 3, className, ...props },
+    ref,
+  ) {
+    const mounted = useRef(false);
+    useEffect(() => {
+      mounted.current = true;
+    }, []);
     const classes = [
       'ds-accordion',
       `ds-accordion--${size}`,
@@ -78,7 +106,13 @@ export const Accordion = forwardRef<HTMLDivElement, AccordionProps>(
       .filter(Boolean)
       .join(' ');
 
-    return <AccordionPrimitive.Root ref={ref} className={classes} {...props} />;
+    return (
+      <AccordionHeadingLevelContext.Provider value={headingLevel}>
+        <AccordionMountedContext.Provider value={mounted}>
+          <AccordionPrimitive.Root ref={ref} className={classes} {...props} />
+        </AccordionMountedContext.Provider>
+      </AccordionHeadingLevelContext.Provider>
+    );
   },
 );
 Accordion.displayName = 'Accordion';
@@ -99,7 +133,6 @@ export const AccordionItem = forwardRef<HTMLDivElement, AccordionItemProps>(
         ref={ref}
         className={classes}
         disabled={disabled}
-        aria-disabled={disabled || undefined}
         {...props}
       />
     );
@@ -111,11 +144,27 @@ AccordionItem.displayName = 'AccordionItem';
 
 export const AccordionTrigger = forwardRef<HTMLButtonElement, AccordionTriggerProps>(
   function AccordionTrigger(
-    { className, children, checked, onCheckedChange, checkboxDisabled, checkboxLabel, ...props },
+    {
+      className,
+      children,
+      size,
+      checked,
+      onCheckedChange,
+      checkboxDisabled,
+      checkboxLabel,
+      ...props
+    },
     ref,
   ) {
-    const classes = ['ds-accordion__trigger', className].filter(Boolean).join(' ');
+    const classes = [
+      'ds-accordion__trigger',
+      size && `ds-accordion__trigger--${size}`,
+      className,
+    ]
+      .filter(Boolean)
+      .join(' ');
     const hasCheckbox = checked !== undefined;
+    const HeadingTag = `h${useContext(AccordionHeadingLevelContext)}` as const;
 
     const trigger = (
       <AccordionPrimitive.Trigger ref={ref} className={classes} {...props}>
@@ -126,8 +175,8 @@ export const AccordionTrigger = forwardRef<HTMLButtonElement, AccordionTriggerPr
 
     if (!hasCheckbox) {
       return (
-        <AccordionPrimitive.Header className="ds-accordion__header">
-          {trigger}
+        <AccordionPrimitive.Header asChild>
+          <HeadingTag className="ds-accordion__header">{trigger}</HeadingTag>
         </AccordionPrimitive.Header>
       );
     }
@@ -135,19 +184,23 @@ export const AccordionTrigger = forwardRef<HTMLButtonElement, AccordionTriggerPr
     const label =
       checkboxLabel ?? (typeof children === 'string' ? children : undefined);
 
+    // The checkbox sits beside the heading, not inside it. Inside, the
+    // heading's name was built from both controls — screen readers read
+    // "Functional Cookies Functional Cookies, heading level 3" — and the
+    // WAI-ARIA accordion pattern keeps the button as the heading's only child.
     return (
-      <AccordionPrimitive.Header className="ds-accordion__header">
-        <div className="ds-accordion__trigger-row">
-          <Checkbox
-            size="sm"
-            checked={checked}
-            onCheckedChange={onCheckedChange}
-            disabled={checkboxDisabled}
-            aria-label={label}
-          />
-          {trigger}
-        </div>
-      </AccordionPrimitive.Header>
+      <div className="ds-accordion__trigger-row">
+        <Checkbox
+          size="sm"
+          checked={checked}
+          onCheckedChange={onCheckedChange}
+          disabled={checkboxDisabled}
+          aria-label={label}
+        />
+        <AccordionPrimitive.Header asChild>
+          <HeadingTag className="ds-accordion__header">{trigger}</HeadingTag>
+        </AccordionPrimitive.Header>
+      </div>
     );
   },
 );
@@ -156,13 +209,29 @@ AccordionTrigger.displayName = 'AccordionTrigger';
 // ─── Content ──────────────────────────────────────────────
 
 export const AccordionContent = forwardRef<HTMLDivElement, AccordionContentProps>(
-  function AccordionContent({ className, children, ...props }, ref) {
-    const classes = ['ds-accordion__content', className].filter(Boolean).join(' ');
+  function AccordionContent({ className, children, size, ...props }, ref) {
+    const classes = [
+      'ds-accordion__content',
+      size && `ds-accordion__content--${size}`,
+      className,
+    ]
+      .filter(Boolean)
+      .join(' ');
     return (
       <AccordionPrimitive.Content ref={ref} className={classes} {...props}>
-        <div className="ds-accordion__content-inner">{children}</div>
+        <AccordionContentInner>{children}</AccordionContentInner>
       </AccordionPrimitive.Content>
     );
   },
 );
 AccordionContent.displayName = 'AccordionContent';
+
+/** Radix renders content children only while open, so this mounts on every open. */
+function AccordionContentInner({ children }: { children?: ReactNode }) {
+  const rootMounted = useContext(AccordionMountedContext);
+  const [fadeIn] = useState(() => rootMounted.current);
+  const classes = ['ds-accordion__content-inner', fadeIn && 'ds-accordion__content-inner--enter']
+    .filter(Boolean)
+    .join(' ');
+  return <div className={classes}>{children}</div>;
+}

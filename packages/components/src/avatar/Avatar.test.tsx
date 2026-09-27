@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { axe } from 'jest-axe';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Avatar } from './Avatar';
 
 describe('Avatar', () => {
@@ -104,6 +104,36 @@ describe('Avatar', () => {
   });
 
   /* ─── Accessibility ──────────────────────────────────────────── */
+
+  /* ─── Regressions ────────────────────────────────────────────── */
+
+  // Regression: charAt(0) split emoji into a lone surrogate (rendered �).
+  it('keeps emoji initials intact', () => {
+    const { container } = render(<Avatar name="😀 Smile" />);
+    expect(container.querySelector('.ds-avatar__initials')?.textContent).toBe('😀S');
+  });
+
+  describe('image that settled before hydration', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    // Regression: an SSR <img> that failed before React attached onError
+    // kept its broken-image glyph forever instead of showing initials.
+    it('falls back to initials when the image already failed', () => {
+      vi.spyOn(HTMLImageElement.prototype, 'complete', 'get').mockReturnValue(true);
+      vi.spyOn(HTMLImageElement.prototype, 'naturalWidth', 'get').mockReturnValue(0);
+      render(<Avatar name="Ada Lovelace" src="/broken.jpg" />);
+      expect(screen.getByRole('img', { name: 'Ada Lovelace' }).tagName).toBe('SPAN');
+    });
+
+    it('keeps an image that already loaded', () => {
+      vi.spyOn(HTMLImageElement.prototype, 'complete', 'get').mockReturnValue(true);
+      vi.spyOn(HTMLImageElement.prototype, 'naturalWidth', 'get').mockReturnValue(120);
+      render(<Avatar name="Ada Lovelace" src="/ok.jpg" />);
+      expect(screen.getByRole('img', { name: 'Ada Lovelace' }).tagName).toBe('IMG');
+    });
+  });
 
   it('has no accessibility violations', async () => {
     const { container } = render(

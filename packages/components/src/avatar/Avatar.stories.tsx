@@ -5,9 +5,17 @@ const meta: Meta<typeof Avatar> = {
   title: 'Components/Avatar',
   component: Avatar,
   tags: ['autodocs'],
+  parameters: {
+    docs: {
+      description: {
+        component:
+          'A small round picture of a person — or their initials when there’s no photo.',
+      },
+    },
+  },
   argTypes: {
-    size: { control: 'select' },
-    shape: { control: 'select' },
+    size: { control: 'select', options: ['sm', 'md', 'lg'] },
+    shape: { control: 'select', options: ['circle', 'square'] },
   },
 };
 export default meta;
@@ -51,13 +59,13 @@ export const Sizes: Story = {
 
 export const FallbackTones: Story = {
   render: () => (
-    <div style={{ display: 'flex', gap: 'var(--spacing-2)', alignItems: 'center' }}>
-      <Avatar name="Ada Lovelace" />
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-2)', alignItems: 'center' }}>
+      {/* One name per tone (0–4): the old list hashed to only 3 of the 5 */}
+      <Avatar name="Linus Torvalds" />
       <Avatar name="Grace Hopper" />
-      <Avatar name="Alan Turing" />
       <Avatar name="Katherine Johnson" />
-      <Avatar name="Edsger Dijkstra" />
-      <Avatar name="Barbara Liskov" />
+      <Avatar name="Mary Kenneth Keller" />
+      <Avatar name="Ada Lovelace" />
     </div>
   ),
 };

@@ -30,7 +30,7 @@
 
 ## Quick Reference Index
 
-Use this to find decisions by topic without scrolling 1300+ lines.
+Use this to find decisions by topic without scrolling 2,300+ lines. Statuses here mirror each entry's **Status** line (last synced 2026-09-26).
 
 ### Architecture & Tooling
 
@@ -40,7 +40,7 @@ Use this to find decisions by topic without scrolling 1300+ lines.
 | Package Manager: pnpm + Turborepo | Active |
 | Token Architecture: 3-Tier | Active |
 | Package Bundler: tsup | Active |
-| Documentation: Two Apps (Storybook + Astro) | Active |
+| Documentation: Two Apps (Storybook + Astro) | **Changed** → Storybook + workbench (2026-09-25) |
 | Primitive Components: Radix UI | Active |
 | CSS Strategy: Plain CSS + BEM + `ds-` prefix | Active |
 | package.json exports: `types` first | Active |
@@ -63,7 +63,7 @@ Use this to find decisions by topic without scrolling 1300+ lines.
 | Composite `--color-overlay` token | Active |
 | Disabled State: `var(--opacity-medium)` not `0.5` | Active |
 | Section Spacing: `--spacing-16` (64px) canonical, not phi-34 | Active |
-| Container Width: `--size-content-xl` (1280px) vs `.ds-page-container` (1200px) | Active |
+| Container Width: `--size-content-xl` (1280px) vs `.ds-page-container` (1200px) | **Changed** — Header/Footer use `--size-container` too |
 | Phi vs Standard Spacing: standard default, phi for proportional math only | Active |
 | Line Height φ Audit: snug→1.382, tight/normal kept | Active |
 | Type Scale Context Mapping: Tight/Default/Display boundaries | Active |
@@ -76,10 +76,10 @@ Use this to find decisions by topic without scrolling 1300+ lines.
 | Accordion: `bordered` variant with panel wrapper | Active |
 | Accordion: checkbox trigger variant | Active |
 | Badge: solid primitive colors (not `color-mix` with transparent) | Active |
-| Button loading: `aria-busy` + disabled interaction | Active |
+| Button loading: `aria-busy` + blocked activation — `aria-disabled`, never native `disabled` (round 1) | Active |
 | CookieConsent: compound component with i18n labels | Active |
 | No Overrides Rule: block components never target primitive internals | Active |
-| Optical Text Centering: `text-box-trim` | Active |
+| Optical Text Centering: `text-box-trim` | **Revisited** — invalid syntax, open decision |
 | Optimal Reading Width: 65ch | Active |
 | ProductCard: `renderPrice`, `badge`, `hoverImage` props | Active |
 | ProductCard: `fluid` variant for grid contexts | Active |
@@ -90,7 +90,7 @@ Use this to find decisions by topic without scrolling 1300+ lines.
 | Table: Compound API with scroll wrapper | Active |
 | Toast: Custom portal over Radix Toast | Active |
 | Info color tokens (`--color-info-subtle`, `--color-info-foreground`) | Active |
-| CartLineItem: Internal `formatPrice` (cents in, formatted out) | Active |
+| CartLineItem: cents in, formatted out — now via shared `format-money` | Active |
 | CartDrawer: Composition over inline rendering | Active |
 | CartDrawer: Sticky footer via `position: sticky` | Active |
 | Pagination: Dual-mode rendering (SPA vs SSR) | Active |
@@ -118,19 +118,40 @@ Use this to find decisions by topic without scrolling 1300+ lines.
 
 | Decision | Status |
 |----------|--------|
-| Gallery Inline Styles → `demo-utilities.css` shared classes | Active |
-| ViewportIndicator: inline styles → CSS + semantic tokens | Active |
-| Shared Results Header pattern | Active |
-| Token Compliance Audit: docs site inline styles → CSS classes | Active |
-| Docs parity: every Storybook story needs live preview in docs | Active |
+| Gallery Inline Styles → `demo-utilities.css` shared classes | Retired (docs site) |
+| ViewportIndicator: inline styles → CSS + semantic tokens | Retired (docs site) |
+| Shared Results Header pattern | Retired (docs site) |
+| Token Compliance Audit: docs site inline styles → CSS classes | Retired (docs site) |
+| Docs parity: every Storybook story needs live preview in docs | Retired — stories are the only specimens |
 
 ### Shopify Integration
 
 | Decision | Status |
 |----------|--------|
-| Theme location: `apps/theme/` in monorepo | Active |
+| Theme location: `apps/theme/` in monorepo | **Changed** → own repo `sixbase/mason-storefront` (2026-06-25) |
 | Base theme: aggressive strip of Dawn (delete all assets/sections/snippets) | Active |
-| Tokens distribution: copy `tokens.css` into theme assets (automation pending) | Active |
+| Tokens distribution: copy `tokens.css` into theme assets (automation open — see `12`) | Active |
+
+### Later decisions (2026-06 → 2026-09) — highlights
+
+| Decision | Status |
+|----------|--------|
+| Semantic tokens live in `tokens.json`; build throws on bad references | Active |
+| Text tone roles: `foreground-secondary` is the readable-text floor | Active |
+| `--size-container` (1200px) tokenized; storefront runs `--size-container-wide` (1300px visible) | Active |
+| Accent ramps extended to 12 steps on the stone spine | Active |
+| Responsive foundation tokens (fluid spacing, aspect, elevation, safe area, interaction) | Active |
+| Touch hit-area pattern (pseudo-element, coarse-pointer guard when adjacent) | Active |
+| Motion layer `@ds/motion`; φ easings; native view transitions | Active |
+| Focus ring: solid 2px with background gap; composites per mode; `--color-border-control` | Active |
+| Docs site retired → visual workbench on stories | Active |
+| One Radix internals version; wrap Radix parts, never rename | Active |
+| Dev-only misuse warnings; one money formatter (cents for every currency) | Active |
+| Print and high-contrast token modes; iOS page globals | Active |
+| Disabled fades the control, not its hint | Active |
+| Round 4: `check-css`, hover gating, `.ds-motion-safe`, live regions on change, hit areas, per-component CSS, stories type-checked | Active |
+| Shopify theme extracted to its own repo | Active |
+| Playbook: how-to chapters state today's rules; logs are history; one open list | Active |
 
 ---
 
@@ -191,7 +212,7 @@ Use this to find decisions by topic without scrolling 1300+ lines.
 **Options considered:** Storybook only, Astro only, Storybook with MDX docs, separate Storybook + Astro
 **Decision:** Separate apps — Storybook for internal dev, Astro for public docs
 **Rationale:** Storybook serves engineers who are building components. The Astro docs site serves consumers who are using components. They have fundamentally different needs. Storybook as the only documentation leads to a poor consumer experience (too technical, no prose explanation). A custom docs site can be more opinionated and brand-appropriate.
-**Status:** Active
+**Status:** Changed (2026-09-25) — the Astro docs site was retired; Storybook stays for engineering and `apps/workbench` renders the same stories for review. See "Docs Site Retired → Visual Workbench Built on Stories".
 
 ---
 
@@ -447,7 +468,7 @@ All three duration values are now φ-derived. Shorthand tokens `--transition-fas
 **Options considered:** Add Lucide React, add Radix Icons, use Hero Icons, inline SVG directly in the gallery component
 **Decision:** Inline SVG in `ButtonGallery.tsx` — no external icon package
 **Rationale:** Adding an icon package to `apps/docs` just for four demo icons adds a dep that has nothing to do with the design system itself. Inline SVG is self-contained, ships zero bytes to consumers, and documents the pattern (you bring your own icons). The component accepts `ReactNode` by design — the docs should demonstrate that without prescribing a specific library.
-**Status:** Active — revisit if an `@ds/icons` package is added in the future
+**Status:** Superseded — components use the internal icon registry ("Internal Icon Registry over Lucide/External Library"), and the docs gallery it applied to was retired 2026-09-25.
 
 ---
 
@@ -458,7 +479,7 @@ All three duration values are now φ-derived. Shorthand tokens `--transition-fas
 **Options considered:** Hardcoded `rgba(hex, alpha)`, CSS `color-mix()`, `oklch` with alpha
 **Decision:** `color-mix(in srgb, var(--color-focus-ring) 20%, transparent)`
 **Rationale:** Hardcoded `rgba()` references a specific hex value and doesn't update when `.dark` swaps `--color-focus-ring` to a different value. `color-mix()` evaluates the CSS variable first (after dark mode applies) then mixes it. Supported in all modern browsers (Chrome 111+, Firefox 113+, Safari 16.2+).
-**Status:** Active
+**Status:** Changed (2026-09-25) — the focus ring is now solid ("Focus Ring: Solid 2px Ring with Background Gap"). `color-mix()` over `rgba()` still holds for decorative composites such as `--color-overlay`.
 
 ---
 
@@ -811,7 +832,7 @@ Combined with `transform: scale(0.98)` on buttons/selects, `scale(0.92)` on smal
 **Decision:** Option 3. Apply `text-box-trim: both; text-box-edge: cap alphabetic;` to all fixed-height control components (Button, Badge, Input, Select, QuantitySelector). Add `@supports not (text-box-trim: both)` fallback with `transform: translateY(0.05em)` for unsupported browsers. Fallback combines with existing transforms where needed (Button `:active`, Select `:active`).
 **Rationale:** `text-box-trim` is the correct CSS solution to the em-box centering problem. It trims the extra leading so flex centering operates on visible ink bounds. The `@supports not` fallback ensures acceptable rendering in Firefox (which doesn't support the property yet). The `0.05em` offset is font-specific to Ancizar Serif.
 **Components affected:** Button (`.ds-button`), Badge (`.ds-badge`), Input (`.ds-input-field`), Select (`.ds-select-trigger`), QuantitySelector (`.ds-quantity-selector__value`)
-**Status:** Active
+**Status:** Revisited (2026-09-25) — `text-box-trim: both` is invalid CSS, so the trim never applied and the translateY fallback runs everywhere. Open owner decision: `12-audit-2026-09-25.md` item 1; analysis in `07-lessons-learned.md#text-box-trim-invalid`.
 
 ---
 
@@ -838,7 +859,7 @@ Combined with `transform: scale(0.98)` on buttons/selects, `scale(0.92)` on smal
 - CSS `:global(.dark)` scoped selectors toggle icon visibility
 - Logo SVG loaded as `<img>` can't use `currentColor`, so `filter: invert(1)` applied in dark mode
 - All components use `var(--color-*)` tokens — zero component changes needed
-**Status:** Active
+**Status:** Changed — FullWidthLayout.astro was retired with the docs site; the toggle now lives in the Header component (`showThemeToggle`, stores `ds-theme` in localStorage).
 
 ---
 
@@ -922,7 +943,7 @@ Combined with `transform: scale(0.98)` on buttons/selects, `scale(0.92)` on smal
 3. Create a `PropsTable` Astro component with scoped styles
 **Decision:** Option 2 — moved to `base.css`. Removed all 21 `<style>` blocks from component pages.
 **Rationale:** The styles were byte-for-byte identical across every page. Scoped styles only make sense when styles vary between pages. Moving to `base.css` eliminates 500+ lines of duplication and ensures any future styling change applies everywhere automatically. Option 3 would be cleaner architecturally but is higher effort for the same result — revisit if the props table markup also needs extraction.
-**Status:** Active
+**Status:** Retired with the Astro docs site (2026-09-25) — see "Docs Site Retired → Visual Workbench Built on Stories". History only.
 
 ---
 
@@ -943,7 +964,7 @@ Combined with `transform: scale(0.98)` on buttons/selects, `scale(0.92)` on smal
 **Decision:** Unified all focus rings to `box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-focus-ring) 20%, transparent)`. Accordion uses `inset` variant for full-width triggers. Button primary layers the focus ring with its existing shadow: `box-shadow: var(--shadow-sm), 0 0 0 3px color-mix(...)`.
 **Rationale:** Single pattern is easier to maintain and creates a consistent visual language. `color-mix` with 20% opacity creates a soft, accessible ring that works in both light and dark modes. `box-shadow` over `outline` because it respects `border-radius`.
 **Components affected:** Button, Card, Header icon buttons, Color Picker, Modal close, Image Gallery thumbnails, Accordion triggers, Checkbox
-**Status:** Active
+**Status:** Superseded — the single-pattern rule stands, but the value moved into composite tokens ("Focus Ring Consolidation") and then to a solid 2px ring ("Focus Ring: Solid 2px Ring with Background Gap").
 
 ---
 
@@ -978,7 +999,7 @@ Combined with `transform: scale(0.98)` on buttons/selects, `scale(0.92)` on smal
 3. Create separate Astro components for PropsTable and AccessibilitySection only
 **Decision:** Option 2. Created `apps/docs/src/layouts/ComponentPage.astro` with props: `title`, `description` (HTML), `installCode`, `props` (array of table definitions with headers + rows), `accessibility` (HTML string array). Feature sections go in the default `<slot />`.
 **Rationale:** Each page goes from ~85 lines to ~55 lines. The structural boilerplate (layout, prose wrapper, h1, description, installation, props tables, accessibility) is identical across every page — only the feature sections (galleries, code examples) vary. Using `<slot />` keeps `client:load` directives working naturally. Props tables are now consistently rendered with `<h2>Props</h2>` + `<h3>` sub-headings for multi-table pages. Modal (no props) and Typography (no accessibility) work via optional props.
-**Status:** Active
+**Status:** Retired with the Astro docs site (2026-09-25) — see "Docs Site Retired → Visual Workbench Built on Stories". History only.
 
 ---
 
@@ -1020,7 +1041,7 @@ Combined with `transform: scale(0.98)` on buttons/selects, `scale(0.92)` on smal
 3. Keep `--line-height-relaxed` — preserve the golden ratio connection
 **Decision:** Option 2 — `snug` (1.375) for both `lg` and `base` sizes. `sm` text retains `--line-height-normal` (1.5) because small text benefits from more leading.
 **Rationale:** Tested with realistic paragraph content (3+ sentences of product copy). `relaxed` was noticeably airy — each line felt isolated. `snug` creates cohesive paragraphs while remaining comfortable for extended reading. The golden ratio still lives in the token system for use cases where generous leading is desired (pull quotes, hero text), but it's not the right default for body copy.
-**Status:** Active
+**Status:** Active — `snug` itself was later set to 1.382 (1 + 1/φ²); see "Line Height φ Audit".
 
 ---
 
@@ -1047,7 +1068,7 @@ Combined with `transform: scale(0.98)` on buttons/selects, `scale(0.92)` on smal
 2. Add visual previews for all categories + a semantic mapping table — comprehensive reference
 **Decision:** Option 2. Added: (1) Line height section with two-line paragraph previews at each value, (2) Letter spacing section with "Design System" text previews at each tracking value, (3) Semantic mapping table showing exactly which tokens each typography component variant uses (Heading h1–h4, Text lg/base/sm, Caption, Code).
 **Rationale:** Token docs that only show names and values force developers to read component CSS to understand how tokens are combined. The semantic mapping table is the single most useful reference for anyone building layouts — it answers "what does `<Heading as='h2'>` actually apply?" without leaving the docs page.
-**Status:** Active
+**Status:** Retired with the Astro docs site (2026-09-25) — see "Docs Site Retired → Visual Workbench Built on Stories". History only. The workbench Foundations sheets carry the visual previews.
 
 ---
 
@@ -1061,7 +1082,7 @@ Combined with `transform: scale(0.98)` on buttons/selects, `scale(0.92)` on smal
 3. Sass mixin — we don't use a preprocessor
 **Decision:** Option 2. Added composite tokens to `build-css.mjs` `:root` block. Each component's `:focus-visible` now references `var(--focus-ring)` instead of the raw expression.
 **Rationale:** CSS custom properties compose with `box-shadow` (e.g., `box-shadow: var(--shadow-sm), var(--focus-ring)`) which a utility class cannot do. The inset variant (`--focus-ring-inset`) handles Accordion's inset ring. Zero TSX changes required.
-**Status:** Active
+**Status:** Active — the composite tokens remain; their value changed to a solid 2px ring on 2026-09-25 ("Focus Ring: Solid 2px Ring with Background Gap").
 
 ---
 
@@ -1091,7 +1112,7 @@ Combined with `transform: scale(0.98)` on buttons/selects, `scale(0.92)` on smal
 **Context:** 60+ inline styles across story and gallery files used raw pixel values (`gap: '12px'`, `fontWeight: 600`) instead of design tokens. Common patterns (unstyled links, cover images) were duplicated as inline styles across multiple demo pages.
 **Decision:** (1) Created `apps/docs/src/styles/demo-utilities.css` with shared utility classes (`.ds-unstyled-link`, `.ds-demo-cover-image`). (2) Converted all hardcoded pixel values in inline styles to token references.
 **Rationale:** Demo files should demonstrate the token system, not bypass it. Developers copying story code should get token-based patterns by default. Container/decorator widths remain as inline styles since they're test harness constraints, not reusable patterns.
-**Status:** Active
+**Status:** Retired with the Astro docs site (2026-09-25) — see "Docs Site Retired → Visual Workbench Built on Stories". History only.
 
 ---
 
@@ -1148,7 +1169,7 @@ Combined with `transform: scale(0.98)` on buttons/selects, `scale(0.92)` on smal
 2. Extract shared styles to a CSS file imported in each page
 **Decision:** Option 2 — created `apps/docs/src/styles/token-docs.css` with all shared styles. Each Astro page imports it via frontmatter (`import '../../styles/token-docs.css'`) and retains only page-specific styles in its `<style>` block.
 **Rationale:** Even in documentation, DRY matters. Three copies of identical styles means three places to update when the design evolves. The import pattern is idiomatic Astro and keeps each page's `<style>` block focused on what's unique to that page.
-**Status:** Active
+**Status:** Retired with the Astro docs site (2026-09-25) — see "Docs Site Retired → Visual Workbench Built on Stories". History only.
 
 ---
 
@@ -1305,7 +1326,7 @@ Also replaced Footer.css hardcoded `1280px` with `var(--size-content-xl)`.
 2. Create a single Layout spec page under Foundation — treats layout as a system-level concept alongside Colors, Typography, Spacing
 **Decision:** Option 2 — a single `/tokens/layout` page documenting breakpoints, Container, product Grid, two-column layouts, section spacing, carousel, and Shopify theme mapping. Also migrated Sale/Search pages to Grid component and fixed Homepage carousel cards to use `fluid` prop.
 **Rationale:** Layout is foundational, not a component. A single reference page is more useful for page builders than scattered component docs. The Shopify mapping table makes this directly actionable for theme development.
-**Status:** Active
+**Status:** Retired with the Astro docs site (2026-09-25) — see "Docs Site Retired → Visual Workbench Built on Stories". History only.
 
 ---
 
@@ -1352,7 +1373,7 @@ Also replaced Footer.css hardcoded `1280px` with `var(--size-content-xl)`.
 2. Extract to shared `.ds-results-header` pattern in demo-utilities.css
 **Decision:** Extracted to `.ds-results-header`, `.ds-results-header__row`, and `.ds-results-header__sort` in `demo-utilities.css`. Removed duplicate CSS from all 3 demo files and updated TSX class references.
 **Rationale:** The pattern was byte-for-byte identical. Three files importing a shared class is simpler than three files each defining the same rules.
-**Status:** Active
+**Status:** Retired with the Astro docs site (2026-09-25) — see "Docs Site Retired → Visual Workbench Built on Stories". History only.
 
 ---
 
@@ -1361,7 +1382,7 @@ Also replaced Footer.css hardcoded `1280px` with `var(--size-content-xl)`.
 **Date/Phase:** Full codebase refactor
 **Context:** CardGallery, InputGallery, SelectGallery, and AccordionGallery used extensive inline `style={{ }}` attributes for widths, margins, and typography. This violated the convention of CSS classes over inline styles.
 **Decision:** Created gallery utility classes in demo-utilities.css (`.ds-gallery-card`, `.ds-gallery-input`, `.ds-gallery-select`, `.ds-gallery-full`, `.ds-gallery-label`, `.ds-gallery-product-meta`). Replaced all inline styles in gallery components with class references.
-**Status:** Active
+**Status:** Retired with the Astro docs site (2026-09-25) — see "Docs Site Retired → Visual Workbench Built on Stories". History only.
 
 ---
 
@@ -1371,7 +1392,7 @@ Also replaced Footer.css hardcoded `1280px` with `var(--size-content-xl)`.
 **Context:** ViewportIndicator component had 20+ inline style properties and hardcoded hex colors (#E07060, #D4A040, #5E8F50) for the breakpoint status dot. The hex values happened to match brick, amber, and sage palette colors but weren't using tokens.
 **Decision:** Moved all styles to `.ds-viewport-indicator` CSS class in demo-utilities.css. Replaced hex colors with `var(--color-destructive)`, `var(--color-warning)`, `var(--color-success)` semantic tokens.
 **Rationale:** Even developer tools should use the design system. The semantic tokens also mean the indicator dot colors adapt to dark mode automatically.
-**Status:** Active
+**Status:** Retired with the Astro docs site (2026-09-25) — see "Docs Site Retired → Visual Workbench Built on Stories". History only.
 
 ---
 
@@ -1454,6 +1475,8 @@ Also replaced Footer.css hardcoded `1280px` with `var(--size-content-xl)`.
 3. Create shared utility classes in `demo-utilities.css` and replace inline styles — chosen
 **Decision:** Created 6 shared gallery utility classes (`.ds-gallery-stack`, `.ds-gallery-stack--lg`, `.ds-gallery-row`, `.ds-gallery-row--lg`, `.ds-gallery-constrained`, `.ds-gallery-constrained--md`) in `demo-utilities.css`. Replaced hardcoded `max-width: 480px` → `var(--size-modal-md)` in HomepageDemo.css, `max-width: 800px` → `var(--size-content-md)` in base.css. Replaced inline styles in 7 gallery components with shared classes. Deduplicated `makePlaceholder` in ImageGalleryGallery.tsx.
 **Rationale:** The docs site should exemplify the same token discipline as the component library. Shared utility classes eliminate repeated inline flex/gap/maxWidth patterns. Acceptable exceptions: CookieConsentGallery's `BannerContainer` minHeight (containment hack for fixed-position component), ProductCardGallery's `renderPrice` inline styles (render prop demo showing consumer-facing API — all values use tokens), and placeholder hex colors (content data, not styling).
+
+**Status:** Retired with the Astro docs site (2026-09-25) — see "Docs Site Retired → Visual Workbench Built on Stories". History only.
 
 ---
 
@@ -1599,7 +1622,7 @@ Also replaced Footer.css hardcoded `1280px` with `var(--size-content-xl)`.
 2. Accept pre-formatted strings in CartLineItem to match PriceDisplay's API
 **Decision:** Option 1. CartLineItem accepts cents (number), formats internally. The cents convention matches Shopify's `cart.items[n].final_price` and Stripe, avoiding formatting bugs at the consumer level. CartLineItem's `formatPrice` is private — not exported.
 **Rationale:** Ecommerce components should speak the same language as the commerce platform (cents). Formatting is a presentation concern that belongs inside the component, not at the call site.
-**Status:** Active
+**Status:** Active — cents in, formatted inside; the private helper was replaced by the shared `internal/format-money.ts` ("One Money Formatter, Explicit Locale, Cents for Every Currency"). Note that Stripe differs from Shopify for zero-decimal currencies.
 
 ### CartLineItem: Composition over Inline Markup in CartDemo
 
@@ -1776,7 +1799,7 @@ Also replaced Footer.css hardcoded `1280px` with `var(--size-content-xl)`.
 **Options considered:** (a) New `apps/theme/` inside this monorepo; (b) Separate repo that installs `@ds/tokens` via npm; (c) Nested under `packages/` as a non-published package.
 **Decision:** Option (a) — `apps/theme/` alongside `apps/docs` and `apps/storybook`.
 **Rationale:** Matches the existing app pattern. Turborepo can wire token builds as a dependency (`@ds/tokens` build → theme sync). Token changes propagate to the theme in the same PR that changes them — no npm publish step required to test. Shopify CLI expects the theme dir to be the working directory; we work around this by running `shopify theme dev` from inside `apps/theme/`.
-**Status:** Active
+**Status:** Changed (2026-06-25) — the theme moved to its own repo; see "Shopify Theme Extracted to Its Own Repo".
 
 ---
 
@@ -1796,7 +1819,7 @@ Also replaced Footer.css hardcoded `1280px` with `var(--size-content-xl)`.
 **Date/Phase:** 2026-04-23 — Phase 4 (Shopify Integration)
 **Context:** Shopify themes can only load CSS files that live in `assets/`. The compiled tokens CSS lives at `packages/tokens/dist/tokens.css`. Some mechanism has to bridge them.
 **Options considered:** (a) Manual copy each time tokens change; (b) Postbuild script in `apps/theme/package.json` that copies on rebuild; (c) Symlink (not supported by Shopify CLI); (d) Inline the tokens as a `{% style %}` block in `theme.liquid`.
-**Decision:** Currently manual copy. Postbuild automation is the [PENDING DECISION] — decision deferred until we hit token churn.
+**Decision:** Currently manual copy. Postbuild automation is still open — tracked in `12-audit-2026-09-25.md` → "Open after five rounds" (the theme is now a separate repo, so a Turborepo task no longer fits).
 **Rationale:** Tokens churn is low once the system stabilizes. Manual copy is acceptable for now; revisit if tokens change more than weekly during theme build phase. Symlinks are ruled out — Shopify CLI resolves them as zero-byte files. Inlining as a `{% style %}` block is rejected because it prevents browser caching of `tokens.css` across pageviews.
 **Status:** Active — revisit after first 3 sections are ported.
 
@@ -2008,7 +2031,7 @@ Also replaced Footer.css hardcoded `1280px` with `var(--size-content-xl)`.
 **Decision:** Option (c). Below 1024px the layout is single-column with a sticky topbar; the sidebar becomes a fixed off-canvas panel (`min(280px, 85vw)`) toggled by a hamburger (`aria-expanded`/`aria-controls`, Escape closes and returns focus, backdrop click closes, link click closes, page scroll frozen while open). A `Menu` icon was added to the icon registry (and its explicit barrel export — see gotcha below). Also: `100vh` → `100dvh` fallbacks on the shell and Modal (iOS dynamic toolbar), content padding steps down below 768px, multi-column docs tables become their own scroll containers below 640px (`display: block; overflow-x: auto` — no wrapper markup needed), and the three gallery demos with fixed inline widths got `maxWidth: '100%'`.
 **Gotchas captured:** (1) The backdrop div initially participated in the desktop grid as a child of `.layout`, silently shifting the columns — structural elements that exist for one breakpoint must be `display: none` outside it. (2) The icon registry's barrel (`icon/index.ts`) is an explicit export list — a new icon in `icons.tsx` is invisible to consumers until added there. (3) After rebuilding `@ds/components`, the docs dev server serves stale Vite-optimized deps — restart it, don't debug phantom hydration errors.
 **Verification:** 0px horizontal overflow at 375/768/1280 on the colors, layout, homepage-example, and add-to-cart pages; drawer interaction verified in-browser; 638 tests green.
-**Status:** Active
+**Status:** Retired with the Astro docs site (2026-09-25) — see "Docs Site Retired → Visual Workbench Built on Stories". History only.
 
 ---
 
@@ -2114,4 +2137,260 @@ Also replaced Footer.css hardcoded `1280px` with `var(--size-content-xl)`.
 **Options considered:** (a) Scroll only (status quo); (b) hide low-priority columns; (c) stack rows into label/value cards below 640px.
 **Decision:** New `responsive="stack"` opt-in (default remains `"scroll"`). Below 640px each row becomes a bordered card; each cell renders its column header as a label on a **1fr / 1.618fr golden split**, injected via `data-label` (header text flows Table→context→Row→cloned Cells). Markup stays a semantic `<table>`; explicit ARIA table roles are applied **only in stack mode** to survive the CSS `display` overrides; `<thead>` is sr-hidden, not `display:none`. Scroll mode's region is now keyboard-focusable (`tabIndex=0`), and sortable headers are real buttons with `aria-sort` + `onSort`.
 **Rationale:** CSS-only responsive (per playbook law) — full DOM renders, display changes at the breakpoint. Golden split keeps the stacked cards on the system's proportional foundation.
+**Status:** Active
+
+---
+
+### Motion Layer: `@ds/motion` — CSS for Micro-Interactions, Lazy GSAP for Choreography
+
+**Date/Phase:** 2026-09-25 — Motion + break-it audit
+**Context:** The brief: "visually elegant and amazing", leaning on GSAP, while staying fast on phones over cellular. The system had only CSS transitions on Material-standard curves and no way to sequence motion across elements.
+**Options considered:** (a) GSAP everywhere, including hover/press and overlay open/close; (b) CSS only (scroll-driven animations, `@starting-style`); (c) split by job — CSS for micro-interactions, GSAP for choreography, loaded lazily.
+**Decision:** (c). New package `@ds/motion` (vanilla core + `@ds/motion/react` hooks + `@ds/motion/css`). Declarative `data-motion="reveal|stagger|split|media|parallax"` works identically in React, Astro and Liquid. Imperative `enter()` for content that arrives after load; `createFlip()`/`useFlip()` for layout changes; `flyToCart()` + `bump()` for the add-to-cart moment. Hero entrance (`data-motion="hero"`) and page transitions are CSS-only.
+**The performance contract** (each point covered by `packages/motion/src/motion.test.ts`):
+1. Nothing is hidden before GSAP has loaded — no CSS pre-hides content. A failed or slow script leaves a static page.
+2. Only elements fully below the fold (measured *after* GSAP arrives) are prepared for reveal; what's visible never blinks out. Above-the-fold motion is CSS, so LCP isn't delayed.
+3. Hidden = opacity only, never visibility/display: content stays in the a11y tree; focusing into it or printing reveals it instantly.
+4. Every inline style GSAP writes is cleared on settle (`clearProps`), so elements end in their authored CSS state.
+5. GSAP downloads only when a page declares motion, in idle time, and never for reduced motion, Save-Data, or 2G-class connections (`getMotionLevel()`).
+6. Reveals are triggered by IntersectionObserver, not ScrollTrigger: phones pay for GSAP core only (28KB gz). ScrollTrigger (18KB) loads only for parallax on ≥768px fine-pointer devices. Flip (10KB) and SplitText (4KB) load only where used.
+**Rationale:** (a) puts a 28KB+ dependency on the critical path of every interaction and breaks everything before JS loads; (b) can't do FLIP, line-split text, or cross-element moments, and scroll-driven animations aren't in Safari. (c) gives GSAP the work only it does well. GSAP has been 100% free including all plugins since 3.13 (Webflow); its license only excludes building a competing visual site builder, which this isn't.
+**Inline styles:** GSAP writes transient inline `transform`/`opacity`. This is runtime animation state, not authored styling, and the contract clears it on settle — the "no inline styles" rule governs authored markup. Documented here so an audit doesn't flag it.
+**Status:** Active
+
+---
+
+### φ-Derived Expressive Easing + Motion Tokens (Stagger, Distance) + JS Token Export
+
+**Date/Phase:** 2026-09-25 — Motion + break-it audit
+**Context:** Only Material-standard curves existed; GSAP needed the same values as CSS without reading custom properties per frame.
+**Options considered:** (a) Popular curves (expo-out 0.16,1,0.3,1; back-out 0.34,1.56,0.64,1); (b) curves whose control points are φ powers; (c) GSAP's built-in named eases (no CSS parity).
+**Decision:** (b): `emphasized` (0.146, 1, 0.382, 1), `emphasized-in` (0.618, 0, 0.854, 0), `glide` (0.618, 0, 0.382, 1), `spring` (0.382, 1.618, 0.618, 1). Stagger continues the ×φ duration series down (62ms, 38ms, plus 100ms loose); distance reuses phi spacing (10/16/26/42px). `@ds/tokens` now exports `motion` (numbers) from a generated `src/motion.json` subset; `@ds/motion` registers every easing token as a GSAP ease `ds.<name>` using its own ~40-line cubic-bezier solver instead of CustomEase (saves 3KB gz).
+**Rationale:** The φ curves land within a hair of the popular curves (emphasized ≈ expo-out; spring ≈ back-out with y₁ = φ), so nothing is lost in feel, and the motion scale now follows the same law as every other scale. One source (tokens.json) drives both CSS and GSAP.
+**Status:** Active
+
+---
+
+### Native Cross-Document View Transitions for Page Navigation
+
+**Date/Phase:** 2026-09-25 — Motion + break-it audit
+**Context:** Page-to-page navigation was a hard cut. Options: Astro's `<ViewTransitions />` client router, a GSAP page-transition script (barba-style), or the native CSS `@view-transition { navigation: auto }`.
+**Decision:** Native CSS, shipped in `@ds/motion/css`, gated on `prefers-reduced-motion: no-preference`. Outgoing page fades fast (normal, emphasized-in); incoming rises 10px (slower, emphasized). Regions that must stay put opt in with `data-motion-persist="header|nav"` (docs sidebar, site header).
+**Rationale:** Zero JS, zero bytes, works on any multi-page site — Astro static and Shopify Liquid alike. Astro's router changes script semantics site-wide and needs JS; a GSAP router would need JS on every navigation. Unsupported browsers (Firefox today) navigate normally. Persisted names must be unique per page or the browser skips the transition — which is why it's opt-in, not on `.ds-header` (docs pages render several headers).
+**Status:** Active
+
+---
+
+### Focus Ring: Solid 2px Ring with Background Gap (replaces 20% alpha halo)
+
+**Date/Phase:** 2026-09-25 — Motion + break-it audit
+**Context:** The foundation audit measured `--focus-ring` (3px at 20% alpha) at 1.39:1 against the page in light mode and 1.38:1 in dark — failing WCAG 1.4.11 / 2.4.13 (3:1). ~50 component rules use it as the *only* focus indicator (`outline: none` + ring).
+**Decision:** `--focus-ring: 0 0 0 2px var(--color-background), 0 0 0 4px var(--color-focus-ring)` (8.7:1 light, 7.1:1 dark). Same shape for `--focus-ring-error` (destructive). `--focus-ring-inset` is a solid 2px inset. `--focus-ring-color` now equals `--color-focus-ring`. All composites are emitted per mode (see next entry). Components pair the ring with `outline: 2px solid transparent` so Windows High Contrast (which drops box-shadows) still paints a ring.
+**Rationale:** One token change fixes every usage. The gap ring keeps the ring legible on any control color.
+**Status:** Active
+
+---
+
+### Composite Tokens Per Mode; Dark Overlay Always Darkens; Dark Destructive → brick-400; `--color-border-control`
+
+**Date/Phase:** 2026-09-25 — Motion + break-it audit
+**Context:** (1) Composites declared once on `:root` kept light values inside nested `.dark` regions. (2) `--color-overlay` mixed `--color-foreground`, near-white in dark mode, so dark dialogs *lightened* the page. (3) Dark `--color-destructive` (brick-500) measured 4.12:1 as button label contrast and 3.69–4.12:1 as error text — failing AA wherever errors, sale prices and destructive buttons appear. (4) Form controls used `--color-border` (1.34:1) as their only boundary.
+**Decision:** (1) `compositeBlock()` in build-css.mjs emits composites in both mode blocks; each block also sets `color-scheme`. (2) Overlay = stone-950 at 38.2% light / 61.8% dark. (3) Dark destructive = brick-400 (6.0:1 on bg, 5.38 on surface, 4.57 on its own tint), hover/active = brick-300 (9.3:1 with its label). The Badge/Toast/Avatar `.dark` destructive patches become redundant. (4) New semantic `--color-border-control`: light = 38.2% stone-400 + 61.8% stone-500 (#918A80, 3.0–3.4:1), dark = 61.8% stone-500 + 38.2% stone-600 (≥3.4:1). A φ mix of two existing primitives rather than a new ramp step.
+**Rationale:** Contrast fixes belong in tokens, never in component `.dark` patches. The φ mix keeps the ramp generator untouched.
+**Status:** Active
+
+---
+
+### Docs `.prose` Styles Live in a Cascade Layer
+
+**Date/Phase:** 2026-09-25 — Motion + break-it audit
+**Context:** `.prose table/th/td/code/pre` beat component styles inside doc pages — the third recurrence of the prose-specificity bug (Accordion text, Footer headings, now Table and inline code). Previous fixes bumped component specificity one at a time.
+**Decision:** All `.prose` rules in `apps/docs/src/layouts/base.css` are wrapped in `@layer docs-prose`. Layered rules lose to unlayered rules regardless of specificity, so every component (unlayered) wins inside docs. `.prose > p` also gained `max-width: var(--measure-reading)`.
+**Rationale:** Fixes the class of bug, not the instance. No component needs to know docs exist.
+**Status:** Retired with the Astro docs site (2026-09-25) — see "Docs Site Retired → Visual Workbench Built on Stories". History only.
+
+---
+
+### Docs Performance: Per-Component Library Build + `client:visible` Islands + Zero-JS Footer
+
+**Date/Phase:** 2026-09-25 — Motion + break-it audit
+**Context:** Every docs page with any island shipped ~123KB gz of JS: the whole `@ds/components` library (one 200KB module) plus React DOM, and all 254 islands used `client:load` (hydrate immediately, even far below the fold). The static Footer was hydrated on every example page though it has no state.
+**Decision:** (1) Multi-entry, code-split tsup build for `@ds/components` (see 02-tooling-setup). (2) Component galleries use `client:visible`; example pages `client:idle`; Header `client:idle`; Footer has no directive (server-rendered only). (3) Motion demos that must be hydrated before the reader scrolls to them use `client:idle`.
+**Result (measured, `astro build`):** average 123.2KB → 56.8KB gz per interactive page; the floor is now React DOM (~45KB).
+**Remaining:** CSS is one ~25KB gz sheet on every page; Google Fonts is a render-blocking cross-origin stylesheet. Next steps: self-host a Latin subset with a metric-matched fallback; per-component CSS.
+**Status:** Partly retired — (1) the per-component library build is active (and got per-component CSS in round 4); (2) and (3) retired with the Astro docs site on 2026-09-25.
+
+---
+
+### Docs Site Retired → Visual Workbench Built on Stories
+
+**Date/Phase:** 2026-09-25 — Workbench rebuild
+**Context:** Alvin is the only person who uses the docs site, and what he needs is a place to go through components and visually confirm they work and look consistent — not documentation. The Astro site (73 pages of prose, props tables and code snippets, plus ~60 hand-written gallery files mirroring the stories) cost parity work on every component and still couldn't show a component at real phone width next to desktop, or light next to dark.
+**Options considered:** (a) improve the Astro site; (b) configure Storybook minimal; (c) a purpose-built workbench that renders the existing stories.
+**Decision:** (c). `apps/workbench` (Vite + React): sidebar grouped by kind with review-status dots; a toolbar for Theme (Light / Dark / Both) and Screen (Phone 375 / Tablet 768 / Desktop 1280 / All), test modes (Motion off, Outlines, Long text, RTL), Replay and an on-demand axe check; device frames as real iframes, scaled to fit, with linked scrolling; a state picker per component; a review bar (Not reviewed / Looks good / Needs work + note, stored in localStorage) with keyboard shortcuts (G, N, J/K, T, W, R); an Overview with progress and "Copy notes". Plus foundation sheets (colors with live contrast in the frame's theme, type, space/radius/elevation, motion), three consistency line-ups (control heights on guide bands, status colors, form states), and the eight store pages. Deployed to GitHub Pages in place of the docs.
+**Rationale:** Stories already exist for all 58 components (418 states) and are the 4-file rule's specimens — rendering them directly removes the duplicate gallery layer entirely. Real iframes at true widths are the only way media/container queries behave like a device. Storybook (b) stays as the engineering tool and Chromatic baseline, but its UI is dense and it can't compare devices/themes side by side or track review verdicts.
+**Removed:** `apps/docs` (Astro, galleries, doc pages, demo-utilities.css). Store-page demos, product data and motion demos moved to `apps/workbench/src/specimens/`.
+**Status:** Active
+
+---
+
+### `@ds/motion` Never Mutates Global GSAP State
+
+**Date/Phase:** 2026-09-25 — Audit round 2
+**Context:** `loadGsap()` called `gsap.defaults()` and `gsap.ticker.lagSmoothing()` on the shared GSAP instance. A store that also uses GSAP directly (Lenis smooth scroll with `lagSmoothing(0)`, its own tweens) would silently inherit our choices, and `killTweensOf` calls in `enter()`/`bump()` could kill the store's own tweens on the same elements.
+**Decision:** No global mutation. Every tween passes its own duration and ease; the only global additions are the namespaced `ds.*` eases and plugin registration. Motion tracks and kills only its own tweens/timelines.
+**Rationale:** A design system's animation layer is a guest on the page.
+**Status:** Active
+
+---
+
+### Dark Mode Grey Ladder Mirrors Light
+
+**Date/Phase:** 2026-09-25 — Audit round 2
+**Context:** Dark `foreground-subtle` (stone-400, 7.1:1) and `foreground-muted` (stone-500, 4.7:1) were much stronger than their light counterparts (3.9:1, 2.5:1), so "disabled" text in dark didn't look disabled and the subtle/secondary steps collapsed.
+**Decision:** Dark subtle → stone-500 (4.65:1 on bg, 4.17:1 on surface), dark muted → stone-600 (3.02:1). Secondary stays stone-300 (10.7:1).
+**Rationale:** Same role, same relative step in both themes; every role still meets its rule (subtle ≥3:1 for large text/icons; muted is decorative/disabled only).
+**Status:** Active
+
+---
+
+### One Radix Internals Version (menu-inside-dialog fix)
+
+**Date/Phase:** 2026-09-25 — Audit round 2
+**Context:** A Popover or DropdownMenu opened inside a Modal/Drawer couldn't be clicked, and one Escape closed both. Dialog resolved `@radix-ui/react-dismissable-layer` 1.1.11 while Popover/Menu/Tooltip resolved 1.1.15 (and `react-focus-scope` was split too) — two layer stacks that don't know about each other, so the popover inherited the dialog's `pointer-events: none`.
+**Decision:** Update every `@radix-ui/*` dependency together (`pnpm update -r "@radix-ui/*"`, all within existing `^` ranges). The lockfile now resolves one version of each internal (dismissable-layer 1.1.19, focus-scope 1.1.16, portal 1.1.17…). Verified in the Modal "With popover" story: the popover receives clicks, and the first Escape closes only the popover.
+**Rule:** Bump Radix packages as a set, never one at a time.
+**Status:** Active
+
+---
+
+### Wrap Radix Parts — Never Rename Them
+
+**Date/Phase:** 2026-09-25 — Audit round 3
+**Context:** Modal, Popover and DropdownMenu re-exported Radix parts (`export const ModalTrigger = Dialog.Trigger`) and then set `ModalTrigger.displayName = 'ModalTrigger'`. That renamed Radix's own shared component, so every other Dialog/Popover on the page showed up in DevTools and error messages under our name.
+**Decision:** Each exported part is a thin `forwardRef` wrapper with its own `displayName`. Tests assert the Radix object keeps its original name.
+**Status:** Active
+
+---
+
+### Development-Only Misuse Warnings
+
+**Date/Phase:** 2026-09-25 — Audit round 3
+**Context:** Silent misuse (an icon-only button with no accessible name, a controlled `value` without `onChange`) rendered fine and failed only for screen-reader users or at runtime.
+**Decision:** `internal/dev-warning.ts` logs a one-time console warning in development. It never throws, and the `process.env.NODE_ENV` check makes it dead code in production bundles. A missing `process` (unbundled browser) counts as production.
+**Status:** Active
+
+---
+
+### One Money Formatter, Explicit Locale, Cents for Every Currency
+
+**Date/Phase:** 2026-09-25 — Audit round 3
+**Context:** Five components each built their own `Intl.NumberFormat` on every render (~160µs each on a throttled phone — a 48-card grid spent ~8ms just constructing formatters), all hardcoded to en-US/USD.
+**Decision:** `internal/format-money.ts` caches one formatter per locale + currency. Price components take `currency` and `locale` props (defaults `USD`, `en-US`). The locale is never the runtime default, so server and browser format identically (no hydration mismatch). Amounts are integer hundredths for every currency, the Shopify convention: ¥4,800 = 480000.
+**Note:** CLAUDE.md says prices in cents follow "the same convention as Shopify and Stripe". That is true for USD but not for zero-decimal currencies — Stripe sends JPY as whole yen. Convert at the API boundary. **Open (needs Alvin):** correct the CLAUDE.md line — tracked in `12-audit-2026-09-25.md` → "Open after five rounds"; suggested wording in the round 5 playbook pass report.
+**Status:** Active
+
+---
+
+### Print and High-Contrast Token Modes
+
+**Date/Phase:** 2026-09-25 — Audit round 3
+**Context:** Printing a dark-mode page used a dark background (ink, and often dropped by the browser to white text on white). Users who ask the OS for more contrast got the same faint borders and grey text as everyone else.
+**Decision:** `build-css.mjs` emits two adaptive blocks. `@media print` forces the light semantic + composite tokens on every theme. `@media (prefers-contrast: more)` raises `--color-border` to the control border and moves subtle/muted text one step darker (light) or lighter (dark). Components need no changes — they read the same tokens.
+**Status:** Active
+
+---
+
+### iOS Page Globals Ship With the Tokens
+
+**Date/Phase:** 2026-09-25 — Audit round 3
+**Context:** iPhone Safari enlarged text after rotating to landscape and painted a grey flash over every tapped control, on top of our own pressed states.
+**Decision:** `tokens.css` sets `text-size-adjust: 100%` and `-webkit-tap-highlight-color: transparent` on `html`. Every component already has visible `:active` and `:focus-visible` states, so the grey flash was redundant.
+**Status:** Active
+
+---
+
+### Textarea `rows` Is the Minimum Height When Auto-Resizing
+
+**Date/Phase:** 2026-09-25 — Audit round 3
+**Context:** With `autoResize`, Chrome and Safari 26 size the field natively (`field-sizing: content`) and start at one line, ignoring `rows`. Firefox and older Safari use the JS fallback and start at `rows`. Same component, two starting heights.
+**Decision:** The component passes `rows` as `--textarea-rows`, and CSS sets `min-height` to that many lines plus padding and borders. Measured: 2 rows = 60px in Chromium, WebKit and Firefox.
+**Status:** Active
+
+---
+
+### Disabled Fades the Control, Not Its Hint
+
+**Date/Phase:** 2026-09-25 — Audit round 3 (final sweep)
+**Context:** Input, Select and Textarea faded only the field when disabled. Checkbox, Switch and RadioGroup faded their whole root, hint included — so "Add a phone number to enable" fell to 1.75:1, the one line telling you how to turn the setting on.
+**Decision:** All form controls fade the control + label; hint and error text keep full contrast. The Input adornment ("USD", icons) also moved from `foreground-subtle` (4.06:1) to `foreground-secondary`, matching the placeholder.
+**Status:** Active
+
+---
+
+### Round 4 — Guards, Semantics, Hit Areas, Packaging
+
+**Date/Phase:** 2026-09-26 — Audit round 4 (seven parallel passes: code hygiene, WCAG 2.2 stress, screen-reader semantics, cross-component consistency, package health, motion feel/cost, workbench)
+**Context:** Rounds 1–3 fixed what broke. Round 4 looked for what fails *silently* (no error, no test failure) and for criteria axe cannot test.
+**Decisions (all active):**
+- **`check-css` runs in lint.** Undefined `var()`, dead component tokens, raw values, stray `!important`, non-token breakpoints, ungated `:hover`. Exceptions live in its header. Chosen over stylelint: no dependency, 0.2s, rules written for this system.
+- **`:hover` only inside `@media (hover: hover)`** (50 rules gated). Keyboard-highlight rules written as `:not(:hover)` stay ungated.
+- **`.ds-motion-safe` opts an element out of the global reduced-motion reset,** which also now applies under `<html data-motion="off">`. An element with the class promises to handle both conditions itself with a non-moving animation. First user: Spinner's opacity pulse, which the `!important` reset had frozen as a solid ring.
+- **Disabled fades the control and its inline label only** — field/group labels and hints stay full strength; one fade, never fade + muted colour; focused `aria-disabled` controls un-fade so the ring keeps 7:1.
+- **Keyboard-highlighted list rows** (Select, DropdownMenu, PredictiveSearch) get a 2px inset focus-ring outline via `[data-highlighted]:not(:hover)` — 1.34:1 → ~8:1. `:focus-visible` can't be used: Radix focuses items from script on hover.
+- **Live regions exist empty and speak on change** (`internal/use-change-announcement.ts`). Badge is no longer a live region by default (opt in with `role="status"`); ToastProvider keeps persistent polite/assertive regions. Resolves round-1 open items 4 and 5.
+- **Popover is named after its trigger by default**; `aria-label`/`aria-labelledby` override; dev warning when unnamed. Tab is not trapped (non-modal dialog pattern).
+- **ProductCard image is decorative by default** (the card link already carries the name); `imageAlt` gives it a real description.
+- **Breadcrumb `schema` prop emits BreadcrumbList JSON-LD** (opt-in). FAQPage JSON-LD stays with the page — accordion answers are free-form.
+- **Sticky header publishes `--sticky-header-height` and sets `scroll-padding-top`** so keyboard focus is never hidden under it (WCAG 2.4.11); sticky columns clear it.
+- **Hit areas:** ≥24px for every pointer, 44px on touch, extended invisibly and outward only.
+- **Packaging:** per-component CSS subpath exports, types split per condition, tsup `clean: true`, turbo outputs matching reality, stories type-checked through the workbench.
+- **Motion:** stagger children individually as each enters (phones), a "fully visible" fallback observer, `Flip.getState(…, { simple: true })` and only on-screen leavers, fly-to-cart arc on `ds.glide`, `data-motion="off"` also cancels page view transitions.
+**Status:** Active
+
+---
+
+### Shopify Theme Extracted to Its Own Repo
+
+**Date/Phase:** 2026-06-25 (commit `a30c5b4`) — recorded 2026-09-26 in the playbook pass; no entry had been written at the time
+**Context:** The theme lived in `apps/theme/` inside this monorepo ("Shopify Theme Location" above). Shopify's GitHub integration and CLI expect the theme at a repo root, and running the CLI from the wrong directory had already corrupted a dev theme (`07` → `#shopify-theme-dev-cwd`).
+**Options considered:** (a) keep `apps/theme/` and deploy through a subdirectory workaround; (b) move the theme to its own repo, history preserved.
+**Decision:** (b). The theme is `sixbase/mason-storefront`, checked out at `/Users/alvinthong/Code/mason-storefront`. It consumes the design system by copying `tokens.css` and porting component CSS/markup by hand.
+**Rationale:** Deploys from the repo root with no workarounds, and the CLI can't be run against the wrong directory by accident. Cost: token and component changes no longer reach the theme in the same PR — the storefront drifts unless re-synced (on 2026-09-26 its `tokens.css` lacked ~50 current tokens).
+**Status:** Active — sync automation is open (`12-audit-2026-09-25.md` → "Open after five rounds").
+
+---
+
+### Playbook: How-To Chapters State Today's Rules; Logs Are History; One Open List
+
+**Date/Phase:** 2026-09-26 — audit round 5 (playbook pass)
+**Context:** After four fast audit rounds, most current rules (hover gating, hit areas, disabled, live regions, `.ds-motion-safe`, `check-css`, story typecheck, internal helpers) lived only in this log and in `07`, while the how-to chapters still described the retired Astro docs site, removed CI workflows, a 31-component list and an invalid `text-box-trim` snippet. The success metric — someone new can rebuild an equivalent system from the playbook — was not met.
+**Options considered:** (a) leave the how-to chapters and point readers to the logs; (b) rewrite the logs; (c) bring the how-to chapters up to date, keep the logs append-only (mark superseded entries' Status), and keep one deduplicated open list.
+**Decision:** (c). Chapters 01–05 and 08–11 corrected against the code; new `13-motion.md` and `14-accessibility.md` collect rules that existed only in the logs; the README became a start-here page with reading order; `[PENDING DECISION]`/`[NEEDS INPUT]` tags now either state the answer or point to `12` → "Open after five rounds".
+**Rationale:** A newcomer should never need the history to know today's rules, and an open item listed in three places is closed in one and forgotten in two.
+**Status:** Active
+
+
+---
+
+### Round 5 — Seams, Safety, Tests, Tokens
+
+**Date/Phase:** 2026-09-27 — Audit round 5 (review of the audit's own edits, shopper journeys, security/privacy, test quality, token math and colour pairs, playbook accuracy, Storybook/story coverage, storefront gap report)
+**Decisions (all active):**
+- **Links built from store data go through `internal/safe-url.ts`** (`javascript:`, `vbscript:`, `data:` blocked, including with hidden whitespace). React 18 — inside our peer range — renders `javascript:` hrefs.
+- **Money that isn't a finite number renders blank** (dev warning), never "$0.00" or "$NaN". Every clamp handles non-finite input.
+- **Merchant/shopper ids are never looked up in a plain `{}`** — `Map` or own-property checks (`constructor`, `__proto__`).
+- **One helper per cross-cutting concern:** `internal/direction.ts` (`isRtl()`), `internal/use-overflow-tab-stop.ts` (Modal/Drawer). Six hand-rolled RTL checks and two copies removed.
+- **Non-modal fixed banners sit below modal layers and reserve page space** (CookieConsent), so they never cover a drawer's controls or the page end.
+- **Focus return uses `preventScroll` when the opener is on screen;** focusable controls never get `pointer-events: none` (swallow the click instead).
+- **Entrance animations run only for things opened after first render** (Accordion, Tabs, filter pills) — `[data-state]` animations otherwise fire on page load.
+- **Token build guards:** fails when light and dark list different names, or a `color-mix()` names an unknown `--color-*`. Print is emitted after the contrast block. `--font-size-base` floor 0.875rem (never below `sm`). `border-strong` moves with `border` in "more contrast".
+- **Non-text contrast (WCAG 1.4.11) uses `--color-border-control`:** interactive empty stars, colour-swatch edges, and the dark-mode selected segment edge. Decorative/display-only marks keep the quiet border.
+- **`container-ultra` (1680px) is a design-system token** — the storefront's ≥1600px frame had been hand-added in the theme and would have been wiped by a token resync.
+- **Stories:** overlays open on load; `name:` gives plain labels without renaming exports; shared Mason fixtures in `src/story-fixtures.ts` (never shipped).
+- **Axe tests on portalled components scan `baseElement`;** global axe rule changes go in `configureAxe({ globalOptions })`.
+- **Storefront port plan lives in `15-storefront-port-plan.md`** (P1–P3, file-level).
+- **A link blocked by `safeHref` renders nothing** (as if no link was given) — never a dead, link-styled `<a>` that can't be focused.
+- **Radio and Switch rows grow to 44px on touch** (`pointer: coarse`) instead of overlapping 44px hit zones; 24px zones for every pointer, as Checkbox.
+- **Table warns in development when unnamed** — its scroll wrapper is always a tab stop.
 **Status:** Active

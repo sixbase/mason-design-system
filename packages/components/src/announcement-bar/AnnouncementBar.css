@@ -35,6 +35,16 @@
   }
 }
 
+/* 768–1023px: --spacing-8 is narrower than the dismiss footprint (up to
+   --size-touch-target + its --spacing-1 inset), so a message long enough
+   to wrap ran under the button. Keep the padding symmetric (true centre)
+   but wide enough to clear it. From 1024px --spacing-12 already does. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .ds-announcement-bar--dismissible .ds-announcement-bar__inner {
+    padding-inline: calc(var(--size-touch-target) + var(--spacing-2));
+  }
+}
+
 @media (min-width: 1024px) {
   .ds-announcement-bar__inner {
     padding: var(--spacing-2) var(--spacing-12);
@@ -75,12 +85,14 @@
   transition: opacity var(--transition-fast);
 }
 
-.ds-announcement-bar__link:hover {
-  opacity: var(--opacity-high);
+@media (hover: hover) {
+  .ds-announcement-bar__link:hover {
+    opacity: var(--opacity-high);
+  }
 }
 
 .ds-announcement-bar__link:focus-visible {
-  outline: none;
+  outline: var(--border-width-lg) solid transparent; /* painted in forced-colors mode, where box-shadow rings vanish */
   box-shadow: var(--focus-ring);
   border-radius: var(--radius-sm);
 }
@@ -89,9 +101,10 @@
 
 .ds-announcement-bar__dismiss {
   position: absolute;
-  /* Even margin on top, bottom and right; icon stays centred via flex. */
+  /* Even margin on top, bottom and the inline end (left in RTL, where the
+     message starts on the right); icon stays centred via flex. */
   top: var(--spacing-1);
-  right: var(--spacing-1);
+  inset-inline-end: var(--spacing-1);
   bottom: var(--spacing-1);
   display: flex;
   align-items: center;
@@ -99,6 +112,12 @@
   aspect-ratio: var(--aspect-square);
   width: auto;
   height: auto;
+  /* Insets size the button to a single-line bar. When the message wraps,
+     the bar grows and so did the button (52px+ square at 320px, covering
+     the text). Cap it at the touch-target size; the auto block margins
+     keep the capped button vertically centred between the insets. */
+  max-height: var(--size-touch-target);
+  margin-block: auto;
   border: none;
   background: none;
   color: var(--announcement-bar-fg);
@@ -109,23 +128,29 @@
 }
 
 /* 44px hit area beyond the visual footprint (WCAG 2.5.5). The button
-   sits alone at the bar's edge, so no adjacent-target guard is needed. */
+   sits alone at the bar's edge, so no adjacent-target guard is needed.
+   Anchored to the bar's end edge (right in LTR, left in RTL), undoing
+   the button's --spacing-1 inset, rather than centred on the button:
+   centred, the zone poked past the viewport edge and gave every page a
+   sideways scroll. */
 .ds-announcement-bar__dismiss::after {
   content: '';
   position: absolute;
   top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  inset-inline-end: calc(var(--spacing-1) * -1);
+  transform: translateY(-50%);
   width: max(100%, var(--size-hit-area));
   height: max(100%, var(--size-hit-area));
 }
 
-.ds-announcement-bar__dismiss:hover {
-  background-color: var(--color-primary-hover);
+@media (hover: hover) {
+  .ds-announcement-bar__dismiss:hover {
+    background-color: var(--color-primary-hover);
+  }
 }
 
 .ds-announcement-bar__dismiss:focus-visible {
-  outline: none;
+  outline: var(--border-width-lg) solid transparent; /* painted in forced-colors mode, where box-shadow rings vanish */
   box-shadow: var(--focus-ring);
 }
 
@@ -135,5 +160,16 @@
   .ds-announcement-bar__link,
   .ds-announcement-bar__dismiss {
     transition: none;
+  }
+}
+
+/* ─── Print ─────────────────────────────────────────────── */
+/* The bar is light text on a dark fill: the message printed white-on-white. Browsers drop backgrounds when printing by default ("economy"), so
+   the state vanished on paper; exact keeps these fills. (-webkit- for
+   Safari < 15.4 and Chrome < 136, which only read the prefixed form.) */
+@media print {
+  .ds-announcement-bar {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }

@@ -1,36 +1,52 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { PredictiveSearch } from './PredictiveSearch';
 import type { SearchResult } from './PredictiveSearch';
+import { PRODUCTS } from '../story-fixtures';
+import type { SampleProduct } from '../story-fixtures';
 
-// ─── Mock data ──────────────────────────────────────────────
+// ─── Sample data (the story catalogue) ──────────────────────
 
-function makePlaceholder(label: string): string {
-  const encoded = encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">` +
-      `<rect width="96" height="96" fill="#c8bfae"/>` +
-      `<text x="48" y="48" text-anchor="middle" dominant-baseline="central" ` +
-      `font-family="system-ui,sans-serif" font-size="10" fill="#7a7262">${label}</text>` +
-      `</svg>`,
-  );
-  return `data:image/svg+xml,${encoded}`;
-}
+const { tote, shirt, wallet, blanket, apron } = PRODUCTS;
+const asResult = (p: SampleProduct): SearchResult => ({
+  type: 'product',
+  id: p.id,
+  title: p.name,
+  url: p.href,
+  image: p.image,
+  price: p.price,
+  compareAtPrice: p.compareAtPrice,
+});
 
 const MOCK_RESULTS: SearchResult[] = [
-  { type: 'product', id: 'p1', title: 'Minimal Canvas Tote', url: '/products/tote', image: makePlaceholder('Tote'), price: 4800 },
-  { type: 'product', id: 'p2', title: 'Relaxed Linen Shirt', url: '/products/shirt', image: makePlaceholder('Shirt'), price: 8900, compareAtPrice: 11200 },
-  { type: 'product', id: 'p3', title: 'Vegetable-Tanned Wallet', url: '/products/wallet', image: makePlaceholder('Wallet'), price: 6500 },
-  { type: 'collection', id: 'c1', title: 'Summer Essentials', url: '/collections/summer' },
+  asResult(tote),
+  asResult(shirt),
+  asResult(wallet),
+  { type: 'collection', id: 'c1', title: 'Bags & Totes', url: '/collections/bags' },
   { type: 'collection', id: 'c2', title: 'New Arrivals', url: '/collections/new' },
   { type: 'page', id: 'pg1', title: 'About Our Materials', url: '/pages/materials' },
-  { type: 'article', id: 'a1', title: 'How to Care for Leather', url: '/blogs/leather-care' },
+  { type: 'article', id: 'a1', title: 'How to Care for Canvas and Leather', url: '/blogs/journal/canvas-care' },
 ];
 
-const SALE_PRODUCTS: SearchResult[] = [
-  { type: 'product', id: 'sp1', title: 'Organic Cotton Hoodie', url: '/products/hoodie', image: makePlaceholder('Hoodie'), price: 5600, compareAtPrice: 7800 },
-  { type: 'product', id: 'sp2', title: 'Linen Blend Trousers', url: '/products/trousers', image: makePlaceholder('Trousers'), price: 6200, compareAtPrice: 8900 },
-  { type: 'product', id: 'sp3', title: 'Merino Crew Neck', url: '/products/merino', image: makePlaceholder('Merino'), price: 4200, compareAtPrice: 5800 },
-];
+const SALE_PRODUCTS: SearchResult[] = [asResult(shirt), asResult(blanket), { ...asResult(apron), price: 4800, compareAtPrice: apron.price }];
+
+/**
+ * Types a query into the search box once, on load — the box has no prop
+ * for a starting query, and every state below only shows after typing.
+ * Story harness only: sets the input's value the way a keystroke would.
+ */
+function Typed({ query, children }: { query: string; children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const input = ref.current?.querySelector('input');
+    if (!input) return;
+    const setValue = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+    setValue?.call(input, query);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  }, [query]);
+  return <div ref={ref}>{children}</div>;
+}
 
 // ─── Meta ───────────────────────────────────────────────────
 
@@ -43,13 +59,13 @@ const meta: Meta<typeof PredictiveSearch> = {
     docs: {
       description: {
         component:
-          'Live search autocomplete with results grouped by type. Implements WAI-ARIA combobox pattern. Data fetching is the consumer\u2019s responsibility via onSearch callback.',
+          'The search box that suggests products, collections and articles as you type.',
       },
     },
   },
   decorators: [
     (Story) => (
-      <div style={{ width: '400px', minHeight: '420px' }}>
+      <div style={{ width: 'var(--size-modal-sm)', minHeight: 'var(--size-modal-sm)' }}>
         <Story />
       </div>
     ),
@@ -59,63 +75,10 @@ const meta: Meta<typeof PredictiveSearch> = {
 export default meta;
 type Story = StoryObj<typeof PredictiveSearch>;
 
-// ─── Stories ────────────────────────────────────────────────
-
 export const Default: Story = {
   args: {
     onSearch: () => {},
     placeholder: 'Search products\u2026',
-  },
-};
-
-export const WithResults: Story = {
-  args: {
-    onSearch: () => {},
-    results: MOCK_RESULTS,
-  },
-  render: function WithResultsStory(args) {
-    const [query, setQuery] = useState('tote');
-
-    return (
-      <PredictiveSearch
-        {...args}
-        onSearch={() => {}}
-        results={query.length >= 2 ? MOCK_RESULTS : []}
-      />
-    );
-  },
-};
-
-export const ProductsOnly: Story = {
-  args: {
-    onSearch: () => {},
-    results: MOCK_RESULTS.filter((r) => r.type === 'product'),
-    showTypes: ['product'],
-  },
-  render: function ProductsOnlyStory(args) {
-    return <PredictiveSearch {...args} />;
-  },
-};
-
-export const Loading: Story = {
-  args: {
-    onSearch: () => {},
-    loading: true,
-  },
-};
-
-export const NoResults: Story = {
-  args: {
-    onSearch: () => {},
-    results: [],
-  },
-};
-
-export const WithSaleProducts: Story = {
-  args: {
-    onSearch: () => {},
-    results: SALE_PRODUCTS,
-    showTypes: ['product'],
   },
 };
 
@@ -135,7 +98,72 @@ export const Large: Story = {
   },
 };
 
+/** “tote” typed on load: products, collections, pages and articles, grouped. */
+export const WithResults: Story = {
+  // Four groups run taller than the space the other states reserve
+  decorators: [(Story) => <div style={{ minHeight: 'var(--size-modal-md)' }}><Story /></div>],
+  render: () => (
+    <Typed query="tote">
+      <PredictiveSearch onSearch={() => {}} results={MOCK_RESULTS} />
+    </Typed>
+  ),
+};
+
+export const ProductsOnly: Story = {
+  render: () => (
+    <Typed query="tote">
+      <PredictiveSearch
+        onSearch={() => {}}
+        results={MOCK_RESULTS.filter((r) => r.type === 'product')}
+        showTypes={['product']}
+      />
+    </Typed>
+  ),
+};
+
+export const WithSaleProducts: Story = {
+  render: () => (
+    <Typed query="linen">
+      <PredictiveSearch onSearch={() => {}} results={SALE_PRODUCTS} showTypes={['product']} />
+    </Typed>
+  ),
+};
+
+/** `currency` + `locale` format result prices: 48,00 €. */
+export const EuroPrices: Story = {
+  name: 'Prices in euros (Germany)',
+  render: () => (
+    <Typed query="tote">
+      <PredictiveSearch
+        onSearch={() => {}}
+        results={MOCK_RESULTS.filter((r) => r.type === 'product')}
+        showTypes={['product']}
+        currency="EUR"
+        locale="de-DE"
+      />
+    </Typed>
+  ),
+};
+
+export const Loading: Story = {
+  render: () => (
+    <Typed query="mug">
+      <PredictiveSearch onSearch={() => {}} loading />
+    </Typed>
+  ),
+};
+
+export const NoResults: Story = {
+  render: () => (
+    <Typed query="umbrella">
+      <PredictiveSearch onSearch={() => {}} results={[]} />
+    </Typed>
+  ),
+};
+
+/** Type anything: results filter as you go, after a short simulated network delay. */
 export const Interactive: Story = {
+  name: 'Try it: type to search',
   render: function InteractiveStory() {
     const [results, setResults] = useState<SearchResult[]>([]);
     const [loading, setLoading] = useState(false);

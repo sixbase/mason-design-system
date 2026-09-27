@@ -3,6 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 import { describe, expect, it, vi } from 'vitest';
 import { ColorPicker } from './ColorPicker';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 const options = [
   { color: '#26241F', label: 'Carbon Black', value: 'carbon-black' },
@@ -177,5 +179,60 @@ describe('ColorPicker', () => {
       <ColorPicker options={options} value="carbon-black" showLabel aria-label="Finish" />,
     );
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+
+  // ─── Regressions (QA break pass) ─────────────────────────
+
+  describe('regressions', () => {
+    it('a one-swatch group does not report a change when arrows wrap onto itself', async () => {
+      const user = userEvent.setup();
+      const onChange = vi.fn();
+      render(
+        <ColorPicker
+          aria-label="Color"
+          options={[{ color: '#000', label: 'Black', value: 'black' }]}
+          value="black"
+          onChange={onChange}
+        />,
+      );
+      screen.getByRole('radio').focus();
+      await user.keyboard('{ArrowRight}');
+      expect(onChange).not.toHaveBeenCalled();
+    });
+
+    it('ArrowRight moves to the visually-next swatch in RTL', async () => {
+      const user = userEvent.setup();
+      const onChange = vi.fn();
+      render(
+        <div dir="rtl">
+          <ColorPicker
+            aria-label="Color"
+            value="b"
+            onChange={onChange}
+            options={[
+              { color: '#000', label: 'A', value: 'a' },
+              { color: '#fff', label: 'B', value: 'b' },
+              { color: '#f00', label: 'C', value: 'c' },
+            ]}
+          />
+        </div>,
+      );
+      screen.getByRole('radio', { name: 'B' }).focus();
+      await user.keyboard('{ArrowRight}');
+      expect(onChange).toHaveBeenCalledWith('a');
+    });
+
+    it('swatches wrap instead of overflowing a phone-width container', () => {
+      const style = document.createElement('style');
+      style.textContent = readFileSync(resolve(__dirname, 'ColorPicker.css'), 'utf8');
+      document.head.appendChild(style);
+      try {
+        render(<ColorPicker aria-label="Color" options={[{ color: '#000', label: 'A', value: 'a' }]} />);
+        expect(getComputedStyle(screen.getByRole('radiogroup')).flexWrap).toBe('wrap');
+      } finally {
+        style.remove();
+      }
+    });
   });
 });

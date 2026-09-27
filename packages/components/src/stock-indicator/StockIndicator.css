@@ -31,6 +31,16 @@
   background-color: var(--color-destructive);
 }
 
+/* Forced colors repaints backgrounds to the canvas, so the dot vanished.
+   The label carries the status; the dot keeps its shape in CanvasText
+   (a system colour, which forced colors leaves alone). Same specificity
+   as the status rules above, later in the file. */
+@media (forced-colors: active) {
+  .ds-stock-indicator .ds-stock-indicator__dot {
+    background-color: CanvasText;
+  }
+}
+
 .ds-stock-indicator__dot--pulse {
   animation: ds-stock-pulse var(--stock-indicator-pulse-duration)
     var(--transition-easing-in-out) infinite;
@@ -44,5 +54,16 @@
 @media (prefers-reduced-motion: reduce) {
   .ds-stock-indicator__dot--pulse {
     animation: none;
+  }
+}
+
+/* ─── Print ─────────────────────────────────────────────── */
+/* The status dot is a fill. Browsers drop backgrounds when printing by default ("economy"), so
+   the state vanished on paper; exact keeps these fills. (-webkit- for
+   Safari < 15.4 and Chrome < 136, which only read the prefixed form.) */
+@media print {
+  .ds-stock-indicator {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }

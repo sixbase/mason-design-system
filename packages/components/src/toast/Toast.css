@@ -1,3 +1,17 @@
+/* ─── Announcer (ToastProvider's live regions) ───────────────── */
+/* Heard, never seen: the visible toast shows the same words. */
+.ds-toast-announcer {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* ─── Toast container ──────────────────────────────────────── */
 
 .ds-toast-container {
@@ -52,8 +66,11 @@
 /* ─── Individual toast — component tokens ─────────────────── */
 
 .ds-toast {
-  --toast-radius: var(--radius-md);
-  --toast-shadow: var(--shadow-lg);
+  /* Same radius as Alert, Popover and DropdownMenu (was radius-md, the
+     odd one out in the overlay family); shadow from the semantic
+     elevation token made for toasts instead of a raw primitive. */
+  --toast-radius: var(--radius-lg);
+  --toast-shadow: var(--elevation-toast);
   --toast-padding-x: var(--spacing-4);
   --toast-padding-y: var(--spacing-3);
   --toast-gap: var(--spacing-3);
@@ -70,7 +87,7 @@
   max-width: calc(100vw - var(--spacing-8));
   padding: var(--toast-padding-y) var(--toast-padding-x);
   border-radius: var(--toast-radius);
-  border: 1px solid transparent;
+  border: var(--border-width-sm) solid transparent;
   box-shadow: var(--toast-shadow);
   font-family: var(--font-family-body);
   pointer-events: auto;
@@ -79,15 +96,15 @@
 /* ─── Enter animations — side positions ───────────────────── */
 
 .ds-toast--enter {
-  animation: ds-toast-slide-in var(--transition-duration-normal) var(--transition-easing-out) forwards;
+  animation: ds-toast-slide-in var(--transition-duration-slower) var(--transition-easing-emphasized) forwards;
 }
 
 .ds-toast--enter-center {
-  animation: ds-toast-slide-in-center var(--transition-duration-normal) var(--transition-easing-out) forwards;
+  animation: ds-toast-slide-in-center var(--transition-duration-slower) var(--transition-easing-emphasized) forwards;
 }
 
 .ds-toast--enter-top {
-  animation: ds-toast-slide-in-top var(--transition-duration-normal) var(--transition-easing-out) forwards;
+  animation: ds-toast-slide-in-top var(--transition-duration-slower) var(--transition-easing-emphasized) forwards;
 }
 
 @keyframes ds-toast-slide-in {
@@ -126,15 +143,15 @@
 /* ─── Exit animations ─────────────────────────────────────── */
 
 .ds-toast--closing {
-  animation: ds-toast-slide-out var(--transition-duration-normal) var(--transition-easing-in) forwards;
+  animation: ds-toast-slide-out var(--transition-duration-slow) var(--transition-easing-emphasized-in) forwards;
 }
 
 .ds-toast--closing-center {
-  animation: ds-toast-slide-out-center var(--transition-duration-normal) var(--transition-easing-in) forwards;
+  animation: ds-toast-slide-out-center var(--transition-duration-slow) var(--transition-easing-emphasized-in) forwards;
 }
 
 .ds-toast--closing-top {
-  animation: ds-toast-slide-out-top var(--transition-duration-normal) var(--transition-easing-in) forwards;
+  animation: ds-toast-slide-out-top var(--transition-duration-slow) var(--transition-easing-emphasized-in) forwards;
 }
 
 /* Exit animations start from the current swipe offset (0 when the
@@ -219,7 +236,9 @@
 /* ─── Variant: error ──────────────────────────────────────── */
 /*
  * Light: brick.600 on brick.50 → 6.08:1 ✅ AA
- * Dark: brick.400 on 12% brick.500/stone.900 → 5.63:1 ✅ AA
+ * Dark: brick.400 on its 12% tint over stone.900 → 4.57:1 ✅ AA — the
+ *   dark destructive token passes on its own since 2026-09-25, so the old
+ *   .dark override to destructive-hover is gone.
  */
 .ds-toast--error {
   background-color: var(--color-destructive-subtle);
@@ -231,9 +250,6 @@
   color: var(--color-destructive);
 }
 
-:is(.dark, [data-theme="dark"]) .ds-toast--error {
-  color: var(--color-destructive-hover);
-}
 
 /* ─── Variant: warning ────────────────────────────────────── */
 /*
@@ -256,7 +272,10 @@
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  margin-top: 1px;
+  /* Optical nudge: the glyph box centres ~0.05em above the letters' visual
+     middle, so the icon drops by the system's standard optical offset
+     (the same 0.05em the text-box-trim fallbacks use). Was a raw 1px. */
+  margin-top: 0.05em;
 }
 
 .ds-toast__content {
@@ -265,6 +284,9 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-1);
+  /* Unbroken strings (emails, order numbers, URLs) wrap instead of
+     spilling past the toast edge */
+  overflow-wrap: anywhere;
 }
 
 .ds-toast__title {
@@ -280,36 +302,25 @@
   align-items: center;
   gap: var(--spacing-1);
   flex-shrink: 0;
-  margin-left: auto;
+  margin-inline-start: auto;
+  /* Center the buttons on the FIRST text line, not the whole row: a
+     one-line toast had its text riding high beside a centered X. The
+     negative margin is (sm line box − button height) / 2, so the 34px
+     buttons overhang the padding instead of growing the toast. */
+  --toast-line-box: calc(var(--font-size-sm) * var(--line-height-normal));
+  margin-block: calc((var(--toast-line-box) - var(--size-control-sm)) / 2);
 }
 
 /* ─── Focus visibility ────────────────────────────────────── */
 
 .ds-toast:focus-within {
-  outline: none;
+  outline: var(--border-width-lg) solid transparent; /* painted in forced-colors mode, where box-shadow rings vanish */
   box-shadow: var(--toast-shadow), var(--focus-ring);
 }
 
 /* ─── Touch hit area on actions ───────────────────────────── */
-/* Dismiss (and action) buttons keep their compact visual size but
-   get an invisible ≥44px hit area on coarse pointers. Coarse-only:
-   the two buttons sit adjacent, so the expanded areas overlap. */
-
-@media (pointer: coarse) {
-  .ds-toast__actions .ds-button {
-    position: relative;
-  }
-
-  .ds-toast__actions .ds-button::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: max(100%, var(--size-hit-area));
-    height: max(100%, var(--size-hit-area));
-  }
-}
+/* Dismiss and action are sm <Button>s, which already get an invisible
+   ≥44px hit area on coarse pointers (Button.css) — no override here. */
 
 /* ─── Reduced motion ──────────────────────────────────────── */
 /* Swiping still works (direct manipulation), but there is no
@@ -332,5 +343,14 @@
   .ds-toast--closing-center,
   .ds-toast--closing-top {
     animation: none;
+  }
+}
+
+/* ─── Print ───────────────────────────────────────────────── */
+/* The container is position: fixed, which Chromium repeats on every
+   printed page — a transient "Added to bag" would stamp the whole order. */
+@media print {
+  .ds-toast-container {
+    display: none;
   }
 }

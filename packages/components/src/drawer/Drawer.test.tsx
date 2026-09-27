@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { useState } from 'react';
 import userEvent from '@testing-library/user-event';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { describe, expect, it, vi } from 'vitest';
@@ -100,12 +101,12 @@ describe('Drawer', () => {
   });
 
   it('has no accessibility violations as a bottom sheet', async () => {
-    const { container } = render(
+    const { baseElement } = render(
       <Drawer {...defaultProps} side="bottom">
         Content
       </Drawer>,
     );
-    const results = await axe(container);
+    const results = await axe(baseElement);
     expect(results).toHaveNoViolations();
   });
 
@@ -171,6 +172,23 @@ describe('Drawer', () => {
     );
   });
 
+  // Drawer no longer strips aria-describedby itself — it relies on Radix
+  // wiring it only while a Description is mounted. Guard that reliance,
+  // including a description that comes and goes while the drawer is open.
+  it('follows the description as it appears and disappears', () => {
+    const { rerender } = render(<Drawer {...defaultProps}>Content</Drawer>);
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).not.toHaveAttribute('aria-describedby');
+
+    rerender(<Drawer {...defaultProps} description="2 items">Content</Drawer>);
+    const descId = dialog.getAttribute('aria-describedby');
+    expect(descId).toBeTruthy();
+    expect(document.getElementById(descId!)).toHaveTextContent('2 items');
+
+    rerender(<Drawer {...defaultProps}>Content</Drawer>);
+    expect(dialog).not.toHaveAttribute('aria-describedby');
+  });
+
   it('does not duplicate the title as a description', () => {
     render(<Drawer {...defaultProps}>Content</Drawer>);
     expect(screen.getAllByText('Test drawer')).toHaveLength(1);
@@ -218,11 +236,125 @@ describe('Drawer', () => {
 
   // ── Accessibility ──────────────────────────────────────
 
+  // The panel portals to <body>, so `container` is empty: scan baseElement.
   it('has no accessibility violations', async () => {
-    const { container } = render(
+    const { baseElement } = render(
       <Drawer {...defaultProps}>Content</Drawer>,
     );
-    const results = await axe(container);
+    const results = await axe(baseElement);
     expect(results).toHaveNoViolations();
+  });
+
+  // ── Focus return ───────────────────────────────────────
+
+  // Bug: Drawer has no Dialog.Trigger, so Radix returned focus to a null
+  // trigger ref and keyboard focus fell to <body> on close.
+  function OpenerHarness() {
+    const [open, setOpen] = useState(false);
+    return (
+      <>
+        <button type="button" onClick={() => setOpen(true)}>Open menu</button>
+        <Drawer open={open} onOpenChange={setOpen} title="Menu">
+          <button type="button">Inside</button>
+        </Drawer>
+      </>
+    );
+  }
+
+  it('returns focus to the element that opened it when closed with Escape', async () => {
+    const user = userEvent.setup();
+    render(<OpenerHarness />);
+    const opener = screen.getByRole('button', { name: 'Open menu' });
+    await user.click(opener);
+    await screen.findByRole('dialog');
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(opener).toHaveFocus();
+  });
+
+  it('returns focus to the opener when closed with the close button', async () => {
+    const user = userEvent.setup();
+    render(<OpenerHarness />);
+    const opener = screen.getByRole('button', { name: 'Open menu' });
+    await user.click(opener);
+    await user.click(await screen.findByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(opener).toHaveFocus();
+  });
+
+  // Safari (macOS + iOS) never focuses a clicked/tapped button, so at open
+  // time activeElement was <body> — or <main tabindex="-1">, which Safari
+  // focuses instead — and closing dropped focus to the top of the page.
+  it('returns focus to a tapped opener that Safari never focused', async () => {
+    render(
+      <main tabIndex={-1}>
+        <OpenerHarness />
+      </main>,
+    );
+    const opener = screen.getByRole('button', { name: 'Open menu' });
+    const main = screen.getByRole('main');
+    // What Safari does on a tap: pointerdown, focus goes to the focusable
+    // ancestor (not the button), then click.
+    fireEvent.pointerDown(opener);
+    main.focus();
+    fireEvent.click(opener);
+    await screen.findByRole('dialog');
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(opener).toHaveFocus();
+  });
+
+  // Round 5 (shopper journeys): closing the mobile menu threw the page up
+  // half a screen. The opener got a plain focus(), and the sticky header's
+  // scroll-padding made the browser "reveal" a button that was on screen.
+  it('returns focus without scrolling when the opener is on screen', async () => {
+    const user = userEvent.setup();
+    render(<OpenerHarness />);
+    const opener = screen.getByRole('button', { name: 'Open menu' });
+    vi.spyOn(opener, 'getBoundingClientRect').mockReturnValue(
+      { x: 10, y: 10, top: 10, left: 10, bottom: 46, right: 46, width: 36, height: 36, toJSON: () => ({}) },
+    );
+    const focus = vi.spyOn(opener, 'focus');
+    await user.click(opener);
+    await screen.findByRole('dialog');
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(focus).toHaveBeenLastCalledWith({ preventScroll: true });
+    expect(opener).toHaveFocus();
+  });
+
+  it('still scrolls to an opener that is off screen', async () => {
+    const user = userEvent.setup();
+    render(<OpenerHarness />);
+    const opener = screen.getByRole('button', { name: 'Open menu' });
+    vi.spyOn(opener, 'getBoundingClientRect').mockReturnValue(
+      { x: 10, y: -400, top: -400, left: 10, bottom: -364, right: 46, width: 36, height: 36, toJSON: () => ({}) },
+    );
+    const focus = vi.spyOn(opener, 'focus');
+    await user.click(opener);
+    await screen.findByRole('dialog');
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(focus).toHaveBeenLastCalledWith({ preventScroll: false });
+  });
+
+  // Regression (keyboard audit): a long body with no focusable content could
+  // not be scrolled from the keyboard — the focus trap only cycles tabbables
+  // (the close button). An overflowing body is a tab stop; a short one isn't.
+  it('makes the body a tab stop only while it overflows', () => {
+    const heights = vi
+      .spyOn(HTMLElement.prototype, 'scrollHeight', 'get')
+      .mockImplementation(function (this: HTMLElement) {
+        return this.classList.contains('ds-drawer__body') ? 900 : 0;
+      });
+    const client = vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(300);
+    const { unmount } = render(<Drawer {...defaultProps}>Long content</Drawer>);
+    expect(screen.getByText('Long content')).toHaveAttribute('tabindex', '0');
+    unmount();
+    heights.mockRestore();
+    client.mockRestore();
+
+    render(<Drawer {...defaultProps}>Short content</Drawer>);
+    expect(screen.getByText('Short content')).not.toHaveAttribute('tabindex');
   });
 });

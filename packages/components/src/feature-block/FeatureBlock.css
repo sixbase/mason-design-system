@@ -50,10 +50,12 @@
 
 /* Title and description use <Heading> and <Text> primitives */
 
-/* Responsive bump: xl → 2xl at desktop */
+/* Responsive bump: xl → 2xl at desktop. Two-class selector: a lone
+   .ds-feature-block__title ties .ds-heading--xl (0-1-0) and only won by
+   stylesheet order (lesson: raw-html-in-components). */
 /* @breakpoint-lg = 1024px */
 @media (min-width: 1024px) {
-  .ds-feature-block__title {
+  .ds-feature-block .ds-feature-block__title {
     font-size: var(--font-size-2xl);
   }
 }

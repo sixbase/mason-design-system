@@ -1,5 +1,6 @@
 import { forwardRef, useRef } from 'react';
 import type { HTMLAttributes, KeyboardEvent } from 'react';
+import { isRtl } from '../internal/direction';
 import './ColorPicker.css';
 
 export interface ColorOption {
@@ -11,15 +12,21 @@ export interface ColorOption {
   value: string;
 }
 
+/** Swatch diameter step. */
+export type ColorPickerSize = 'sm' | 'md' | 'lg';
+
 export interface ColorPickerProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onChange'> {
   /** Available color options */
   options: ColorOption[];
-  /** Currently selected value */
+  /**
+   * Currently selected value. Controlled only — the picker keeps no
+   * selection of its own, so pass `value` and update it in `onChange`.
+   */
   value?: string;
-  /** Called when a color is selected */
+  /** Called with the chosen option's `value` (not an event) */
   onChange?: (value: string) => void;
   /** Size of the swatches */
-  size?: 'sm' | 'md' | 'lg';
+  size?: ColorPickerSize;
   /** Show the selected option's name next to the swatch group */
   showLabel?: boolean;
 }
@@ -47,23 +54,24 @@ export const ColorPicker = forwardRef<HTMLDivElement, ColorPickerProps>(
     const selected = selectedIndex >= 0 ? options[selectedIndex] : undefined;
 
     const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
+      // Swatches lay out right-to-left in RTL, so the horizontal arrows swap.
+      const rtl = isRtl(event.currentTarget);
+      const forwardKey = rtl ? 'ArrowLeft' : 'ArrowRight';
+      const backwardKey = rtl ? 'ArrowRight' : 'ArrowLeft';
+
       let nextIndex: number;
-      switch (event.key) {
-        case 'ArrowRight':
-        case 'ArrowDown':
-          nextIndex = (index + 1) % options.length;
-          break;
-        case 'ArrowLeft':
-        case 'ArrowUp':
-          nextIndex = (index - 1 + options.length) % options.length;
-          break;
-        default:
-          return;
+      if (event.key === forwardKey || event.key === 'ArrowDown') {
+        nextIndex = (index + 1) % options.length;
+      } else if (event.key === backwardKey || event.key === 'ArrowUp') {
+        nextIndex = (index - 1 + options.length) % options.length;
+      } else {
+        return;
       }
       const next = options[nextIndex];
       if (!next) return;
       event.preventDefault();
-      onChange?.(next.value);
+      // A one-swatch group wraps onto itself — don't report a "change".
+      if (next.value !== value) onChange?.(next.value);
       buttonRefs.current.get(next.value)?.focus();
     };
 

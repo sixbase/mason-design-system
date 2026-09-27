@@ -1,6 +1,9 @@
 /* ─── PredictiveSearch component tokens ───────────────────── */
 .ds-predictive-search {
-  --search-border-color: var(--color-border);
+  /* border-control, like Input: the resting edge is what shows where the
+     field is, so it needs 3:1 (WCAG 1.4.11). --color-border was 1.3:1 —
+     the only form field still on the faint edge. */
+  --search-border-color: var(--color-border-control);
   --search-bg: var(--color-background-surface);
   --search-radius: var(--radius-md);
   --search-dropdown-radius: var(--radius-lg);
@@ -14,6 +17,8 @@
 /* ─── Input wrapper (icon + input + clear) ────────────────── */
 .ds-predictive-search__input-wrapper {
   position: relative;
+  /* Contain the icon's raised stacking to this field (see the icon). */
+  isolation: isolate;
   display: flex;
   align-items: center;
   width: 100%;
@@ -22,7 +27,19 @@
 /* ─── Search icon ─────────────────────────────────────────── */
 .ds-predictive-search__icon {
   position: absolute;
-  left: var(--spacing-3);
+  /*
+   * Raised deliberately — same bug Input fixed for its leading adornment.
+   * The optical-centering fallback at the bottom of this file transforms
+   * .ds-predictive-search__input, which makes it a stacking context painted
+   * at the z-index:0 layer. The icon is a *previous* sibling at z-index:auto,
+   * so the input's opaque background painted straight over it: the search
+   * field showed an empty gap where the magnifier belongs, in every browser
+   * (the fallback always runs). Isolation on the wrapper keeps this local.
+   */
+  z-index: var(--z-index-raised);
+  /* Logical insets/padding throughout: in RTL the magnifier leads on the
+     right and the clear button trails on the left (they were mirrored). */
+  inset-inline-start: var(--spacing-3);
   display: flex;
   align-items: center;
   color: var(--color-foreground-subtle);
@@ -35,10 +52,10 @@
   align-items: center;
   width: 100%;
   padding: 0 var(--spacing-3);
-  padding-left: calc(var(--spacing-3) + var(--size-icon) + var(--spacing-2));
+  padding-inline-start: calc(var(--spacing-3) + var(--size-icon) + var(--spacing-2));
   color: var(--color-foreground);
   background-color: var(--search-bg);
-  border: 1px solid var(--search-border-color);
+  border: var(--border-width-sm) solid var(--search-border-color);
   border-radius: var(--search-radius);
   outline: none;
   transition:
@@ -60,9 +77,9 @@
   color: var(--color-foreground-secondary);
 }
 
-/* Has clear button → extra right padding */
+/* Has clear button → extra inline-end padding */
 .ds-predictive-search__input-wrapper--has-clear .ds-predictive-search__input {
-  padding-right: calc(var(--spacing-3) + var(--size-icon) + var(--spacing-2));
+  padding-inline-end: calc(var(--spacing-3) + var(--size-icon) + var(--spacing-2));
 }
 
 /* ─── Sizes ───────────────────────────────────────────────── */
@@ -78,22 +95,39 @@
 
 .ds-predictive-search__input--lg {
   height: var(--size-control-lg);
-  padding-left: calc(var(--spacing-4) + var(--size-icon) + var(--spacing-2));
+  padding-inline-start: calc(var(--spacing-4) + var(--size-icon) + var(--spacing-2));
   font-size: var(--font-size-base);
 }
 
 .ds-predictive-search__input-wrapper--has-clear .ds-predictive-search__input--lg {
-  padding-right: calc(var(--spacing-4) + var(--size-icon) + var(--spacing-2));
+  padding-inline-end: calc(var(--spacing-4) + var(--size-icon) + var(--spacing-2));
+}
+
+/* iOS auto-zoom guard: Safari zooms the page when a focused field is
+   under 16px, and every size here (fluid xs/sm/base) dips below 1rem on
+   phones. Pin to the fixed 1rem step on touch — same rule as Input. */
+@media (pointer: coarse) {
+  .ds-predictive-search__input--sm,
+  .ds-predictive-search__input--md,
+  .ds-predictive-search__input--lg {
+    font-size: var(--font-size-tight-base);
+  }
 }
 
 /* ─── Focus / hover states ────────────────────────────────── */
 .ds-predictive-search__input:focus {
   border-color: var(--color-primary);
   box-shadow: var(--focus-ring);
+  /* Same as Input: forced-colors mode drops the box-shadow ring and repaints
+     this transparent outline, so the field keeps a focus indicator there. */
+  outline: var(--border-width-lg) solid transparent;
+  outline-offset: var(--border-width-lg);
 }
 
-.ds-predictive-search__input:hover:not(:focus):not(:disabled) {
-  border-color: var(--color-border-strong);
+@media (hover: hover) {
+  .ds-predictive-search__input:hover:not(:focus):not(:disabled) {
+    border-color: var(--color-foreground-subtle); /* darker than the resting border-control edge, as Input */
+  }
 }
 
 .ds-predictive-search__input:disabled {
@@ -105,7 +139,7 @@
 /* ─── Clear button ────────────────────────────────────────── */
 .ds-predictive-search__clear {
   position: absolute;
-  right: var(--spacing-3);
+  inset-inline-end: var(--spacing-3);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -118,12 +152,14 @@
   transition: color var(--transition-fast);
 }
 
-.ds-predictive-search__clear:hover {
-  color: var(--color-foreground);
+@media (hover: hover) {
+  .ds-predictive-search__clear:hover {
+    color: var(--color-foreground);
+  }
 }
 
 .ds-predictive-search__clear:focus-visible {
-  outline: none;
+  outline: var(--border-width-lg) solid transparent; /* painted in forced-colors mode, where box-shadow rings vanish */
   box-shadow: var(--focus-ring);
 }
 
@@ -151,17 +187,19 @@
   right: 0;
   margin-top: var(--spacing-1);
   background-color: var(--color-background-surface);
-  border: 1px solid var(--color-border);
+  border: var(--border-width-sm) solid var(--color-border);
   border-radius: var(--search-dropdown-radius);
   box-shadow: var(--search-dropdown-shadow);
   z-index: var(--z-index-overlay);
   overflow: hidden;
 
-  animation: ds-predictive-search-open var(--transition-duration-fast) var(--transition-easing-out);
+  /* Same arrival as every anchored list (Select, DropdownMenu, Popover):
+     normal duration, emphasized curve. Was fast + ease-out. */
+  animation: ds-predictive-search-open var(--transition-duration-normal) var(--transition-easing-emphasized);
 }
 
 @keyframes ds-predictive-search-open {
-  from { opacity: 0; transform: translateY(-4px); }
+  from { opacity: 0; transform: translateY(calc(-1 * var(--spacing-1))); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
@@ -188,7 +226,6 @@
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
   }
 
@@ -223,6 +260,8 @@
 .ds-predictive-search__empty {
   padding: var(--spacing-6) var(--spacing-4);
   text-align: center;
+  /* The echoed query can be one unbroken string — wrap, don't clip */
+  overflow-wrap: anywhere;
 }
 
 /* ─── Results listbox ─────────────────────────────────────── */
@@ -262,19 +301,45 @@
   padding: var(--spacing-2) var(--spacing-3);
   border-radius: var(--radius-md);
   cursor: pointer;
+  -webkit-user-select: none; /* Safari ignores the unprefixed property */
   user-select: none;
   transition: background-color var(--transition-fast);
 }
 
+/* Flush-stacked full-width rows: grow the real box on touch (an overlay
+   would swallow the neighbouring row). Text-only rows (collections,
+   pages) are otherwise ~36px. */
+@media (pointer: coarse) {
+  .ds-predictive-search__result {
+    min-height: var(--size-hit-area);
+  }
+}
+
 .ds-predictive-search__result--active {
   background-color: var(--color-secondary);
+  /* Invisible normally; forced-colors mode repaints transparent outlines in
+     a system color. The background alone vanished in Windows High Contrast,
+     so arrow-key users couldn't see which result Enter would open. Same
+     pattern as DropdownMenu/Select highlighted items. */
+  outline: var(--border-width-lg) solid transparent;
+  outline-offset: calc(-1 * var(--border-width-lg));
+}
+
+/* Arrow-key highlight: the background alone is 1.3:1 against the panel.
+   The active row the pointer is not on was reached with the arrow keys, so
+   it also paints the inset focus ring; under the pointer (onMouseEnter makes
+   it active) the background alone stays. Same rule as DropdownMenu/Select. */
+.ds-predictive-search__result--active:not(:hover) {
+  outline-color: var(--color-focus-ring);
 }
 
 /* ─── Product thumbnail ───────────────────────────────────── */
 .ds-predictive-search__thumbnail {
   width: var(--spacing-12);
   height: var(--spacing-12);
-  border-radius: var(--radius-sm);
+  /* 5px on a 48px square — the same corner as the 64px ImageGallery thumbs;
+     2px read as a hard-cornered outlier beside every other product photo. */
+  border-radius: var(--radius-md);
   object-fit: cover;
   flex-shrink: 0;
 }
@@ -292,10 +357,24 @@
 }
 
 /* ─── Price ───────────────────────────────────────────────── */
+/* Same treatment as PriceDisplay size="sm" (and so ProductCard, CartLineItem
+   and CartDrawer): numeric family, tabular figures, and the sale price in the
+   destructive color whenever a compare-at price is shown. It used to render in
+   the body face with a near-black sale price — the only commerce surface that
+   didn't mark a sale in red. */
 .ds-predictive-search__result-price {
   display: flex;
   align-items: baseline;
   gap: var(--spacing-2);
+}
+
+.ds-predictive-search__result-price .ds-text {
+  font-family: var(--font-family-numeric);
+  font-variant-numeric: tabular-nums;
+}
+
+.ds-predictive-search__result-price--sale .ds-predictive-search__result-current {
+  color: var(--color-destructive);
 }
 
 .ds-predictive-search__result-compare {
@@ -304,7 +383,7 @@
 
 /* ─── Footer ──────────────────────────────────────────────── */
 .ds-predictive-search__footer {
-  border-top: 1px solid var(--color-border);
+  border-top: var(--border-width-sm) solid var(--color-border);
   padding: var(--spacing-2) var(--spacing-3);
 }
 
@@ -321,19 +400,26 @@
   cursor: pointer;
   font-family: var(--font-family-body);
   font-size: var(--font-size-sm);
+  text-align: center;
+  overflow-wrap: anywhere;
   transition: background-color var(--transition-fast);
 }
 
-.ds-predictive-search__view-all:hover {
-  background-color: var(--color-secondary);
+@media (hover: hover) {
+  .ds-predictive-search__view-all:hover {
+    background-color: var(--color-secondary);
+  }
 }
 
 .ds-predictive-search__view-all:focus-visible {
-  outline: none;
+  outline: var(--border-width-lg) solid transparent; /* painted in forced-colors mode, where box-shadow rings vanish */
   box-shadow: var(--focus-ring);
 }
 
 /* ─── Screen reader only ──────────────────────────────────── */
+/* Global class, also declared in CartDrawer.css and PriceDisplay.css so
+   each component works when its CSS is loaded alone. Keep all three
+   copies identical — they share one selector, so any drift merges. */
 .ds-sr-only {
   position: absolute;
   width: 1px;
@@ -344,7 +430,7 @@
   clip: rect(0, 0, 0, 0); /* legacy fallback */
   clip-path: inset(50%);
   white-space: nowrap;
-  border-width: 0;
+  border: 0;
 }
 
 /* ─── Optical centering fallback ──────────────────────────── */

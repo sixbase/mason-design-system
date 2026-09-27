@@ -11,7 +11,7 @@ const meta: Meta<typeof AddToCartButton> = {
     docs: {
       description: {
         component:
-          'A specialized shopping CTA with domain-specific states: idle, loading, success feedback, sold out, and pre-order.',
+          'The main “Add to bag” button on a product page, with its own states: adding, added, sold out and pre-order.',
       },
     },
   },
@@ -75,7 +75,7 @@ export const PreOrder: Story = {
 
 export const AllStatuses: Story = {
   render: () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)', width: '240px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)', width: 'calc(var(--spacing-phi-55) * 2)' }}>
       <AddToCartButton status="idle" />
       <AddToCartButton status="loading" />
       <AddToCartButton status="success" />
@@ -89,7 +89,7 @@ export const AllStatuses: Story = {
 
 export const Sizes: Story = {
   render: () => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)' }}>
+    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--spacing-3)' }}>
       <AddToCartButton size="md" />
       <AddToCartButton size="lg" />
     </div>
@@ -105,7 +105,7 @@ export const FullWidth: Story = {
   },
   decorators: [
     (Story) => (
-      <div style={{ width: '320px' }}>
+      <div style={{ width: 'var(--size-modal-sm)', maxWidth: '100%' }}>
         <Story />
       </div>
     ),
@@ -116,7 +116,7 @@ export const FullWidth: Story = {
 
 export const CustomLabels: Story = {
   render: () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)', width: '240px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)', width: 'calc(var(--spacing-phi-55) * 2)' }}>
       <AddToCartButton
         status="idle"
         labels={{ idle: 'Add to Cart' }}
@@ -136,6 +136,7 @@ export const CustomLabels: Story = {
 // ─── Interactive demo ──────────────────────────────────────────
 
 export const InteractiveDemo: Story = {
+  name: 'Try it: click to add',
   render: function InteractiveDemoRender() {
     const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
 
@@ -148,7 +149,7 @@ export const InteractiveDemo: Story = {
     }, []);
 
     return (
-      <div style={{ width: '240px' }}>
+      <div style={{ width: 'calc(var(--spacing-phi-55) * 2)' }}>
         <AddToCartButton
           status={status}
           onClick={handleClick}

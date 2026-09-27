@@ -1,11 +1,21 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
+import { Button } from '../button';
+import { Icon } from '../icon';
 import { Alert } from './Alert';
 
 const meta: Meta<typeof Alert> = {
   title: 'Components/Alert',
   component: Alert,
   tags: ['autodocs'],
+  parameters: {
+    docs: {
+      description: {
+        component:
+          'A message box on the page — information, success, a warning or a problem — with an optional title and close button.',
+      },
+    },
+  },
   argTypes: {
     variant: {
       control: 'select',
@@ -23,14 +33,6 @@ export const Default: Story = {
     variant: 'info',
     title: 'New collection available',
     children: 'Our spring collection is now live. Browse the latest arrivals.',
-  },
-};
-
-export const Info: Story = {
-  args: {
-    variant: 'info',
-    title: 'Free shipping',
-    children: 'Orders over $100 qualify for free standard shipping.',
   },
 };
 
@@ -58,13 +60,6 @@ export const Destructive: Story = {
   },
 };
 
-export const DescriptionOnly: Story = {
-  args: {
-    variant: 'info',
-    children: 'Free returns within 30 days of purchase.',
-  },
-};
-
 export const AllVariants: Story = {
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}>
@@ -84,6 +79,31 @@ export const AllVariants: Story = {
   ),
 };
 
+export const DescriptionOnly: Story = {
+  args: {
+    variant: 'info',
+    children: 'Free returns within 30 days of purchase.',
+  },
+};
+
+/** `icon` swaps the variant's built-in symbol for one that fits the message. */
+export const CustomIcon: Story = {
+  name: 'With its own icon',
+  args: {
+    variant: 'info',
+    title: 'Ships in 1–2 days',
+    children: 'Order by 2pm for same-day dispatch from our Portland workshop.',
+    icon: (
+      <Icon>
+        <rect x="1" y="3" width="15" height="13" />
+        <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+        <circle cx="5.5" cy="18.5" r="2.5" />
+        <circle cx="18.5" cy="18.5" r="2.5" />
+      </Icon>
+    ),
+  },
+};
+
 export const Dismissible: Story = {
   render: () => {
     function DismissDemo() {
@@ -91,13 +111,9 @@ export const Dismissible: Story = {
 
       if (!visible) {
         return (
-          <button
-            type="button"
-            onClick={() => setVisible(true)}
-            style={{ fontFamily: 'var(--font-family-body)', fontSize: 'var(--font-size-sm)' }}
-          >
+          <Button variant="secondary" size="sm" onClick={() => setVisible(true)}>
             Show alert again
-          </button>
+          </Button>
         );
       }
 
@@ -126,6 +142,7 @@ export const LongContent: Story = {
 };
 
 export const EcommerceContext: Story = {
+  name: 'In the store (cart and product messages)',
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}>
       <Alert variant="success">
