@@ -184,7 +184,7 @@ Dark mode (on stone.950): foreground stone.50 (17.99:1) · secondary stone.300 (
 | Token | Light | Dark | Permitted use |
 |-------|-------|------|---------------|
 | `--color-border-subtle` (2026-09-27) | stone.950 at 5.57% (φ⁻⁶), translucent — 1.12:1 on bg, subtle and surface alike | stone.50 at 5.57% — 1.13:1 on bg, 1.16 on surface | Dividers — rules *between* content: the Divider component, list rows, header/footer and section rules, table rows, menu separators, the tabs baseline. Translucent so one line keeps the same weight on every background. Decorative only |
-| `--color-border` | stone.200 (1.3:1) | stone.800 | Decorative edges of boxes — cards, popovers, menu and select panels, modals, drawers, pills, swatches — and tracks. Rules between content use `--color-border-subtle`. **Never the only boundary of a form control** |
+| `--color-border` | stone.200 (1.3:1) | stone.800 | Decorative edges of boxes — cards, popovers, menu and select panels, modals, drawers, pills, swatches — tracks, and scroll edges (a pinned footer that content scrolls beneath). Rules between content use `--color-border-subtle`. **Never the only boundary of a form control** |
 | `--color-border-strong` | stone.300 (1.7:1) | stone.700 | Emphasis dividers, hover borders |
 | `--color-border-control` (2026-09-25) | 38.2% stone.400 + 61.8% stone.500 = `#918A80` (3.24:1 on bg, 3.00 on subtle, 3.41 on surface) | 61.8% stone.500 + 38.2% stone.600 (≥3.4:1) | The resting boundary of Input, Textarea, Select, Checkbox, Radio, Switch-off track — anything a user must find to operate |
 

@@ -10,6 +10,19 @@
         "dev"
       ],
       "port": 4321
+    },
+    {
+      "name": "workbench-preview",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@ds/workbench",
+        "preview",
+        "--port",
+        "4173",
+        "--host"
+      ],
+      "port": 4173
     }
   ]
 }

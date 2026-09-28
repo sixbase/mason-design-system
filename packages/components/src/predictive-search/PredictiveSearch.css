@@ -383,7 +383,9 @@
 
 /* ─── Footer ──────────────────────────────────────────────── */
 .ds-predictive-search__footer {
-  border-top: var(--border-width-sm) solid var(--color-border-subtle);
+  /* Pinned under the scrolling results list — a scroll edge, so it takes
+     --color-border (see CartDrawer footer), not the quiet divider. */
+  border-top: var(--border-width-sm) solid var(--color-border);
   padding: var(--spacing-2) var(--spacing-3);
 }
 

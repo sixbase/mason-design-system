@@ -27,7 +27,11 @@
   flex-direction: column;
   gap: var(--spacing-3);
   padding-top: var(--cart-drawer-gap);
-  border-top: var(--border-width-sm) solid var(--color-border-subtle);
+  /* A scroll edge, not a content divider: items slide under this pinned
+     footer, and on the quiet --color-border-subtle hairline (≈1.12:1) a
+     half-hidden line item read as clipped rather than scrolled. Edges that
+     content scrolls beneath take --color-border, like other box edges. */
+  border-top: var(--border-width-sm) solid var(--color-border);
   margin-top: auto;
   position: sticky;
   bottom: calc(-1 * var(--spacing-6));
