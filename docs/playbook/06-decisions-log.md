@@ -2432,3 +2432,14 @@ These stay on `--color-border`:
 **Also:** Divider `variant="subtle"` dimmed the line to 38.2% opacity. On the new hairline that would be ≈1.04:1, which is invisible. The variant is deprecated and now renders like the default, and its three duplicate stories were removed.
 **Rationale:** Dividers are decorative, and WCAG 1.4.11 does not apply to them, so a transparent mix is allowed (`07` → `#color-mix-contrast`). It is also the only option that keeps one visual weight on every surface in both modes. The token has the same name as the storefront's, so the theme replaces its local definition with the synced one.
 **Status:** Active
+
+---
+
+### Scroll Edges Use `--color-border`, Not the Quiet Divider
+
+**Date/Phase:** 2026-09-28 — review of the quieter-dividers change (#9)
+**Context:** #9 moved rules between content to `--color-border-subtle` (≈1.12:1). The CartDrawer footer is pinned while line items scroll beneath it; on the new hairline a half-hidden item read as clipped, not scrolled. PredictiveSearch's footer sits the same way under its scrolling results.
+**Options considered:** keep the hairline (consistent with other footers); a scroll shadow; the box-edge border.
+**Decision:** a pinned header/footer that content scrolls beneath is a *box edge* and uses `--color-border` (1.27:1 light, stronger in dark). The CartDrawer header scrolls with its items, so it stays a quiet divider.
+**Rationale:** the edge tells the shopper there is more to scroll; that is structure, not decoration between content. Same rule #9 already applies to box edges and tracks.
+**Status:** Active
