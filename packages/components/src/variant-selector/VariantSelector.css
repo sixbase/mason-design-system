@@ -4,8 +4,11 @@
   --variant-selector-group-gap: var(--spacing-3);
   --variant-selector-option-radius: var(--radius-md);
   --variant-selector-option-font-weight: var(--font-weight-medium);
-  /* Label truncation cap — sm default; md relaxes to 16ch below */
-  --variant-selector-option-label-max: 12ch;
+  /* Label truncation cap — 12 characters at sm; md relaxes to 16 below.
+     In --measure-character, not ch: ch follows whichever font is showing,
+     so a label could be cut short in the stand-in font and whole in Plex,
+     and the pill changed width when the font landed. */
+  --variant-selector-option-label-max: calc(12 * var(--measure-character));
   --variant-selector-transition: color var(--transition-fast),
     background-color var(--transition-fast),
     border-color var(--transition-fast),
@@ -94,7 +97,7 @@
 
 /* ─── Size: md (default) ─────────────────────────────────── */
 .ds-variant-selector--md {
-  --variant-selector-option-label-max: 16ch;
+  --variant-selector-option-label-max: calc(16 * var(--measure-character));
 }
 
 .ds-variant-selector--md .ds-variant-selector__option {

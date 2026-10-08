@@ -13,7 +13,7 @@
      playbook reserves optical trimming for fixed-height controls
      (see 04-components.md → "Do NOT apply to … Typography"). */
 
-  /* Optimal reading width: --measure-reading (65ch ≈ 65 characters
+  /* Optimal reading width: --measure-reading (65 characters
      per line). Only applies to block-level renderings (p, div) —
      inline elements (span, label) ignore max-width automatically.
      min(100%, …) for the same reason as .ds-heading below: as a centred
@@ -190,8 +190,9 @@
 
 /* ─── Reading width utility ───────────────────────────────── */
 /* Apply to any body/paragraph text outside the Text component.
-   65ch ≈ 65 characters — the typographic sweet spot for
-   comfortable reading (Bringhurst, 45–75ch range). */
+   65 characters — the typographic sweet spot for comfortable
+   reading (Bringhurst, 45–75 range). The token is in em, not ch:
+   see --measure-character in tokens.css. */
 .ds-readable-width {
   max-width: var(--measure-reading);
 }

@@ -313,17 +313,17 @@ The `bordered` accordion variant wraps in a panel with its own border + radius �
 
 ---
 
-## Optimal Reading Width (65ch)
+## Optimal Reading Width (65 characters)
 
-All body/paragraph text: `max-width: var(--measure-reading)` (65ch). Typographic sweet spot (Bringhurst 45–75 range). `.ds-text` uses `min(100%, var(--measure-reading))` so a long word can't push a narrow column sideways.
+All body/paragraph text: `max-width: var(--measure-reading)` (65 characters). Typographic sweet spot (Bringhurst 45–75 range). `.ds-text` uses `min(100%, var(--measure-reading))` so a long word can't push a narrow column sideways.
 
 **Applied to:** `.ds-text`, `.ds-feature-block__desc`, `.ds-cookie-consent__description`, `.ds-readable-width` utility.
 
 **NOT applied to:** Headings (run wider), captions, labels, buttons, badges, single-line text.
 
-**Uses `ch` units** — adapts automatically if font or size changes. Never `px`.
+**Written in `em`, never `ch`** — `--measure-reading` is 65 × `--measure-character` (0.6em, one character of IBM Plex Sans), so it follows the text size but not the font that happens to be showing. `ch` did follow the font, which is why text re-wrapped when the web font arrived (see 03-tokens.md → Measures). Never `px`.
 
-**If body text renders wider than 65ch anywhere, it's a bug.**
+**If body text renders wider than 65 characters anywhere, it's a bug.**
 
 ---
 

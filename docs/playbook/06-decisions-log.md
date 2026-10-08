@@ -80,7 +80,7 @@ Use this to find decisions by topic without scrolling 2,300+ lines. Statuses her
 | CookieConsent: compound component with i18n labels | Active |
 | No Overrides Rule: block components never target primitive internals | Active |
 | Optical Text Centering: `text-box-trim` | **Revisited** — invalid syntax, open decision |
-| Optimal Reading Width: 65ch | Active |
+| Optimal Reading Width: 65ch | **Amended 2026-10-07** — still 65 characters, written in em |
 | ProductCard: `renderPrice`, `badge`, `hoverImage` props | Active |
 | ProductCard: `fluid` variant for grid contexts | Active |
 | StarRating: SVG clipPath half-fill | Active |
@@ -154,6 +154,7 @@ Use this to find decisions by topic without scrolling 2,300+ lines. Statuses her
 | Playbook: how-to chapters state today's rules; logs are history; one open list | Active |
 | Storybook removed; workbench is the only app (stories stay Component Story Format) | Active |
 | Divider hairline: `--color-border-subtle` (translucent, φ⁻⁶); Divider `subtle` variant deprecated | Active |
+| Measures in em (`--measure-character`), never `ch`; metric-matched stand-in fonts | Active |
 
 ---
 
@@ -2443,3 +2444,15 @@ These stay on `--color-border`:
 **Decision:** a pinned header/footer that content scrolls beneath is a *box edge* and uses `--color-border` (1.27:1 light, stronger in dark). The CartDrawer header scrolls with its items, so it stays a quiet divider.
 **Rationale:** the edge tells the shopper there is more to scroll; that is structure, not decoration between content. Same rule #9 already applies to box edges and tracks.
 **Status:** Active
+
+---
+
+### Measures in em; Stand-in Fonts
+
+**Date/Phase:** 2026-10-07 — the storefront's web-font hop
+**Context:** On a first visit the storefront painted in the system font and re-wrapped when IBM Plex Sans arrived 70–280ms later (every cold load; a 22px hop on collection pages, 10px on Support). Two causes sat in the design system. (1) Measures were in `ch`, chosen in 2025 because it "adapts automatically if fonts change" — which is the bug: the box itself changes width at the swap. (2) The font stack fell back to `system-ui`, whose letters are 5–9% narrower than Plex's and, on Apple devices, change spacing with size, so no single correction fits.
+**Options considered:** keep `ch` and only preload the font (still hops whenever the font is late); `font-display: optional` (no swap at all, but the storefront's review app injects an `@font-face` after first paint and Chrome swaps anyway); measures in raw `em` per component (fails the raw-value lint, and hides that they are character counts); a `--measure-character` token.
+**Decision:** `--measure-character: 0.6em` — Plex's "0" is exactly 0.6em at every weight — and `--measure-reading: 39em` (65 of them). Component character counts become `calc(n * var(--measure-character))`; `check-css` now rejects `ch`. The body and numeric font stacks gain `'IBM Plex Sans Fallback'` / `'JetBrains Mono Fallback'`: local Arial and Menlo, scaled per weight to the web font's measured widths, emitted as `@font-face` rules in `tokens.css` from `font.fallback` in `tokens.json`.
+**Rationale:** nothing visible changes once the web font is showing (0.6em × 65 is the same 65ch it was). What changes is the moment before: same box, near-identical line breaks. Measured on ten storefront pages with the font held back, then released: the worst in-view hop went from 22px to 0 in Chromium (layout-shift score 0.119 → 0.0001) and from 19px to 5px in WebKit, which ignores the metric overrides and rounds a trimmed text box to whole pixels (each Accordion row grows 1px). With the fonts loaded, 42 of 44 storefront page views were identical element for element to the previous build; the other two are one sentence the storefront widened on purpose. Also tried and dropped: a separate size-adjust for capitals, lowercase, digits and spaces — tighter per string in Chromium, but in WebKit the mixed sizes made lines taller and more paragraphs re-wrapped. The numbers live in 03-tokens.md → "Stand-in Fonts" and must be re-measured if the typeface changes; the scripts are in the storefront repo (`scripts/fonts/`).
+**Status:** Active
+

@@ -3,7 +3,7 @@
   --popover-bg: var(--color-background-surface);
   --popover-radius: var(--radius-lg);
   --popover-padding: var(--spacing-4);
-  --popover-max-width: 42ch;
+  --popover-max-width: calc(42 * var(--measure-character));
 
   /* Radix Portal content does not inherit font-family — declare explicitly */
   font-family: var(--font-family-body);

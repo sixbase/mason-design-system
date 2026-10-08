@@ -225,7 +225,7 @@ Still open — the owner's decisions are tracked in `12-audit-2026-09-25.md` →
 | ~~No `--z-index-popover`~~ **Resolved 2026-09-25** | Popover/DropdownMenu/Select opened inside a Modal rendered behind it | `--z-index-popover: 250` added; all three use it |
 | No ambient durations above 686ms | Skeleton `1.5s`, StockIndicator `2s`, Spinner `calc(slowest * 2)` | `--transition-duration-ambient: 1110ms` (686 × φ), `ambient-slow: 1796ms` |
 | No optical nudge token | `translateY(0.05em)` text-box-trim fallback repeated ~29× | `--optical-nudge-y: 0.05em` |
-| No compact measures | Popover 42ch, Tooltip 36ch, Tabs 22ch | `--measure-compact: 40ch` (65/φ), `--measure-label: 25ch` (65/φ²) |
+| No compact measures | Popover 42, Tooltip 36, Tabs 22 characters (each `calc(n * var(--measure-character))`) | `--measure-compact`: 40 characters (65/φ), `--measure-label`: 25 (65/φ²) |
 | Dark mode has no elevation | Dark `background-surface` = `background-subtle` (#1F1C18), black shadows invisible on #131010 | Dark surface ramp (surface one step lighter than subtle) — design decision |
 | `-foreground` means two things | "text on the solid fill" for destructive, "text on the tint" for success/warning/info | Rename in a major version: `*-on-solid` / `*-text` |
 
@@ -627,15 +627,61 @@ meta to take effect on notched devices.
 Note: `--size-touch-target-lg` (44px) predates `--size-hit-area` and shares its value;
 `hit-area` is the semantic name for "invisible minimum hit zone" — prefer it in new code.
 
-### Reading Measure
+### Measures
 
 ```
---measure-reading: 65ch
+--measure-character: 0.6em     one character of IBM Plex Sans (the width of its "0")
+--measure-reading:   39em      65 characters — the optimal line length for body text
 ```
 
-The 65-character optimal line length for body text — the value behind the "reading width"
-rule. Previously hardcoded as `max-width: 65ch` in Typography, Alert, Footer, and
-EmptyState; components should reference the token. `ch` units only — never a px measure.
+`--measure-reading` is the value behind the "reading width" rule; components reference the
+token. Any other character count is `calc(n * var(--measure-character))` (Tabs' 22-character
+label cap, Tooltip's 36, Popover's 42, VariantSelector's 12 and 16).
+
+**Never `ch`** (since 2026-10-07; `check-css` rejects it). `1ch` is the width of "0" in
+whichever font is *showing*. Before the web font arrives that is the stand-in font, whose
+"0" is a different width, so every `ch`-sized box changed width when IBM Plex Sans landed
+and the text inside re-wrapped. Plex's "0" is exactly 0.6em at every weight (measured,
+300–700), so `0.6em` gives the same box with either font showing. Never a px measure
+either — the measure must follow the text size.
+
+### Stand-in Fonts
+
+```
+--font-family-body:    'IBM Plex Sans', 'IBM Plex Sans Fallback', ui-sans-serif, system-ui, …
+--font-family-numeric: 'JetBrains Mono', 'JetBrains Mono Fallback', ui-monospace, …
+```
+
+`tokens.css` also carries `@font-face` rules for the two `… Fallback` families, generated
+from `font.fallback` in `tokens.json`. Each wraps a font the device already has and scales
+it (`size-adjust`) so the same words take the same room as in the web font; when the web
+font lands, lines keep their breaks and the page does not hop.
+
+| Weight | Local font | size-adjust | How it was measured |
+|--------|-----------|-------------|---------------------|
+| 300 | Arial | 98.69% | width of real storefront copy in Plex ÷ in Arial |
+| 400 | Arial | 100.56% | 18,951 characters; 80% of longer lines within −1.4% / +1.8% |
+| 500 | Arial | 102.17% | Arial Bold would be 4.5% too wide |
+| 600 | Arial Bold | 96.53% | |
+| 700 | Arial Bold | 97.69% | |
+| mono, all | Menlo | 99.66% | JetBrains Mono's digit is 0.6em, Menlo's 0.6022em |
+
+Each rule carries the web font's own `unicode-range` (the union of Google's subsets), so
+the stand-in covers exactly the characters the web font will. Characters Plex is not
+served for — arrows, check marks, symbols — still fall through to the system font, as
+they always did; without the range they moved to Arial permanently and one line with a
+"→" in it wrapped differently even after Plex had loaded.
+
+Vertical metrics are overridden to the web font's own (Plex: ascent 1.025, descent 0.275,
+no line gap), divided by the size-adjust because Chromium and Firefox multiply them by it.
+Safari ignores the overrides — harmless while `line-height` is set.
+
+Measured 2026-10-07 in Chromium and WebKit (identical to four decimals) against the
+storefront's own text, with the storefront repo's `scripts/fonts/measure-widths.mjs`.
+Re-measure if the typeface, its version, or the weights in use change. Arial exists on Apple devices and Windows; Android has none, skips the family, and
+shows Roboto as before (0.3% narrower than Plex at 400 — already a near match). Capitals
+alone run 6% wide and digits 8% narrow in the stand-in: one number per weight cannot fit
+every string, so a line that only just fits can still re-wrap.
 
 ### Z-Index
 
