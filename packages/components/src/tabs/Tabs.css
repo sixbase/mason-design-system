@@ -8,7 +8,7 @@
   /* Truncation limit for long labels — a typographic measure
      (~22 characters at the trigger font size), not a layout size,
      so it has no home on the size scale. */
-  --tabs-trigger-max-width: 22ch;
+  --tabs-trigger-max-width: calc(22 * var(--measure-character));
 }
 
 /* 2. Base styles */

@@ -115,7 +115,11 @@ const css = lines(
   ...Object.entries(p.spacing).map(([k, v]) => `  --spacing-${k}: ${v};`),
   // aspect ratios — φ-derived (golden = φ:1) plus practical media ratios
   ...Object.entries(p.aspect).map(([k, v]) => `  --aspect-${k}: ${v};`),
-  // reading measure — 65ch optimal line length for body text
+  // measures — character-count widths, written in em. `ch` is the width of
+  // "0" in whichever font is SHOWING, so a ch-sized box changes width when
+  // the web font swaps in and the text inside re-wraps. IBM Plex Sans's "0"
+  // is exactly 0.6em at every weight: --measure-character is that, and
+  // --measure-reading is 65 of them (the 65-character line length).
   ...Object.entries(p.measure).map(([k, v]) => `  --measure-${k}: ${v};`),
   // interaction scale — pressed-state transform shared by all pressable components
   ...Object.entries(p.scale).map(([k, v]) => `  --scale-${k}: ${v};`),
@@ -319,8 +323,57 @@ const globals = lines(
   `}`,
 );
 
+/**
+ * Stand-in fonts. Until a web font arrives, text shows in the next family in
+ * its stack; when the font lands, every line whose width differs re-wraps
+ * and the page hops. These @font-face rules wrap a font the device already
+ * has (Arial for IBM Plex Sans, Menlo for JetBrains Mono) and scale it so
+ * the same words take the same room:
+ *
+ *   size-adjust  — measured, per weight: width of real storefront copy in
+ *                  the web font ÷ its width in the local font (see
+ *                  03-tokens.md, "Stand-in fonts", for the numbers).
+ *   ascent/descent/line-gap-override — the web font's own vertical metrics,
+ *                  so `line-height: normal` and baselines don't move.
+ *                  Chromium and Firefox multiply these by size-adjust, hence
+ *                  the division. Safari ignores them (no layout effect while
+ *                  line-height is set, which it is everywhere).
+ *
+ *   unicode-range — the characters the web font itself is served for (the
+ *                  union of Google's subsets). A stand-in must not cover MORE
+ *                  than the font it stands in for: without this line every
+ *                  character Plex lacks ("→", "✓", symbols) moved from the
+ *                  system font to Arial for good, and a line with an arrow in
+ *                  it wrapped differently even with Plex loaded.
+ *
+ * A device without the local font (Android has no Arial) skips the family
+ * and falls through to the rest of the stack, exactly as before.
+ */
+const pct = (n) => `${Math.round(n * 10000) / 100}%`;
+const fallbackFonts = lines(
+  ``,
+  `/* ─── Stand-in fonts (metric-matched to the web fonts) ─ */`,
+  ...Object.entries(p.font.fallback).flatMap(([family, f]) =>
+    f.faces.map((face) =>
+      [
+        `@font-face {`,
+        `  font-family: '${family}';`,
+        `  font-weight: ${face.weight};`,
+        `  src: ${face.local.map((n) => `local('${n}')`).join(', ')};`,
+        `  size-adjust: ${pct(face.sizeAdjust)};`,
+        `  ascent-override: ${pct(f.ascent / face.sizeAdjust)};`,
+        `  descent-override: ${pct(f.descent / face.sizeAdjust)};`,
+        `  line-gap-override: ${pct(f.lineGap / face.sizeAdjust)};`,
+        `  unicode-range: ${f.unicodeRange};`,
+        `}`,
+      ].join('\n'),
+    ),
+  ),
+  ``,
+);
+
 mkdirSync(join(root, 'dist'), { recursive: true });
-writeFileSync(join(root, 'dist/tokens.css'), css + adaptive + globals + '\n');
+writeFileSync(join(root, 'dist/tokens.css'), css + adaptive + fallbackFonts + globals + '\n');
 console.log('✓ dist/tokens.css written');
 
 // Motion subset for the JS export (src/index.ts → @ds/motion). Written as

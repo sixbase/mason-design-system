@@ -11,7 +11,7 @@
  *      CSS, set from a component .tsx (style={{ '--x': … }}), or --radix-*.
  *   2. Component custom properties declared but never read (a knob that
  *      does nothing when a consumer turns it).
- *   3. Raw values: hex / rgb() / hsl() / named colours, px / rem / em
+ *   3. Raw values: hex / rgb() / hsl() / named colours, px / rem / em / ch
  *      lengths, ms / s durations, cubic-bezier() / steps(), and bare
  *      numbers for z-index, font-weight, opacity, line-height and scale().
  *   4. !important outside @media (prefers-reduced-motion: reduce).
@@ -25,7 +25,6 @@
  * ALLOWED without a token (keep this list short — every entry is a rule):
  *   - 0 in any unit; percentages; fr; deg/turn (geometry, not design values)
  *   - viewport units (100vh, 50dvh…): proportions of the screen, like %
- *   - ch: reading measures (the 65ch rule in CLAUDE.md is written in ch)
  *   - 1em / 1lh / 1cap: "exactly the size of the surrounding text"
  *   - 0.05em: the optical-centering nudge in the text-box-trim fallbacks
  *     (token pending — see 03-tokens.md, "No optical nudge token")
@@ -172,7 +171,7 @@ function rawValues(decl, rel) {
   for (const m of v.matchAll(/(?<![\w-])(rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\(/gi)) found.push(`${m[1]}()`);
   const named = v.match(NAMED_COLORS);
   if (named) found.push(named[0]);
-  for (const m of v.matchAll(/(?<![\w.#-])(-?\d*\.?\d+)(px|rem|em|pt|pc|cm|mm|in|q|ex|ic|cap|lh|rlh)\b/gi)) {
+  for (const m of v.matchAll(/(?<![\w.#-])(-?\d*\.?\d+)(px|rem|em|ch|pt|pc|cm|mm|in|q|ex|ic|cap|lh|rlh)\b/gi)) {
     const [tok, num, unit] = m;
     if (Number(num) === 0) continue;
     if (/^(em|lh|cap|ic)$/i.test(unit) && Math.abs(Number(num)) === 1) continue;

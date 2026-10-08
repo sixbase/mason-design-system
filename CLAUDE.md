@@ -102,7 +102,7 @@ Two spacing scales exist for different scopes. Never mix them within the same co
 ## Typography Conventions
 
 - **Font:** IBM Plex Sans (Google Fonts). Light (300), Regular (400), Medium (500), Semibold (600), Bold (700) + italics.
-- **Reading width:** All body/paragraph text constrained to `max-width: 65ch`. Headings exempt. Use `ch` units, never `px`.
+- **Reading width:** All body/paragraph text constrained to `max-width: var(--measure-reading)` (65 characters). Headings exempt. A character count is written `calc(n * var(--measure-character))` — never `ch` (it is the width of "0" in whichever font is showing, so the box changes width when the web font swaps in), never `px`.
 - **Optical centering:** Use `text-box-trim: both` + `text-box-edge: cap alphabetic` on fixed-height containers (buttons, badges, tags, pills, labels, table cells, nav items, inputs). Not on body text. Include `@supports not` fallback with `translateY` nudge.
 - **Always use `<Heading>` and `<Text>` components.** Never raw `<h1>`–`<h6>` or `<p>` tags — not in components, not in demo pages, not anywhere.
 - **Font-family inheritance:** Declare `font-family` once on component root. Exception: Radix Portal content (Select dropdown, Modal) must declare explicitly because portals render outside the DOM tree.
@@ -263,7 +263,7 @@ Before any new section, component, or template is considered done:
 - [ ] Meta content — unique title, description, canonical URL
 - [ ] Images — descriptive alt, responsive srcset, lazy/preload
 - [ ] Internal links — descriptive anchor text
-- [ ] Reading width — body text at 65ch max
+- [ ] Reading width — body text at 65 characters max (`--measure-reading`)
 - [ ] Optical centering — text-box-trim on fixed-height containers
 - [ ] Contrast — WCAG AA (4.5:1 body, 3:1 large text)
 - [ ] Accessibility — axe passes, keyboard nav works, focus states visible

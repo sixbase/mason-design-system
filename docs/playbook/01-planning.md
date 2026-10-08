@@ -46,7 +46,7 @@ See `03-tokens.md` for the complete mathematical reference. See `06-decisions-lo
 | v4 | Source Serif 4 | Warm literary serif — replaced in the move to sans |
 | **Final** | **IBM Plex Sans** | Humanist sans — clearer at UI sizes, modern product character |
 
-IBM Plex Sans is loaded from Google Fonts. Designed by IBM (Bold Monday) — open-source humanist sans (SIL OFL). We load: Light (300), Regular (400), Medium (500), Semibold (600), Bold (700) + italic variants. Numerals (prices, quantities, page numbers) use JetBrains Mono through `--font-family-numeric`. Self-hosting the fonts (today a render-blocking stylesheet) is an open item in `12-audit-2026-09-25.md`.
+IBM Plex Sans is loaded from Google Fonts. Designed by IBM (Bold Monday) — open-source humanist sans (SIL OFL). We load: Light (300), Regular (400), Medium (500), Semibold (600), Bold (700) + italic variants. Numerals (prices, quantities, page numbers) use JetBrains Mono through `--font-family-numeric`. The storefront theme serves the font files itself, with a preload, since 2026-10-07 (decisions log, "Measures in em; stand-in fonts"); the workbench still loads them from Google Fonts.
 
 **Do not change the font without a decisions log entry and a full audit of every component for visual regressions.**
 

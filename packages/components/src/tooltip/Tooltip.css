@@ -3,7 +3,7 @@
   --tooltip-bg: var(--color-foreground);
   --tooltip-fg: var(--color-background);
   --tooltip-radius: var(--radius-md);
-  --tooltip-max-width: 36ch;
+  --tooltip-max-width: calc(36 * var(--measure-character));
 
   /* Radix Portal content does not inherit font-family — declare explicitly */
   font-family: var(--font-family-body);
